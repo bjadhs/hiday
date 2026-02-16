@@ -1,36 +1,55 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Hiday (Bruddle)
 
-## Getting Started
+![Hiday Hero Image](/Users/bijayadhs/.gemini/antigravity/brain/5ce07a0f-fa90-45cd-bedc-ba2598248c74/howistheday_hero_image_1771240495218.png)
 
-First, run the development server:
+> **Manage your time, beautifully.**
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Hiday is a premium time-tracking application designed for clarity, functional minimalism, and aesthetic excellence. Built with the **Bruddle** design system, it features a neo-brutalist aesthetic that combines high-contrast boundaries with vibrant purple accents.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## ✨ Features
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **🚀 One-Tap Tracking**: Effortless start/stop for your daily tasks.
+- **📊 Advanced Analytics**: Insights via pie charts, bar charts, and historical trends.
+- **🎯 Goal Management**: Set daily and weekly targets with visual progress tracking.
+- **🏷️ Flexible Tagging**: Categorize your time with standard, numeric, and dropdown tags.
+- **📱 Multi-Platform Sync**: Seamless experience across iOS, Android, and Web.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🛠️ Technology Stack
 
-## Learn More
+- **Frontend**: [Next.js](https://nextjs.org/) (App Router), [React](https://reactjs.org/)
+- **Styling**: [Tailwind CSS v4](https://tailwindcss.com/)
+- **Database/Auth**: [Supabase](https://supabase.com/)
+- **State Management**: [Zustand](https://github.com/pmndrs/zustand), [React Query](https://tanstack.com/query/latest)
+- **UI Components**: [Radix UI](https://www.radix-ui.com/), [Lucide React Icons](https://lucide.dev/)
 
-To learn more about Next.js, take a look at the following resources:
+## 🚀 Getting Started
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Prerequisites
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Node.js >= 20.9.0
+- npm or yarn
 
-## Deploy on Vercel
+### Installation
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+2. Run the development server:
+   ```bash
+   npm run dev
+   ```
+
+3. Open [http://localhost:3000](http://localhost:3000) to view the application.
+
+## 📁 Architecture
+
+- `app/`: Next.js App Router pages and layouts.
+- `components/`: Reusable UI components built with Radix UI and Tailwind v4.
+- `lib/`: Utility functions, constants, and shared logic.
+- `hooks/`: Custom React hooks for state and data fetching.
+- `store/`: Zustand state management.
+
+---
+
