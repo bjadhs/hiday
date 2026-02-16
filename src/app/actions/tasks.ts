@@ -11,7 +11,7 @@ type TaskUpdate = Database['public']['Tables']['tasks']['Update']
 
 export async function getTasks() {
   const supabase = await createClient()
-  
+
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
@@ -28,7 +28,7 @@ export async function getTasks() {
 
 export async function getTaskById(id: string) {
   const supabase = await createClient()
-  
+
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
@@ -45,7 +45,7 @@ export async function getTaskById(id: string) {
 
 export async function createTask(task: Omit<TaskInsert, 'user_id' | 'created_at' | 'updated_at'>) {
   const supabase = await createClient()
-  
+
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
@@ -67,7 +67,7 @@ export async function createTask(task: Omit<TaskInsert, 'user_id' | 'created_at'
 
 export async function updateTask(id: string, updates: TaskUpdate) {
   const supabase = await createClient()
-  
+
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
@@ -88,7 +88,7 @@ export async function updateTask(id: string, updates: TaskUpdate) {
 
 export async function deleteTask(id: string) {
   const supabase = await createClient()
-  
+
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
@@ -105,21 +105,23 @@ export async function archiveTask(id: string) {
   return updateTask(id, { archived: true })
 }
 
-export async function reorderTasks(taskIds: string[]) {
+export async function reorderTasks(tasks: { id: string; name: string }[]) {
   const supabase = await createClient()
-  
+
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
-  const updates = taskIds.map((id, index) => ({
-    id,
+  const updates = tasks.map((task, index) => ({
+    id: task.id,
+    name: task.name,
+    user_id: user.id,
     sort_order: index,
     updated_at: Date.now(),
   }))
 
   const { error } = await supabase
     .from('tasks')
-    .upsert(updates)
+    .upsert(updates, { onConflict: 'id' })
 
   if (error) throw error
 }

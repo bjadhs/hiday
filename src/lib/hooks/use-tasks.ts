@@ -28,7 +28,7 @@ export function useTasks(filters: { archived?: boolean } = {}) {
 // Hook to create a task
 export function useCreateTask() {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
     mutationFn: (task: Omit<TaskInsert, 'user_id' | 'created_at' | 'updated_at'>) => createTask(task),
     onSuccess: () => {
@@ -40,7 +40,7 @@ export function useCreateTask() {
 // Hook to update a task
 export function useUpdateTask() {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
     mutationFn: ({ id, updates }: { id: string; updates: TaskUpdate }) => updateTask(id, updates),
     onSuccess: (_, variables) => {
@@ -53,7 +53,7 @@ export function useUpdateTask() {
 // Hook to delete a task
 export function useDeleteTask() {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
     mutationFn: (id: string) => deleteTask(id),
     onSuccess: () => {
@@ -65,7 +65,7 @@ export function useDeleteTask() {
 // Hook to archive a task
 export function useArchiveTask() {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
     mutationFn: (id: string) => archiveTask(id),
     onSuccess: () => {
@@ -77,9 +77,9 @@ export function useArchiveTask() {
 // Hook to reorder tasks
 export function useReorderTasks() {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
-    mutationFn: (taskIds: string[]) => reorderTasks(taskIds),
+    mutationFn: (tasks: { id: string; name: string }[]) => reorderTasks(tasks),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: taskKeys.lists() })
     },

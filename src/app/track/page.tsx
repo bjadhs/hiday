@@ -11,13 +11,14 @@ import {
   useStopSession,
   useUpdateSession,
 } from '@/lib/hooks/use-sessions';
-import { useActiveSessionsStore } from '@/lib/stores/active-sessions-store';
+import { useActiveSessionsStore, ActiveSessionState } from '@/lib/stores/active-sessions-store';
 import {
   ActiveTimerCard,
   TasksGrid,
   TodaySessions,
   PomodoroTimer,
   SessionEditDialog,
+  NotePromptDialog,
 } from '@/components/track';
 
 // Default task when no tasks exist
@@ -41,16 +42,18 @@ const defaultTask: Task = {
  */
 export default function TrackPage() {
   // Zustand store
-  const { 
-    activeSessions, 
-    addSession, 
-    removeSession, 
-    syncFromDatabase 
+  const {
+    activeSessions,
+    addSession,
+    removeSession,
+    syncFromDatabase
   } = useActiveSessionsStore();
 
   // Edit dialog state (kept in component as it's UI-specific)
   const [editingSession, setEditingSession] = useState<HistorySession | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [promptSession, setPromptSession] = useState<ActiveSessionState | null>(null);
+  const [isStoppingWithNote, setIsStoppingWithNote] = useState(false);
 
   // Fetch data using React Query
   const {
@@ -58,13 +61,13 @@ export default function TrackPage() {
     isLoading: isLoadingTasks,
     error: tasksError,
   } = useTasks();
-  
+
   const {
     data: todaySessions = [],
     isLoading: isLoadingSessions,
     refetch: refetchTodaySessions,
   } = useTodaySessions();
-  
+
   // Use the hook that returns ALL active sessions
   const { data: activeDbSessions = [], isLoading: isLoadingActiveSessions } = useActiveSessions();
 
@@ -76,7 +79,7 @@ export default function TrackPage() {
   // Calculate recent tasks (unique tasks from today sessions, max 6)
   const recentTasks = useMemo(() => {
     const taskMap = new Map<string, Task>();
-    
+
     // Iterate through today's sessions to find unique tasks
     for (const session of todaySessions) {
       if (session.tasks && !taskMap.has(session.tasks.id)) {
@@ -89,7 +92,7 @@ export default function TrackPage() {
       }
       if (taskMap.size >= 6) break;
     }
-    
+
     // If we don't have 6 tasks from today, add from all tasks
     if (taskMap.size < 6) {
       for (const task of tasks) {
@@ -99,7 +102,7 @@ export default function TrackPage() {
         if (taskMap.size >= 6) break;
       }
     }
-    
+
     return Array.from(taskMap.values());
   }, [todaySessions, tasks]);
 
@@ -140,6 +143,13 @@ export default function TrackPage() {
   }, [startSessionMutation]);
 
   const stopSession = useCallback(async (sessionId: string) => {
+    // Check if this session's task requires a note prompt
+    const sessionToStop = activeSessions.find(s => s.id === sessionId);
+    if (sessionToStop?.task.note_prompt) {
+      setPromptSession(sessionToStop);
+      return;
+    }
+
     // Immediately remove from local state for instant UI feedback
     removeSession(sessionId);
 
@@ -149,7 +159,49 @@ export default function TrackPage() {
       console.error('Failed to stop session:', error);
       alert('Failed to stop session. Please try again.');
     }
-  }, [removeSession, stopSessionMutation]);
+  }, [activeSessions, removeSession, stopSessionMutation]);
+
+  const handleSaveNoteAndStop = useCallback(async (note: string) => {
+    if (!promptSession) return;
+
+    setIsStoppingWithNote(true);
+    try {
+      const sessionId = promptSession.id;
+
+      // 1. Update session with the note
+      await updateSessionMutation.mutateAsync({
+        id: sessionId,
+        updates: { note: note.trim() || null }
+      });
+
+      // 2. Stop the session
+      removeSession(sessionId);
+      await stopSessionMutation.mutateAsync(sessionId);
+      setPromptSession(null);
+    } catch (error) {
+      console.error('Failed to save note and stop:', error);
+      alert('Failed to save note. Please try again.');
+    } finally {
+      setIsStoppingWithNote(false);
+    }
+  }, [promptSession, removeSession, stopSessionMutation, updateSessionMutation]);
+
+  const handleStopWithoutNote = useCallback(async () => {
+    if (!promptSession) return;
+
+    setIsStoppingWithNote(true);
+    try {
+      const sessionId = promptSession.id;
+      removeSession(sessionId);
+      await stopSessionMutation.mutateAsync(sessionId);
+      setPromptSession(null);
+    } catch (error) {
+      console.error('Failed to stop session:', error);
+      alert('Failed to stop session. Please try again.');
+    } finally {
+      setIsStoppingWithNote(false);
+    }
+  }, [promptSession, removeSession, stopSessionMutation]);
 
   const updateSession = useCallback(async (sessionId: string, updates: { title?: string; note?: string; taskId?: string }) => {
     try {
@@ -158,12 +210,12 @@ export default function TrackPage() {
       if (updates.title !== undefined) dbUpdates.title = updates.title;
       if (updates.note !== undefined) dbUpdates.note = updates.note;
       if (updates.taskId !== undefined) dbUpdates.task_id = updates.taskId;
-      
+
       await updateSessionMutation.mutateAsync({
         id: sessionId,
         updates: dbUpdates,
       });
-      
+
       // If task changed, update the local store
       if (updates.taskId) {
         const newTask = tasks.find(t => t.id === updates.taskId);
@@ -271,6 +323,16 @@ export default function TrackPage() {
         session={editingSession}
         isOpen={isEditDialogOpen}
         onClose={handleCloseEditDialog}
+      />
+
+      {/* Note Prompt Dialog */}
+      <NotePromptDialog
+        session={promptSession}
+        isOpen={!!promptSession}
+        onClose={() => setPromptSession(null)}
+        onSave={handleSaveNoteAndStop}
+        onStopWithoutNote={handleStopWithoutNote}
+        isStopping={isStoppingWithNote}
       />
     </main>
   );

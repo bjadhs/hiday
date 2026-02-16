@@ -7,7 +7,13 @@ export type Task = {
   name: string;           // Task name (e.g., "Coding", "Gym")
   color: string;
   icon: string | null;
-  goalDuration?: number | null; // in minutes
+  goal_duration?: number | null; // in minutes
+  goal_value?: number | null;     // for count-based goals
+  goal_type?: 'daily' | 'weekly' | 'hour' | 'count' | 'none' | null;
+  default_note?: string | null;
+  note_prompt?: boolean | null;
+  tags?: string[] | null;
+  sort_order?: number;
 };
 
 // An active (ongoing) session being tracked
