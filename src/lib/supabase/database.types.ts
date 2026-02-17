@@ -88,6 +88,7 @@ export type Database = {
           source: 'manual' | 'widget' | 'watch' | 'suggestion'
           sync_status: string
           client_timestamp: number
+          session_date: string
           server_timestamp: number | null
           created_at: number
         }
@@ -104,6 +105,7 @@ export type Database = {
           source?: 'manual' | 'widget' | 'watch' | 'suggestion'
           sync_status?: string
           client_timestamp: number
+          session_date: string
           server_timestamp?: number | null
           created_at?: number
         }
@@ -120,6 +122,7 @@ export type Database = {
           source?: 'manual' | 'widget' | 'watch' | 'suggestion'
           sync_status?: string
           client_timestamp?: number
+          session_date?: string
           server_timestamp?: number | null
           created_at?: number
         }

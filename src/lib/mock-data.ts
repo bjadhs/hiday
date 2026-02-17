@@ -6,13 +6,13 @@ export const INITIAL_NOW = Date.now();
 // Common tasks used across the app
 export const mockTasks: Task[] = [
   { id: 'inbox', name: 'Inbox', color: '#6B7280', icon: '📥' },
-  { id: '1', name: 'Coding', color: '#8B5CF6', icon: '💻', goalDuration: 240 },
-  { id: '2', name: 'Gym', color: '#22C55E', icon: '💪', goalDuration: 60 },
-  { id: '3', name: 'Reading', color: '#3B82F6', icon: '📚', goalDuration: 30 },
+  { id: '1', name: 'Coding', color: '#8B5CF6', icon: '💻', goal_duration: 240 },
+  { id: '2', name: 'Gym', color: '#22C55E', icon: '💪', goal_duration: 60 },
+  { id: '3', name: 'Reading', color: '#3B82F6', icon: '📚', goal_duration: 30 },
   { id: '4', name: 'Meeting', color: '#F59E0B', icon: '🗣️' },
   { id: '5', name: 'Break', color: '#EF4444', icon: '☕' },
-  { id: '6', name: 'Design', color: '#EC4899', icon: '🎨', goalDuration: 120 },
-  { id: '7', name: 'Writing', color: '#14B8A6', icon: '✍️', goalDuration: 60 },
+  { id: '6', name: 'Design', color: '#EC4899', icon: '🎨', goal_duration: 120 },
+  { id: '7', name: 'Writing', color: '#14B8A6', icon: '✍️', goal_duration: 60 },
   { id: '8', name: 'Research', color: '#6366F1', icon: '🔍' },
 ];
 

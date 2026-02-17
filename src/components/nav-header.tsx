@@ -1,19 +1,32 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Calendar } from 'lucide-react';
 
 interface NavHeaderProps {
   title: string;
 }
-const INITIAL_DATE_STR = new Date().toLocaleDateString('en-US', {
-  weekday: 'long',
-  month: 'long',
-  day: 'numeric',
-});
-
-const currentDateStr = INITIAL_DATE_STR;
 
 export function NavHeader({ title }: NavHeaderProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Use a stable date string only after mounting
+  const [dateStr, setDateStr] = useState<string>('');
+
+  useEffect(() => {
+    if (mounted) {
+      setDateStr(new Date().toLocaleDateString('en-US', {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+      }));
+    }
+  }, [mounted]);
+
   return (
     <>
       {/* Mobile Header - Shows app logo and page title */}
@@ -29,7 +42,12 @@ export function NavHeader({ title }: NavHeaderProps) {
         <h1 className='text-3xl font-bold tracking-tight'>{title}</h1>
         <div className='flex items-center gap-3 text-muted-foreground'>
           <Calendar className='w-5 h-5' />
-          <span className='font-medium'>{currentDateStr}</span>
+          <span
+            className='font-medium'
+            suppressHydrationWarning
+          >
+            {dateStr}
+          </span>
         </div>
       </header>
     </>

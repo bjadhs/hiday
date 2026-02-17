@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -11,7 +12,6 @@ import {
   ListTodo,
   Clock,
 } from 'lucide-react';
-import { INITIAL_DATE_STR } from '@/lib/constant';
 import { cn } from '@/lib/utils';
 
 type NavItem = {
@@ -33,8 +33,27 @@ interface NavBarProps {
   pomodoroCompletions?: number;
 }
 
-export function NavBar({}: NavBarProps) {
+export function NavBar({ }: NavBarProps) {
   const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Use a stable date string only after mounting
+  const [dateStr, setDateStr] = useState<string>('');
+
+  useEffect(() => {
+    if (mounted) {
+      setDateStr(new Date().toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      }));
+    }
+  }, [mounted]);
 
   return (
     <>
@@ -47,7 +66,12 @@ export function NavBar({}: NavBarProps) {
           </h1>
           <div className='flex items-center gap-2 text-muted-foreground mt-2'>
             <Calendar className='w-4 h-4' />
-            <span className='text-sm font-medium'>{INITIAL_DATE_STR}</span>
+            <span
+              className='text-sm font-medium'
+              suppressHydrationWarning
+            >
+              {dateStr}
+            </span>
           </div>
         </div>
 

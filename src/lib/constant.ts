@@ -1,12 +1,5 @@
 // App constants
 
-export const INITIAL_DATE_STR = new Date().toLocaleDateString('en-US', {
-  weekday: 'long',
-  year: 'numeric',
-  month: 'long',
-  day: 'numeric',
-});
-
 // Available icons for tasks (emoji-based)
 export const TASK_ICONS = [
   // Work & Productivity

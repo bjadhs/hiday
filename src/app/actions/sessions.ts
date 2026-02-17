@@ -15,7 +15,7 @@ type SessionWithTask = Session & { tasks: Task | null }
 
 export async function getSessions(startDate?: number, endDate?: number) {
   const supabase = await createClient()
-  
+
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
@@ -24,10 +24,14 @@ export async function getSessions(startDate?: number, endDate?: number) {
     .select('*, tasks(*)')
     .eq('user_id', user.id)
 
-  if (startDate) {
+  if (startDate && endDate) {
+    // A session overlaps with [startDate, endDate] if it started before/at endDate
+    // AND (it's still running OR it ended after/at startDate)
+    query = query.lte('started_at', endDate)
+      .or(`ended_at.gte.${startDate},ended_at.is.null`)
+  } else if (startDate) {
     query = query.gte('started_at', startDate)
-  }
-  if (endDate) {
+  } else if (endDate) {
     query = query.lte('started_at', endDate)
   }
 
@@ -39,7 +43,7 @@ export async function getSessions(startDate?: number, endDate?: number) {
 
 export async function getActiveSession() {
   const supabase = await createClient()
-  
+
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
@@ -59,7 +63,7 @@ export async function getActiveSession() {
 // Get ALL active sessions for concurrent tracking support
 export async function getActiveSessions() {
   const supabase = await createClient()
-  
+
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
@@ -76,7 +80,7 @@ export async function getActiveSessions() {
 
 export async function startSession(taskId: string, title?: string) {
   const supabase = await createClient()
-  
+
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
@@ -88,6 +92,7 @@ export async function startSession(taskId: string, title?: string) {
       user_id: user.id,
       title: title || null,
       started_at: now,
+      session_date: new Date(now).toISOString().split('T')[0], // YYYY-MM-DD
       source: 'manual',
       sync_status: 'synced',
       client_timestamp: now,
@@ -102,12 +107,12 @@ export async function startSession(taskId: string, title?: string) {
 
 export async function stopSession(sessionId: string) {
   const supabase = await createClient()
-  
+
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
   const now = Date.now()
-  
+
   // First get the session to calculate duration
   const { data: session } = await supabase
     .from('sessions')
@@ -138,7 +143,7 @@ export async function stopSession(sessionId: string) {
 
 export async function updateSession(sessionId: string, updates: SessionUpdate) {
   const supabase = await createClient()
-  
+
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
@@ -156,7 +161,7 @@ export async function updateSession(sessionId: string, updates: SessionUpdate) {
 
 export async function deleteSession(sessionId: string) {
   const supabase = await createClient()
-  
+
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
