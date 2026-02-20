@@ -54,10 +54,10 @@ export function useTrackPage() {
     const stopSessionMutation = useStopSession();
     const updateSessionMutation = useUpdateSession();
 
-    // Calculate recent tasks (unique tasks from today sessions, max 6)
+    // Calculate recent tasks (unique tasks from today sessions, max 4)
     const recentTasks = useMemo(() => {
         const taskMap = new Map<string, Task>();
-
+        
         // Iterate through today's sessions to find unique tasks
         for (const session of todaySessions) {
             if (session.tasks && !taskMap.has(session.tasks.id)) {
@@ -68,19 +68,19 @@ export function useTrackPage() {
                     icon: session.tasks.icon,
                 });
             }
-            if (taskMap.size >= 6) break;
+            if (taskMap.size >= 4) break;
         }
-
-        // If we don't have 6 tasks from today, add from all tasks
-        if (taskMap.size < 6) {
+        
+        // If we don't have 4 tasks from today, add from all tasks
+        if (taskMap.size < 4) {
             for (const task of tasks) {
                 if (!taskMap.has(task.id)) {
                     taskMap.set(task.id, task);
                 }
-                if (taskMap.size >= 6) break;
+                if (taskMap.size >= 4) break;
             }
         }
-
+        
         return Array.from(taskMap.values());
     }, [todaySessions, tasks]);
 
@@ -100,20 +100,21 @@ export function useTrackPage() {
         syncFromDatabase(sessionsForSync);
     }, [activeDbSessions, isLoadingActiveSessions, syncFromDatabase]);
 
-    const startTask = useCallback(async (task: Task) => {
+    const startTask = useCallback(async (task: Task, startTime?: number) => {
         try {
             const newSession = await startSessionMutation.mutateAsync({
                 taskId: task.id,
                 title: task.name,
+                startTime,
             });
 
-            // Add to Zustand store
+            // Add to Zustand store with the correct start time
             useActiveSessionsStore.getState().addSession({
                 id: newSession.id,
                 task,
                 title: task.name,
                 note: '',
-                startTime: Date.now(),
+                startTime: startTime || Date.now(),
             });
         } catch (error) {
             console.error('Failed to start session:', error);
@@ -181,13 +182,14 @@ export function useTrackPage() {
         }
     }, [promptSession, removeSession, stopSessionMutation]);
 
-    const updateSession = useCallback(async (sessionId: string, updates: { title?: string; note?: string; taskId?: string }) => {
+    const updateSession = useCallback(async (sessionId: string, updates: { title?: string; note?: string; taskId?: string; started_at?: number }) => {
         try {
-            // Convert taskId to task_id for the database
-            const dbUpdates: { title?: string; note?: string; task_id?: string } = {};
+            // Convert camelCase to snake_case for the database
+            const dbUpdates: { title?: string; note?: string; task_id?: string; started_at?: number } = {};
             if (updates.title !== undefined) dbUpdates.title = updates.title;
             if (updates.note !== undefined) dbUpdates.note = updates.note;
             if (updates.taskId !== undefined) dbUpdates.task_id = updates.taskId;
+            if (updates.started_at !== undefined) dbUpdates.started_at = updates.started_at;
 
             await updateSessionMutation.mutateAsync({
                 id: sessionId,

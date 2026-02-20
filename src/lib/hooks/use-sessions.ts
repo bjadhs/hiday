@@ -65,7 +65,8 @@ export function useStartSession() {
   const queryClient = useQueryClient()
   
   return useMutation({
-    mutationFn: ({ taskId, title }: { taskId: string; title?: string }) => startSession(taskId, title),
+    mutationFn: ({ taskId, title, startTime }: { taskId: string; title?: string; startTime?: number }) => 
+      startSession(taskId, title, startTime),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: sessionKeys.lists() })
       queryClient.invalidateQueries({ queryKey: sessionKeys.today() })

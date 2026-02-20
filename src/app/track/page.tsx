@@ -79,6 +79,7 @@ export default function TrackPage() {
           <ActiveTimerCard
             firstTask={firstTask}
             recentTasks={recentTasks}
+            todaySessions={todaySessions}
             onStartTask={startTask}
             onStopSession={stopSession}
             onUpdateSession={updateSession}

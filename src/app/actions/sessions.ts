@@ -78,21 +78,22 @@ export async function getActiveSessions() {
   return data as SessionWithTask[]
 }
 
-export async function startSession(taskId: string, title?: string) {
+export async function startSession(taskId: string, title?: string, startTime?: number) {
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
   const now = Date.now()
+  const sessionStartTime = startTime || now
   const { data, error } = await supabase
     .from('sessions')
     .insert({
       task_id: taskId,
       user_id: user.id,
       title: title || null,
-      started_at: now,
-      session_date: new Date(now).toISOString().split('T')[0], // YYYY-MM-DD
+      started_at: sessionStartTime,
+      session_date: new Date(sessionStartTime).toISOString().split('T')[0], // YYYY-MM-DD
       source: 'manual',
       sync_status: 'synced',
       client_timestamp: now,
