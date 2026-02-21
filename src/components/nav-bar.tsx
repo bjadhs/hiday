@@ -11,6 +11,7 @@ import {
   Calendar,
   ListTodo,
   Clock,
+  CalendarCheck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -23,6 +24,7 @@ type NavItem = {
 const navItems: NavItem[] = [
   { label: 'Track', href: '/track', icon: Zap },
   { label: 'Timeline', href: '/timeline', icon: Clock },
+  { label: 'Todos', href: '/todos', icon: CalendarCheck },
   { label: 'History', href: '/history', icon: History },
   { label: 'Analyze', href: '/analyze', icon: BarChart3 },
   { label: 'Tasks', href: '/tasks', icon: ListTodo },

@@ -90,6 +90,7 @@ export type Database = {
           client_timestamp: number
           session_date: string
           server_timestamp: number | null
+          status: 'planned' | 'active' | 'completed' | 'cancelled'
           created_at: number
         }
         Insert: {
@@ -107,6 +108,7 @@ export type Database = {
           client_timestamp: number
           session_date: string
           server_timestamp?: number | null
+          status?: 'planned' | 'active' | 'completed' | 'cancelled'
           created_at?: number
         }
         Update: {
@@ -124,6 +126,7 @@ export type Database = {
           client_timestamp?: number
           session_date?: string
           server_timestamp?: number | null
+          status?: 'planned' | 'active' | 'completed' | 'cancelled'
           created_at?: number
         }
         Relationships: [

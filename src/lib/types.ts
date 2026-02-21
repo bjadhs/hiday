@@ -60,6 +60,29 @@ export type HistoryTimeEntry = HistorySession;
 
 export type ViewMode = 'list' | 'timeline';
 
+// Planned session for future time planning
+// Uses the sessions table with status='planned'
+export type PlannedSession = {
+  id: string;
+  taskId: string;
+  task: Task;
+  title: string | null;
+  plannedStartTime: number;  // Unix timestamp when it's planned to start (stored in started_at)
+  plannedEndTime: number;    // Unix timestamp when it's planned to end (stored in ended_at)
+  plannedDuration: number;   // Duration in seconds
+  plannedDate: string;       // YYYY-MM-DD format
+  status: 'planned' | 'active' | 'completed' | 'cancelled';
+  note: string | null;
+};
+
+// For display on the timeline
+export type TimelinePlannedSession = PlannedSession & {
+  top: number;      // Pixel position from top
+  height: number;   // Pixel height based on duration
+  left: number;     // Percentage for column positioning
+  width: number;    // Percentage width
+};
+
 // Stats card props
 export type StatCardProps = {
   label: string;
