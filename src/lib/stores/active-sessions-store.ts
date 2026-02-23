@@ -23,6 +23,7 @@ interface ActiveSessionsState {
   editingSessionId: string | null;
   editTitle: string;
   expandedSessionId: string | null;
+  promptingSessionId: string | null;
   sessionNotes: Record<string, string>;
   
   // Actions
@@ -47,6 +48,10 @@ interface ActiveSessionsState {
   toggleExpand: (sessionId: string) => void;
   closeExpand: () => void;
   
+  // Note prompt actions
+  startPromptingNote: (sessionId: string) => void;
+  cancelPromptNote: () => void;
+  
   // Sync tracking
   markAsSynced: (sessionId: string) => void;
   removeSyncedId: (sessionId: string) => void;
@@ -69,12 +74,13 @@ export const useActiveSessionsStore = create<ActiveSessionsState>((set, get) => 
   editingSessionId: null,
   editTitle: '',
   expandedSessionId: null,
+  promptingSessionId: null,
   sessionNotes: {},
 
-  // Add a new session
+  // Add a new session - prepend to maintain newest-first order
   addSession: (session) => {
     set((state) => ({
-      activeSessions: [...state.activeSessions, session],
+      activeSessions: [session, ...state.activeSessions],
       elapsedTimes: { ...state.elapsedTimes, [session.id]: 0 },
       syncedSessionIds: new Set([...state.syncedSessionIds, session.id]),
       sessionNotes: { ...state.sessionNotes, [session.id]: session.note || '' },
@@ -96,6 +102,7 @@ export const useActiveSessionsStore = create<ActiveSessionsState>((set, get) => 
         syncedSessionIds: newSyncedIds,
         editingSessionId: state.editingSessionId === sessionId ? null : state.editingSessionId,
         expandedSessionId: state.expandedSessionId === sessionId ? null : state.expandedSessionId,
+        promptingSessionId: state.promptingSessionId === sessionId ? null : state.promptingSessionId,
       };
     });
   },
@@ -197,6 +204,16 @@ export const useActiveSessionsStore = create<ActiveSessionsState>((set, get) => 
   closeExpand: () => {
     set({ expandedSessionId: null });
   },
+  
+  // Start prompting for note (when stopping a session that requires note)
+  startPromptingNote: (sessionId) => {
+    set({ promptingSessionId: sessionId });
+  },
+  
+  // Cancel note prompt
+  cancelPromptNote: () => {
+    set({ promptingSessionId: null });
+  },
 
   // Mark session as synced with DB
   markAsSynced: (sessionId) => {
@@ -214,7 +231,7 @@ export const useActiveSessionsStore = create<ActiveSessionsState>((set, get) => 
     });
   },
 
-  // Sync from database - only adds sessions not already synced
+  // Sync from database - adds sessions not already synced and removes optimistic ones
   syncFromDatabase: (dbSessions) => {
     set((state) => {
       const localSessionIds = new Set(state.activeSessions.map((s) => s.id));
@@ -242,13 +259,28 @@ export const useActiveSessionsStore = create<ActiveSessionsState>((set, get) => 
       const newNotes: Record<string, string> = { ...state.sessionNotes };
       const now = Date.now();
 
+      // Remove optimistic sessions for the same tasks to prevent duplicates
+      const dbTaskIds = new Set(dbSessions.map((s) => s.task.id));
+      const filteredSessions = state.activeSessions.filter((s) => {
+        // Keep non-optimistic sessions or optimistic sessions for different tasks
+        const isOptimistic = s.id.startsWith('optimistic-');
+        const isSameTask = dbTaskIds.has(s.task.id);
+        if (isOptimistic && isSameTask) {
+          // Clean up elapsed time and notes for removed optimistic session
+          delete newElapsedTimes[s.id];
+          delete newNotes[s.id];
+          return false;
+        }
+        return true;
+      });
+
       newSessions.forEach((session) => {
         newElapsedTimes[session.id] = Math.floor((now - session.startTime) / 1000);
         newNotes[session.id] = session.note || '';
       });
 
       return {
-        activeSessions: [...state.activeSessions, ...newSessions],
+        activeSessions: [...newSessions, ...filteredSessions],
         syncedSessionIds: newSyncedIds,
         elapsedTimes: newElapsedTimes,
         sessionNotes: newNotes,

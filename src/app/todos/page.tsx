@@ -9,11 +9,12 @@ import {
   useUpdatePlannedSession,
   useDeletePlannedSession,
   useStartPlannedSession,
+  useUnschedulePlannedSession,
 } from '@/lib/hooks/use-planned-sessions';
-import { TodoHeader } from './components/todo-header';
-import { TaskColumn } from './components/task-column';
-import { PlanningTimeline } from './components/planning-timeline';
-import { CreateTodoDialog } from './components/create-todo-dialog';
+import { TodoHeader } from '@/components/todos/todo-header';
+import { TaskColumn } from '@/components/todos/task-column';
+import { PlanningTimeline } from '@/components/todos/planning-timeline';
+import { CreateTodoDialog } from '@/components/todos/create-todo-dialog';
 import type { PlannedSession } from '@/lib/types';
 import type { Database } from '@/lib/supabase/database.types';
 
@@ -37,6 +38,7 @@ export default function TodosPage() {
   const updateMutation = useUpdatePlannedSession();
   const deleteMutation = useDeletePlannedSession();
   const startMutation = useStartPlannedSession();
+  const unscheduleMutation = useUnschedulePlannedSession();
 
   const isSubmitting = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending || startMutation.isPending;
   const submitError = createMutation.error?.message || updateMutation.error?.message || null;
@@ -98,7 +100,7 @@ export default function TodosPage() {
   const handleCreateSubmit = useCallback((data: {
     taskId: string;
     plannedDate: string;
-    plannedStartTime: number;
+    plannedStartTime: number | null;
     plannedDuration: number;
     title?: string;
     note?: string;
@@ -117,19 +119,70 @@ export default function TodosPage() {
 
   const handleUpdateSubmit = useCallback((sessionId: string, updates: {
     plannedStartTime?: number;
+    plannedEndTime?: number;
     plannedDuration?: number;
     title?: string;
     note?: string;
   }) => {
+    // If plannedEndTime is provided, calculate plannedDuration
+    const finalUpdates = { ...updates };
+    if (updates.plannedEndTime && updates.plannedStartTime) {
+      finalUpdates.plannedDuration = Math.round((updates.plannedEndTime - updates.plannedStartTime) / 1000);
+    } else if (updates.plannedEndTime && !updates.plannedStartTime) {
+      // If only end time changed, need start time from existing session
+      const session = plannedSessions.find(s => s.id === sessionId);
+      if (session) {
+        finalUpdates.plannedDuration = Math.round((updates.plannedEndTime - session.plannedStartTime) / 1000);
+      }
+    }
+
     updateMutation.mutate(
-      { sessionId, plannedDate: formattedDate, updates },
+      { sessionId, plannedDate: formattedDate, updates: finalUpdates },
       {
         onSuccess: () => {
           handleCloseDialog();
         },
       }
     );
-  }, [updateMutation, formattedDate, handleCloseDialog]);
+  }, [updateMutation, formattedDate, handleCloseDialog, plannedSessions]);
+
+  // Direct update from timeline drag/resize
+  const handleSessionUpdate = useCallback((sessionId: string, updates: {
+    plannedStartTime?: number;
+    plannedEndTime?: number;
+  }) => {
+    // Calculate duration if both times are provided
+    const finalUpdates: {
+      plannedStartTime?: number;
+      plannedDuration?: number;
+    } = {};
+
+    if (updates.plannedStartTime !== undefined) {
+      finalUpdates.plannedStartTime = updates.plannedStartTime;
+    }
+
+    if (updates.plannedEndTime !== undefined && updates.plannedStartTime !== undefined) {
+      finalUpdates.plannedDuration = Math.round((updates.plannedEndTime - updates.plannedStartTime) / 1000);
+    } else if (updates.plannedEndTime !== undefined) {
+      // Only end time changed
+      const session = plannedSessions.find(s => s.id === sessionId);
+      if (session) {
+        finalUpdates.plannedDuration = Math.round((updates.plannedEndTime - session.plannedStartTime) / 1000);
+      }
+    } else if (updates.plannedStartTime !== undefined) {
+      // Only start time changed, keep same duration
+      const session = plannedSessions.find(s => s.id === sessionId);
+      if (session) {
+        finalUpdates.plannedDuration = session.plannedDuration;
+      }
+    }
+
+    updateMutation.mutate({
+      sessionId,
+      plannedDate: formattedDate,
+      updates: finalUpdates
+    });
+  }, [updateMutation, formattedDate, plannedSessions]);
 
   const handleDeleteSession = useCallback((sessionId: string) => {
     if (confirm('Are you sure you want to delete this planned session?')) {
@@ -141,12 +194,63 @@ export default function TodosPage() {
     startMutation.mutate({ sessionId, plannedDate: formattedDate });
   }, [startMutation, formattedDate]);
 
-  // Convert planned sessions to DB format for child components
-  const dbPlannedSessions = useMemo(() => {
-    return plannedSessions.map((session) => ({
-      ...session,
-      status: session.status as 'planned' | 'active' | 'completed' | 'cancelled',
-    }));
+  // Handle task drop from task column to timeline
+  const handleTaskDrop = useCallback((taskId: string, startTime: number, sessionId?: string) => {
+    const plannedDate = selectedDate.toISOString().split('T')[0];
+    const plannedDuration = 60 * 60; // 1 hour in seconds
+
+    if (sessionId) {
+      // Dropping an unscheduled session to the timeline - schedule it
+      updateMutation.mutate({
+        sessionId,
+        plannedDate,
+        updates: {
+          plannedStartTime: startTime,
+          plannedDuration,
+        },
+      });
+    } else {
+      // Dropping a task to create a new scheduled session
+      createMutation.mutate({
+        taskId,
+        plannedDate,
+        plannedStartTime: startTime,
+        plannedDuration,
+      });
+    }
+  }, [createMutation, updateMutation, selectedDate]);
+
+  // Handle unscheduling a session (drag from timeline to task column)
+  const handleUnscheduleSession = useCallback((sessionId: string) => {
+    unscheduleMutation.mutate({
+      sessionId,
+      plannedDate: formattedDate,
+    });
+  }, [unscheduleMutation, formattedDate]);
+
+  // Separate scheduled and unscheduled sessions
+  const { scheduledSessions, unscheduledSessions } = useMemo(() => {
+    const scheduled: typeof plannedSessions = [];
+    const unscheduled: typeof plannedSessions = [];
+
+    plannedSessions.forEach((session) => {
+      if (session.started_at === null) {
+        unscheduled.push(session);
+      } else {
+        scheduled.push(session);
+      }
+    });
+
+    return {
+      scheduledSessions: scheduled.map((session) => ({
+        ...session,
+        status: session.status as 'planned' | 'active' | 'completed' | 'cancelled',
+      })),
+      unscheduledSessions: unscheduled.map((session) => ({
+        ...session,
+        status: session.status as 'planned' | 'active' | 'completed' | 'cancelled',
+      })),
+    };
   }, [plannedSessions]);
 
   const isLoading = isLoadingTasks || isLoadingSessions;
@@ -185,21 +289,26 @@ export default function TodosPage() {
         <div className="w-80 flex-shrink-0 border-r-2 border-border-strong dark:border-border-strong-dark">
           <TaskColumn
             tasks={tasks}
-            plannedSessions={dbPlannedSessions}
+            plannedSessions={scheduledSessions}
+            unscheduledSessions={unscheduledSessions}
             onCreateTodo={handleCreateTodo}
             onEditSession={handleEditSession}
             onDeleteSession={handleDeleteSession}
             onStartSession={handleStartSession}
+            onSessionUnschedule={handleUnscheduleSession}
           />
         </div>
 
         {/* Right Column - Timeline */}
         <div className="flex-1 min-w-0">
           <PlanningTimeline
-            plannedSessions={dbPlannedSessions}
+            plannedSessions={scheduledSessions}
             selectedDate={selectedDate}
             onSessionClick={handleEditSession}
             onTimeSlotClick={handleTimeSlotClick}
+            onSessionUpdate={handleSessionUpdate}
+            onTaskDrop={handleTaskDrop}
+            onSessionUnschedule={handleUnscheduleSession}
           />
         </div>
       </div>

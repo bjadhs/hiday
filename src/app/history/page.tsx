@@ -3,13 +3,13 @@
 import { Suspense } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useHistoryPage } from '@/lib/hooks/use-history-page';
-import { SessionEditDialog } from '@/app/components/track';
+import { SessionEditDialog } from '@/components/track';
 import {
   HistoryControls,
   HistoryStats,
   HistoryListView,
   HistoryTimelineView,
-} from '@/app/components/history';
+} from '@/components/history';
 
 function HistoryPageContent() {
   const {

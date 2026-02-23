@@ -8,8 +8,7 @@ import {
   TodaySessions,
   PomodoroTimer,
   SessionEditDialog,
-  NotePromptDialog,
-} from '@/app/components/track';
+} from '@/components/track';
 
 /**
  * TrackPage
@@ -24,8 +23,6 @@ export default function TrackPage() {
     activeSessions,
     editingSession,
     isEditDialogOpen,
-    promptSession,
-    isStoppingWithNote,
     tasks,
     todaySessions,
     isLoadingTasks,
@@ -36,13 +33,10 @@ export default function TrackPage() {
     recentTasks,
     startTask,
     stopSession,
-    handleSaveNoteAndStop,
-    handleStopWithoutNote,
     updateSession,
     handleEditSession,
     handleCloseEditDialog,
     refetchTodaySessions,
-    setPromptSession,
     firstTask,
   } = useTrackPage();
 
@@ -125,15 +119,7 @@ export default function TrackPage() {
         onClose={handleCloseEditDialog}
       />
 
-      {/* Note Prompt Dialog */}
-      <NotePromptDialog
-        session={promptSession}
-        isOpen={!!promptSession}
-        onClose={() => setPromptSession(null)}
-        onSave={handleSaveNoteAndStop}
-        onStopWithoutNote={handleStopWithoutNote}
-        isStopping={isStoppingWithNote}
-      />
+
     </main>
   );
 }

@@ -10,7 +10,7 @@ import {
   stopSession, 
   updateSession, 
   deleteSession 
-} from '@/app/actions/sessions'
+} from '@/actions/sessions'
 import type { Database } from '@/lib/supabase/database.types'
 
 type Session = Database['public']['Tables']['sessions']['Row']

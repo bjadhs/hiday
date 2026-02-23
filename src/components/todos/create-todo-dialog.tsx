@@ -28,7 +28,7 @@ interface CreateTodoDialogProps {
   onCreate: (data: {
     taskId: string;
     plannedDate: string;
-    plannedStartTime: number;
+    plannedStartTime: number | null;  // Null for unscheduled
     plannedDuration: number;
     title?: string;
     note?: string;
@@ -96,6 +96,7 @@ export function CreateTodoDialog({
   const [startTime, setStartTime] = useState('09:00');
   const [duration, setDuration] = useState('01:00');
   const [note, setNote] = useState('');
+  const [isScheduled, setIsScheduled] = useState(false); // Default to unscheduled
 
   const isEditing = !!editingSession;
 
@@ -106,28 +107,45 @@ export function CreateTodoDialog({
         // Editing existing session
         setTaskId(editingSession.taskId);
         setTitle(editingSession.title || '');
-        setStartTime(formatTimeForInput(editingSession.plannedStartTime));
+        // Check if session has time scheduled
+        const hasTime = editingSession.plannedStartTime !== null;
+        setIsScheduled(hasTime);
+        if (hasTime) {
+          setStartTime(formatTimeForInput(editingSession.plannedStartTime!));
+        } else {
+          setStartTime('09:00');
+        }
         setDuration(formatDurationForInput(editingSession.plannedDuration));
         setNote(editingSession.note || '');
       } else {
-        // Creating new session
+        // Creating new session - default to UNScheduled (no time)
+        // If preselectedTime is provided, schedule it
+        const defaultScheduled = !!preselectedTime;
+        setIsScheduled(defaultScheduled);
+
+        if (preselectedTime) {
+          setStartTime(formatTimeForInput(preselectedTime));
+        } else {
+          setStartTime('09:00');
+        }
+
         setTaskId(preselectedTaskId || '');
         setTitle('');
-        setStartTime(preselectedTime ? formatTimeForInput(preselectedTime) : '09:00');
         setDuration('01:00');
         setNote('');
       }
     }
-  }, [isOpen, editingSession, preselectedTaskId, preselectedTime]);
+  }, [isOpen, editingSession, preselectedTaskId, preselectedTime, selectedDate]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
-    console.log('Form submitted', { taskId, isEditing });
+    console.log('Form submitted', { taskId, isEditing, isScheduled });
 
-    const plannedStartTime = parseTimeFromInput(startTime, selectedDate);
     const plannedDuration = parseDurationFromInput(duration);
+    // Only set start time if scheduled, otherwise null (unscheduled)
+    const plannedStartTime = isScheduled ? parseTimeFromInput(startTime, selectedDate) : null;
 
     if (isEditing && editingSession) {
       onUpdate(editingSession.id, {
@@ -143,6 +161,7 @@ export function CreateTodoDialog({
         plannedDate,
         plannedStartTime,
         plannedDuration,
+        isScheduled,
       });
       onCreate({
         taskId,
@@ -214,18 +233,37 @@ export function CreateTodoDialog({
               />
             </div>
 
-            {/* Start Time */}
-            <div className="grid gap-2">
-              <Label htmlFor="startTime">Start Time</Label>
-              <Input
-                id="startTime"
-                type="time"
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-                required
-                className="bg-surface dark:bg-surface-dark"
+            {/* Schedule Toggle */}
+            <div className="flex items-center gap-3 p-3 rounded-lg border border-border dark:border-border-dark bg-muted/30">
+              <input
+                type="checkbox"
+                id="isScheduled"
+                checked={isScheduled}
+                onChange={(e) => setIsScheduled(e.target.checked)}
+                className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
               />
+              <Label htmlFor="isScheduled" className="text-sm font-medium cursor-pointer flex-1">
+                Schedule on timeline
+              </Label>
+              <span className="text-xs text-muted-foreground">
+                {isScheduled ? 'Will appear on timeline' : 'No specific time'}
+              </span>
             </div>
+
+            {/* Start Time - Only show if scheduled */}
+            {isScheduled && (
+              <div className="grid gap-2 animate-in slide-in-from-top-2">
+                <Label htmlFor="startTime">Start Time</Label>
+                <Input
+                  id="startTime"
+                  type="time"
+                  value={startTime}
+                  onChange={(e) => setStartTime(e.target.value)}
+                  required={isScheduled}
+                  className="bg-surface dark:bg-surface-dark"
+                />
+              </div>
+            )}
 
             {/* Duration */}
             <div className="grid gap-2">

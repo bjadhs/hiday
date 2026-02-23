@@ -9,8 +9,9 @@ import {
   deletePlannedSession,
   startPlannedSession,
   completePlannedSession,
+  unschedulePlannedSession,
   type PlannedSessionWithTask,
-} from '@/app/actions/planned-sessions'
+} from '@/actions/planned-sessions'
 import type { Database } from '@/lib/supabase/database.types'
 
 // Query keys
@@ -44,6 +45,7 @@ export function usePlannedSessionsRange(startDate: string, endDate: string) {
 
 /**
  * Hook to create a new planned session
+ * Can create scheduled (with time) or unscheduled (no time) sessions
  */
 export function useCreatePlannedSession() {
   const queryClient = useQueryClient()
@@ -59,7 +61,7 @@ export function useCreatePlannedSession() {
     }: {
       taskId: string
       plannedDate: string
-      plannedStartTime: number
+      plannedStartTime: number | null  // Null for unscheduled
       plannedDuration: number
       title?: string
       note?: string
@@ -84,6 +86,7 @@ export function useCreatePlannedSession() {
 
 /**
  * Hook to update a planned session
+ * Pass plannedStartTime: null to unschedule the session
  */
 export function useUpdatePlannedSession() {
   const queryClient = useQueryClient()
@@ -96,9 +99,40 @@ export function useUpdatePlannedSession() {
     }: {
       sessionId: string
       plannedDate: string
-      updates: Parameters<typeof updatePlannedSession>[1]
+      updates: {
+        plannedStartTime?: number | null  // Null to unschedule
+        plannedDuration?: number
+        title?: string
+        note?: string
+        status?: 'planned' | 'active' | 'completed' | 'cancelled'
+      }
     }) => {
       return updatePlannedSession(sessionId, updates)
+    },
+    onSuccess: (_, variables) => {
+      // Invalidate the planned sessions list for the date
+      queryClient.invalidateQueries({
+        queryKey: plannedSessionKeys.list(variables.plannedDate),
+      })
+    },
+  })
+}
+
+/**
+ * Hook to unschedule a planned session (remove from timeline, keep as unscheduled todo)
+ */
+export function useUnschedulePlannedSession() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      sessionId,
+      plannedDate,
+    }: {
+      sessionId: string
+      plannedDate: string
+    }) => {
+      return unschedulePlannedSession(sessionId)
     },
     onSuccess: (_, variables) => {
       // Invalidate the planned sessions list for the date

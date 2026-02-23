@@ -2,10 +2,10 @@
 
 import { Suspense } from 'react';
 import { useTasksPage } from '@/lib/hooks/use-tasks-page';
-import { TaskAnalyticsModal } from '@/app/components/tasks/task-analytics-modal';
-import { TaskFormModal } from '@/app/components/tasks/task-form-modal';
-import { TasksHeader } from '@/app/components/tasks/tasks-header';
-import { TasksList } from '@/app/components/tasks/tasks-list';
+import { TaskAnalyticsModal } from '@/components/tasks/task-analytics-modal';
+import { TaskFormModal } from '@/components/tasks/task-form-modal';
+import { TasksHeader } from '@/components/tasks/tasks-header';
+import { TasksList } from '@/components/tasks/tasks-list';
 
 function TasksPageContent() {
   const {

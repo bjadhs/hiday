@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback } from 'react';
 import { useSessions } from '@/lib/hooks/use-sessions';
 import { useTasks } from '@/lib/hooks/use-tasks';
 import { HistorySession, Task, ViewMode } from '@/lib/types';
-import { isToday } from '@/app/components/history/utils';
+import { isToday } from '@/components/history/utils';
 
 export function useHistoryPage() {
     const [viewMode, setViewMode] = useState<ViewMode>('list');

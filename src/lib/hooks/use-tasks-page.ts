@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTasks, useCreateTask, useUpdateTask, useDeleteTask, useReorderTasks } from '@/lib/hooks/use-tasks';
-import { DBTask, EditableTask } from '@/app/components/tasks/types';
+import { DBTask, EditableTask } from '@/components/tasks/types';
 import { TASK_COLORS, TASK_ICONS } from '@/lib/constant';
 import { DragEndEvent } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';

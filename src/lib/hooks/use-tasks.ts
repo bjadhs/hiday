@@ -1,7 +1,7 @@
 'use client'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getTasks, createTask, updateTask, deleteTask, archiveTask, reorderTasks } from '@/app/actions/tasks'
+import { getTasks, createTask, updateTask, deleteTask, archiveTask, reorderTasks } from '@/actions/tasks'
 import type { Database } from '@/lib/supabase/database.types'
 
 type Task = Database['public']['Tables']['tasks']['Row']

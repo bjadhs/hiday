@@ -4,7 +4,7 @@ import { formatHour } from '../utils';
 export function TimeLabels() {
     return (
         <div
-            className='sticky left-0 z-20 flex-shrink-0 border-r-2 border-border dark:border-border-dark bg-surface-elevated dark:bg-surface-elevated-dark'
+            className='sticky left-0 z-20 shrink-0 border-r-2 border-border dark:border-border-dark bg-surface-elevated dark:bg-surface-elevated-dark'
             style={{ width: TIME_COLUMN_WIDTH }}
         >
             {HOURS.map((hour) => (

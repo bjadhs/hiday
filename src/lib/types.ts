@@ -67,12 +67,13 @@ export type PlannedSession = {
   taskId: string;
   task: Task;
   title: string | null;
-  plannedStartTime: number;  // Unix timestamp when it's planned to start (stored in started_at)
-  plannedEndTime: number;    // Unix timestamp when it's planned to end (stored in ended_at)
+  plannedStartTime: number | null;  // Unix timestamp when it's planned to start (stored in started_at). Null = unscheduled
+  plannedEndTime: number | null;    // Unix timestamp when it's planned to end (stored in ended_at). Null = unscheduled
   plannedDuration: number;   // Duration in seconds
   plannedDate: string;       // YYYY-MM-DD format
   status: 'planned' | 'active' | 'completed' | 'cancelled';
   note: string | null;
+  isUnscheduled?: boolean;   // True if no start/end time set yet
 };
 
 // For display on the timeline

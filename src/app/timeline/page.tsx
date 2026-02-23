@@ -1,14 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useTimeline } from '@/lib/hooks/use-timeline';
-import { DayNavigation } from '@/app/components/timeline/day-navigation';
-import { TimeLabels } from '@/app/components/timeline/time-labels';
-import { TimelineGrid } from '@/app/components/timeline/timeline-grid';
-import { HOURS, HOUR_HEIGHT } from '@/app/components/timeline/constants';
-import { TimelineSession } from '@/app/components/timeline/types';
-import { SessionEditDialog } from '@/app/components/track/session-edit-dialog';
+import { useUpdateSession } from '@/lib/hooks/use-sessions';
+import { DayNavigation } from '@/components/timeline/day-navigation';
+import { TimeLabels } from '@/components/timeline/time-labels';
+import { TimelineGrid } from '@/components/timeline/timeline-grid';
+import { HOURS, HOUR_HEIGHT } from '@/components/timeline/constants';
+import { TimelineSession } from '@/components/timeline/types';
+import { SessionEditDialog } from '@/components/track/session-edit-dialog';
 import { HistorySession } from '@/lib/types';
 
 export default function TimelinePage() {
@@ -30,6 +31,9 @@ export default function TimelinePage() {
   const [editingSession, setEditingSession] = useState<HistorySession | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
+  // Update session mutation
+  const updateSessionMutation = useUpdateSession();
+
   const handleEditSession = (session: TimelineSession) => {
     const historySession: HistorySession = {
       id: session.id,
@@ -49,6 +53,29 @@ export default function TimelinePage() {
     setIsEditDialogOpen(false);
     setEditingSession(null);
   };
+
+  // Handle session drag/resize updates
+  const handleSessionUpdate = useCallback((sessionId: string, updates: { startedAt?: number; endedAt?: number }) => {
+    const updateData: { started_at?: number; ended_at?: number; duration?: number } = {};
+
+    if (updates.startedAt !== undefined) {
+      updateData.started_at = updates.startedAt;
+    }
+
+    if (updates.endedAt !== undefined) {
+      updateData.ended_at = updates.endedAt;
+    }
+
+    // Recalculate duration if both times are available
+    if (updates.startedAt && updates.endedAt) {
+      updateData.duration = Math.round((updates.endedAt - updates.startedAt) / 1000);
+    }
+
+    updateSessionMutation.mutate({
+      id: sessionId,
+      updates: updateData,
+    });
+  }, [updateSessionMutation]);
 
   if (isLoading) {
     return (
@@ -95,6 +122,8 @@ export default function TimelinePage() {
                 startOfDay={startOfDay}
                 timelineSessions={timelineSessions}
                 onEditSession={handleEditSession}
+                onSessionUpdate={handleSessionUpdate}
+                scrollContainerRef={scrollContainerRef}
               />
             </div>
           </div>

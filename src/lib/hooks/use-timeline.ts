@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useSessions } from '@/lib/hooks/use-sessions';
-import { calculateTimelineLayout } from '@/app/components/timeline/utils';
-import { HOUR_HEIGHT } from '@/app/components/timeline/constants';
+import { calculateTimelineLayout } from '@/components/timeline/utils';
+import { HOUR_HEIGHT } from '@/components/timeline/constants';
 
 export function useTimeline() {
     const [selectedDate, setSelectedDate] = useState<Date>(new Date());

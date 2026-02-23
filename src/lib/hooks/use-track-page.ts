@@ -30,8 +30,6 @@ export function useTrackPage() {
     // Edit dialog state (kept in component as it's UI-specific)
     const [editingSession, setEditingSession] = useState<HistorySession | null>(null);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-    const [promptSession, setPromptSession] = useState<ActiveSessionState | null>(null);
-    const [isStoppingWithNote, setIsStoppingWithNote] = useState(false);
 
     // Fetch data using React Query
     const {
@@ -53,6 +51,7 @@ export function useTrackPage() {
     const startSessionMutation = useStartSession();
     const stopSessionMutation = useStopSession();
     const updateSessionMutation = useUpdateSession();
+
 
     // Calculate recent tasks (unique tasks from today sessions, max 4)
     const recentTasks = useMemo(() => {
@@ -108,7 +107,7 @@ export function useTrackPage() {
                 startTime,
             });
 
-            // Add to Zustand store with the correct start time
+            // Add to Zustand store with the correct start time (prepend to maintain order)
             useActiveSessionsStore.getState().addSession({
                 id: newSession.id,
                 task,
@@ -122,13 +121,6 @@ export function useTrackPage() {
     }, [startSessionMutation]);
 
     const stopSession = useCallback(async (sessionId: string) => {
-        // Check if this session's task requires a note prompt
-        const sessionToStop = activeSessions.find(s => s.id === sessionId);
-        if (sessionToStop?.task.note_prompt) {
-            setPromptSession(sessionToStop);
-            return;
-        }
-
         // Immediately remove from local state for instant UI feedback
         removeSession(sessionId);
 
@@ -138,49 +130,9 @@ export function useTrackPage() {
             console.error('Failed to stop session:', error);
             alert('Failed to stop session. Please try again.');
         }
-    }, [activeSessions, removeSession, stopSessionMutation]);
+    }, [removeSession, stopSessionMutation]);
 
-    const handleSaveNoteAndStop = useCallback(async (note: string) => {
-        if (!promptSession) return;
 
-        setIsStoppingWithNote(true);
-        try {
-            const sessionId = promptSession.id;
-
-            // 1. Update session with the note
-            await updateSessionMutation.mutateAsync({
-                id: sessionId,
-                updates: { note: note.trim() || null }
-            });
-
-            // 2. Stop the session
-            removeSession(sessionId);
-            await stopSessionMutation.mutateAsync(sessionId);
-            setPromptSession(null);
-        } catch (error) {
-            console.error('Failed to save note and stop:', error);
-            alert('Failed to save note. Please try again.');
-        } finally {
-            setIsStoppingWithNote(false);
-        }
-    }, [promptSession, removeSession, stopSessionMutation, updateSessionMutation]);
-
-    const handleStopWithoutNote = useCallback(async () => {
-        if (!promptSession) return;
-
-        setIsStoppingWithNote(true);
-        try {
-            const sessionId = promptSession.id;
-            removeSession(sessionId);
-            await stopSessionMutation.mutateAsync(sessionId);
-            setPromptSession(null);
-        } catch (error) {
-            console.error('Failed to stop session:', error);
-            alert('Failed to stop session. Please try again.');
-        } finally {
-            setIsStoppingWithNote(false);
-        }
-    }, [promptSession, removeSession, stopSessionMutation]);
 
     const updateSession = useCallback(async (sessionId: string, updates: { title?: string; note?: string; taskId?: string; started_at?: number }) => {
         try {
@@ -231,8 +183,6 @@ export function useTrackPage() {
         activeSessions,
         editingSession,
         isEditDialogOpen,
-        promptSession,
-        isStoppingWithNote,
         tasks,
         todaySessions,
         isLoadingTasks,
@@ -243,14 +193,10 @@ export function useTrackPage() {
         recentTasks,
         startTask,
         stopSession,
-        handleSaveNoteAndStop,
-        handleStopWithoutNote,
         updateSession,
         handleEditSession,
         handleCloseEditDialog,
         refetchTodaySessions,
-        setPromptSession,
-        setIsStoppingWithNote,
         firstTask,
     };
 }

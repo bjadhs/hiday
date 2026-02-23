@@ -6,6 +6,7 @@ import { cn, formatDuration } from '@/lib/utils';
 import { Task } from '@/lib/types';
 import { useActiveSessionsStore, ActiveSessionState } from '@/lib/stores/active-sessions-store';
 import { ExpandedSessionView } from './expanded-session-view';
+import { NotePromptInline } from './note-prompt-inline';
 import type { Database } from '@/lib/supabase/database.types';
 
 type SessionRow = Database['public']['Tables']['sessions']['Row'];
@@ -58,11 +59,11 @@ export function ActiveTimerCard({
   // Get sessions from store
   const storeSessions = useActiveSessionsStore((state) => state.activeSessions);
   
-  // Optimistic UI state
+  // Optimistic UI state - prepend to match store behavior
   const [optimisticSessions, addOptimisticSession] = useOptimistic(
     storeSessions,
-    (state: ActiveSessionState[], newSession: { id: string; task: Task; title: string; startTime: number }) => 
-      [...state, { ...newSession, note: '' }]
+    (state: ActiveSessionState[], newSession: { id: string; task: Task; title: string; startTime: number; isOptimistic?: boolean }) => 
+      [{ ...newSession, note: '' }, ...state]
   );
   
   // Zustand store state
@@ -71,6 +72,7 @@ export function ActiveTimerCard({
     editingSessionId,
     editTitle,
     expandedSessionId,
+    promptingSessionId,
     sessionNotes,
     updateAllElapsedTimes,
     startEditingTitle,
@@ -82,6 +84,7 @@ export function ActiveTimerCard({
     setSessionNote,
     updateSession,
     removeSession,
+    cancelPromptNote,
   } = useActiveSessionsStore();
 
   const activeSessions = optimisticSessions;
@@ -166,13 +169,14 @@ export function ActiveTimerCard({
           ? Date.now() - (offsetMinutes * 60 * 1000)
           : Date.now();
         
-        // Optimistic update
-        const optimisticId = `optimistic-${Date.now()}`;
+        // Optimistic update - use a unique ID that won't conflict with real sessions
+        const optimisticId = `optimistic-${task.id}-${Date.now()}`;
         addOptimisticSession({
           id: optimisticId,
           task,
           title: task.name,
           startTime,
+          isOptimistic: true,
         });
         
         await onStartTask(task, startTime);
@@ -202,6 +206,19 @@ export function ActiveTimerCard({
 
   // Stop session with transition
   const handleStopSession = useCallback((sessionId: string) => {
+    const session = activeSessions.find((s: { id: string }) => s.id === sessionId);
+    
+    // Check if this session's task requires a note prompt
+    if (session?.task.note_prompt) {
+      // Show inline note prompt instead of modal
+      useActiveSessionsStore.getState().startPromptingNote(sessionId);
+      // Also expand the session if not already expanded
+      if (expandedSessionId !== sessionId) {
+        toggleExpand(sessionId);
+      }
+      return;
+    }
+    
     stopTransition(async () => {
       setActiveOperation({ type: 'stop', id: sessionId });
       
@@ -212,7 +229,55 @@ export function ActiveTimerCard({
         setActiveOperation(null);
       }
     });
-  }, [onStopSession, removeSession, stopTransition]);
+  }, [activeSessions, expandedSessionId, toggleExpand, onStopSession, removeSession, stopTransition]);
+  
+  // Handle save note and stop (from inline prompt)
+  const handleSaveNoteAndStop = useCallback(async (sessionId: string, note: string) => {
+    if (!promptingSessionId) return;
+    
+    stopTransition(async () => {
+      setActiveOperation({ type: 'stop', id: sessionId });
+      
+      try {
+        // 1. Update session with the note
+        await onUpdateSession(sessionId, { note: note.trim() || undefined });
+        // 2. Save note to local state
+        setSessionNote(sessionId, note);
+        // 3. Remove from local state and stop
+        removeSession(sessionId);
+        await onStopSession(sessionId);
+        // 4. Close the prompt
+        cancelPromptNote();
+      } catch (error) {
+        console.error('Failed to save note and stop:', error);
+      } finally {
+        setActiveOperation(null);
+      }
+    });
+  }, [promptingSessionId, onUpdateSession, setSessionNote, removeSession, onStopSession, cancelPromptNote, stopTransition]);
+  
+  // Handle delete session (from inline prompt)
+  const handleDeleteSession = useCallback(async (sessionId: string) => {
+    if (!promptingSessionId) return;
+    
+    stopTransition(async () => {
+      setActiveOperation({ type: 'stop', id: sessionId });
+      
+      try {
+        // Remove from local state
+        removeSession(sessionId);
+        // Delete the session from database (not saved to history)
+        // The parent will handle the actual delete via API
+        await onStopSession(sessionId);
+        // Close the prompt
+        cancelPromptNote();
+      } catch (error) {
+        console.error('Failed to delete session:', error);
+      } finally {
+        setActiveOperation(null);
+      }
+    });
+  }, [promptingSessionId, removeSession, onStopSession, cancelPromptNote, stopTransition]);
 
   // Check if specific operation is loading
   const isOperationLoading = (type: 'start' | 'adjust' | 'stop', id: string) => {
@@ -242,24 +307,34 @@ export function ActiveTimerCard({
         </div>
 
         {expandedSessionId ? (
-          <ExpandedSessionView
-            session={activeSessions.find((s: { id: string }) => s.id === expandedSessionId)!}
-            elapsedTime={elapsedTimes[expandedSessionId] || 0}
-            isEditing={editingSessionId === expandedSessionId}
-            editTitle={editTitle}
-            editNote={sessionNotes[expandedSessionId] || ''}
-            onEditTitleChange={setEditTitle}
-            onEditNoteChange={(value) => setSessionNote(expandedSessionId, value)}
-            onSaveTitle={() => handleSaveTitle(expandedSessionId)}
-            onSaveNote={() => handleSaveNote(expandedSessionId)}
-            onCancelEdit={cancelEditTitle}
-            onStartEdit={() => startEditingTitle(expandedSessionId)}
-            onClose={closeExpand}
-            onStop={() => handleStopSession(expandedSessionId)}
-            isStopping={isOperationLoading('stop', expandedSessionId)}
-            tasks={tasks}
-            onTaskChange={(task) => onUpdateSession(expandedSessionId, { taskId: task.id })}
-          />
+          promptingSessionId === expandedSessionId ? (
+            <NotePromptInline
+              session={activeSessions.find((s: { id: string }) => s.id === expandedSessionId)!}
+              onSave={(note) => handleSaveNoteAndStop(expandedSessionId, note)}
+              onDelete={() => handleDeleteSession(expandedSessionId)}
+              onCancel={cancelPromptNote}
+              isStopping={isOperationLoading('stop', expandedSessionId)}
+            />
+          ) : (
+            <ExpandedSessionView
+              session={activeSessions.find((s: { id: string }) => s.id === expandedSessionId)!}
+              elapsedTime={elapsedTimes[expandedSessionId] || 0}
+              isEditing={editingSessionId === expandedSessionId}
+              editTitle={editTitle}
+              editNote={sessionNotes[expandedSessionId] || ''}
+              onEditTitleChange={setEditTitle}
+              onEditNoteChange={(value) => setSessionNote(expandedSessionId, value)}
+              onSaveTitle={() => handleSaveTitle(expandedSessionId)}
+              onSaveNote={() => handleSaveNote(expandedSessionId)}
+              onCancelEdit={cancelEditTitle}
+              onStartEdit={() => startEditingTitle(expandedSessionId)}
+              onClose={closeExpand}
+              onStop={() => handleStopSession(expandedSessionId)}
+              isStopping={isOperationLoading('stop', expandedSessionId)}
+              tasks={tasks}
+              onTaskChange={(task) => onUpdateSession(expandedSessionId, { taskId: task.id })}
+            />
+          )
         ) : (
           <div className="flex flex-col h-full gap-2">
             {/* === TOP ROW: Quick Start Buttons === */}
@@ -318,10 +393,11 @@ export function ActiveTimerCard({
 
             {/* === SCROLLABLE CONTENT === */}
             <div className="flex-1 overflow-y-auto min-h-0 -mx-1 px-1">
-              <div className="space-y-2">
-                {/* Recent Tasks Row */}
+              <div className="space-y-2 flex flex-col h-full">
+                {/* Recent Tasks Row - Grid layout for equal width */}
                 <div 
-                  className="flex items-center gap-1.5 flex-wrap"
+                  className="grid gap-1.5"
+                  style={{ gridTemplateColumns: `repeat(${uniqueRecentTasks.length}, 1fr)` }}
                   role="group"
                   aria-label="Recent tasks"
                 >
@@ -357,10 +433,10 @@ export function ActiveTimerCard({
                   </div>
                 )}
 
-                {/* Empty state */}
+                {/* Empty state - Motivational Quote - takes remaining height and centers */}
                 {!hasActiveSessions && (
-                  <div className="text-center py-4 text-xs text-muted-foreground">
-                    Click a task above to start tracking
+                  <div className="flex-1 min-h-[120px] flex items-center justify-center">
+                    <MotivationalQuote />
                   </div>
                 )}
               </div>
@@ -368,6 +444,85 @@ export function ActiveTimerCard({
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+// Motivational quotes array with unique colors
+const motivationalQuotes = [
+  { text: "The best time to start was yesterday. The second best time is now.", author: "Chinese Proverb" },
+  { text: "Small steps every day lead to big results.", author: "Unknown" },
+  { text: "Your future is created by what you do today, not tomorrow.", author: "Robert Kiyosaki" },
+  { text: "Time is what we want most, but what we use worst.", author: "William Penn" },
+  { text: "Don't watch the clock; do what it does. Keep going.", author: "Sam Levenson" },
+  { text: "Lost time is never found again.", author: "Benjamin Franklin" },
+  { text: "Productivity is being able to do things that you were never able to do before.", author: "Franz Kafka" },
+  { text: "Focus on being productive instead of busy.", author: "Tim Ferriss" },
+  { text: "The way to get started is to quit talking and begin doing.", author: "Walt Disney" },
+  { text: "What gets measured gets managed.", author: "Peter Drucker" },
+];
+
+// Vibrant colors for quotes (no red)
+const quoteColors = [
+  "#8B5CF6", // Violet
+  "#EC4899", // Pink
+  "#3B82F6", // Blue
+  "#10B981", // Emerald
+  "#F59E0B", // Amber
+  "#06B6D4", // Cyan
+  "#84CC16", // Lime
+  "#A855F7", // Purple
+  "#14B8A6", // Teal
+  "#6366F1", // Indigo
+];
+
+// Motivational Quote Component - Auto-rotates every 5 seconds
+function MotivationalQuote() {
+  const [currentIndex, setCurrentIndex] = useState(() => 
+    Math.floor(Math.random() * motivationalQuotes.length)
+  );
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % motivationalQuotes.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const quote = motivationalQuotes[currentIndex];
+  const color = quoteColors[currentIndex % quoteColors.length];
+
+  return (
+    <div className="relative text-center px-4">
+      {/* Big background quote mark - centered behind text */}
+      <span 
+        className="absolute text-[100px] font-serif leading-none opacity-[0.06] pointer-events-none select-none -z-10"
+        style={{ 
+          color,
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+        }}
+        aria-hidden="true"
+      >
+        "
+      </span>
+      
+      {/* Quote text */}
+      <blockquote 
+        className="text-base font-bold leading-tight mb-2 line-clamp-3"
+        style={{ color }}
+      >
+        {quote.text}
+      </blockquote>
+      
+      {/* Author */}
+      <cite 
+        className="text-xs font-medium not-italic opacity-60 block"
+        style={{ color }}
+      >
+        — {quote.author}
+      </cite>
     </div>
   );
 }
@@ -430,15 +585,15 @@ function TaskButton({ task, onClick, isLoading }: TaskButtonProps) {
       aria-label={`Start ${task.name} session`}
       aria-busy={isLoading}
       title={`Start ${task.name}`}
-      className="flex items-center gap-1.5 px-2 py-1.5 rounded-md bg-surface-elevated dark:bg-surface-elevated-dark border-2 border-border dark:border-border-dark hover:border-primary hover:bg-primary/5 transition-all disabled:opacity-50 shrink-0 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+      className="flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-md bg-surface-elevated dark:bg-surface-elevated-dark border-2 border-border dark:border-border-dark hover:border-primary hover:bg-primary/5 transition-all disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 w-full min-w-0"
       style={{ borderColor: isLoading ? undefined : `${task.color}40` }}
     >
       <span className="text-sm" aria-hidden="true">{task.icon}</span>
-      <span className="text-xs font-semibold">{task.name}</span>
+      <span className="text-xs font-semibold truncate">{task.name}</span>
       {isLoading ? (
-        <Loader2 className="w-3 h-3 animate-spin text-primary" aria-hidden="true" />
+        <Loader2 className="w-3 h-3 animate-spin text-primary shrink-0" aria-hidden="true" />
       ) : (
-        <Play className="w-3 h-3 text-primary fill-current" aria-hidden="true" />
+        <Play className="w-3 h-3 text-primary fill-current shrink-0" aria-hidden="true" />
       )}
     </button>
   );

@@ -8,3 +8,4 @@ export { TodaySessions } from './today-sessions';
 export { PomodoroTimer } from './pomodoro-timer';
 export { SessionEditDialog } from './session-edit-dialog';
 export { NotePromptDialog } from './note-prompt-dialog';
+export { NotePromptInline } from './note-prompt-inline';
