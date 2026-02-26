@@ -104,7 +104,7 @@ export function ActiveTimerCard({
     const seen = new Set<string>();
     const result: Task[] = [];
     
-    const sortedSessions = [...todaySessions].sort((a, b) => b.started_at - a.started_at);
+    const sortedSessions = [...todaySessions].sort((a, b) => (b.started_at || 0) - (a.started_at || 0));
     for (const session of sortedSessions) {
       if (session.tasks && !seen.has(session.tasks.id)) {
         seen.add(session.tasks.id);

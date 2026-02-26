@@ -80,7 +80,7 @@ export type Database = {
           user_id: string
           task_id: string
           title: string | null
-          started_at: number
+          started_at: number | null
           ended_at: number | null
           duration: number | null
           note: string | null
@@ -98,7 +98,7 @@ export type Database = {
           user_id: string
           task_id: string
           title?: string | null
-          started_at: number
+          started_at?: number | null
           ended_at?: number | null
           duration?: number | null
           note?: string | null
@@ -116,7 +116,7 @@ export type Database = {
           user_id?: string
           task_id?: string
           title?: string | null
-          started_at?: number
+          started_at?: number | null
           ended_at?: number | null
           duration?: number | null
           note?: string | null

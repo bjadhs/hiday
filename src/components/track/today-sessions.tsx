@@ -14,7 +14,7 @@ interface DbSession {
     color: string;
     icon: string | null;
   } | null;
-  started_at: number;
+  started_at: number | null;
   ended_at: number | null;
   duration: number | null;
   title: string | null;
@@ -58,7 +58,7 @@ export function TodaySessions({ sessions, onEditSession }: TodaySessionsProps) {
       id: session.id,
       taskId: session.task_id,
       task,
-      startedAt: session.started_at,
+      startedAt: session.started_at || 0,
       endedAt: session.ended_at,
       duration: session.duration || 0,
       title: session.title || undefined,

@@ -8,7 +8,7 @@ import type { PlannedSession, TimelinePlannedSession } from '@/lib/types';
 
 type DBSession = Database['public']['Tables']['sessions']['Row'] & { tasks: Database['public']['Tables']['tasks']['Row'] | null };
 
-interface PlanningTimelineProps {
+interface TodoTimelineProps {
   plannedSessions: DBSession[];
   selectedDate: Date;
   onSessionClick: (session: PlannedSession) => void;
@@ -16,6 +16,8 @@ interface PlanningTimelineProps {
   onSessionUpdate?: (sessionId: string, updates: { plannedStartTime?: number; plannedEndTime?: number }) => void;
   onTaskDrop?: (taskId: string, startTime: number, sessionId?: string) => void;
   onSessionUnschedule?: (sessionId: string) => void;
+  showTimeLabels?: boolean;
+  showHeader?: boolean;
 }
 
 // Constants for interaction
@@ -51,6 +53,7 @@ function calculatePlannedSessionsLayout(
 
   const initialLayout = sessions.map(s => {
     const startedAt = s.started_at;
+    if (!startedAt) return null; // Skip sessions without start time
     const endedAt = s.ended_at || startedAt + (s.duration || 0) * 1000;
 
     const visualStart = Math.max(startedAt, dayStart);
@@ -167,10 +170,10 @@ function calculatePlannedSessionsLayout(
     }
   }
 
-  return result.sort((a, b) => a.plannedStartTime - b.plannedStartTime);
+  return result.sort((a, b) => (a.plannedStartTime || 0) - (b.plannedStartTime || 0));
 }
 
-export function PlanningTimeline({
+export function TodoTimeline({
   plannedSessions,
   selectedDate,
   onSessionClick,
@@ -178,7 +181,9 @@ export function PlanningTimeline({
   onSessionUpdate,
   onTaskDrop,
   onSessionUnschedule,
-}: PlanningTimelineProps) {
+  showTimeLabels = true,
+  showHeader = false,
+}: TodoTimelineProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const timelineRef = useRef<HTMLDivElement>(null);
 
@@ -192,10 +197,10 @@ export function PlanningTimeline({
     type: 'move' | 'resize-top' | 'resize-bottom';
     sessionId: string;
     startY: number;
-    originalStart: number;
-    originalEnd: number;
-    currentStart: number;
-    currentEnd: number;
+    originalStart: number | null;
+    originalEnd: number | null;
+    currentStart: number | null;
+    currentEnd: number | null;
   } | null>(null);
 
   // Selection and hover state
@@ -235,7 +240,7 @@ export function PlanningTimeline({
   // Handle drag start from session block
   const handleDragStart = useCallback((sessionId: string, type: 'move' | 'resize-top' | 'resize-bottom', startY: number) => {
     const session = timelineSessions.find(s => s.id === sessionId);
-    if (!session) return;
+    if (!session || !session.plannedStartTime) return;
 
     setActiveDrag({
       type,
@@ -261,20 +266,20 @@ export function PlanningTimeline({
     if (activeDrag) {
       const deltaY = e.clientY - activeDrag.startY;
 
-      let newStart = activeDrag.originalStart;
-      let newEnd = activeDrag.originalEnd;
+      let newStart = activeDrag.originalStart!;
+      let newEnd = activeDrag.originalEnd!;
 
       if (activeDrag.type === 'move') {
-        newStart = pixelToTimestamp(timestampToPixel(activeDrag.originalStart, startOfDay) + deltaY, startOfDay);
-        const duration = activeDrag.originalEnd - activeDrag.originalStart;
+        newStart = pixelToTimestamp(timestampToPixel(activeDrag.originalStart!, startOfDay) + deltaY, startOfDay);
+        const duration = activeDrag.originalEnd! - activeDrag.originalStart!;
         newEnd = newStart + duration;
       } else if (activeDrag.type === 'resize-top') {
-        newStart = pixelToTimestamp(timestampToPixel(activeDrag.originalStart, startOfDay) + deltaY, startOfDay);
+        newStart = pixelToTimestamp(timestampToPixel(activeDrag.originalStart!, startOfDay) + deltaY, startOfDay);
         if (newEnd - newStart < 15 * 60 * 1000) {
           newStart = newEnd - 15 * 60 * 1000;
         }
       } else if (activeDrag.type === 'resize-bottom') {
-        newEnd = pixelToTimestamp(timestampToPixel(activeDrag.originalEnd, startOfDay) + deltaY, startOfDay);
+        newEnd = pixelToTimestamp(timestampToPixel(activeDrag.originalEnd!, startOfDay) + deltaY, startOfDay);
         if (newEnd - newStart < 15 * 60 * 1000) {
           newEnd = newStart + 15 * 60 * 1000;
         }
@@ -302,10 +307,10 @@ export function PlanningTimeline({
   // Handle mouse up
   const handleMouseUp = useCallback(() => {
     // Complete active drag
-    if (activeDrag && onSessionUpdate) {
+    if (activeDrag && onSessionUpdate && activeDrag.currentStart && activeDrag.currentEnd) {
       const hasChanged =
-        Math.abs(activeDrag.currentStart - activeDrag.originalStart) > 60000 ||
-        Math.abs(activeDrag.currentEnd - activeDrag.originalEnd) > 60000;
+        Math.abs(activeDrag.currentStart - activeDrag.originalStart!) > 60000 ||
+        Math.abs(activeDrag.currentEnd - activeDrag.originalEnd!) > 60000;
 
       if (hasChanged) {
         onSessionUpdate(activeDrag.sessionId, {
@@ -397,7 +402,7 @@ export function PlanningTimeline({
 
   // Calculate preview for active drag
   const dragPreview = useMemo(() => {
-    if (!activeDrag) return null;
+    if (!activeDrag || !activeDrag.currentStart || !activeDrag.currentEnd) return null;
 
     const top = timestampToPixel(activeDrag.currentStart, startOfDay);
     const height = Math.max(timestampToPixel(activeDrag.currentEnd, startOfDay) - top, 20);
@@ -427,13 +432,15 @@ export function PlanningTimeline({
 
   return (
     <div className="flex flex-col h-full">
-      {/* Timeline Header */}
-      <div className="flex items-center justify-between p-4 border-b-2 border-border-strong dark:border-border-strong-dark">
-        <h2 className="font-semibold text-lg">Timeline</h2>
-        <p className="text-sm text-muted-foreground">
-          Click and drag to create • Drag sessions to move • Resize edges • Drop tasks here
-        </p>
-      </div>
+      {/* Optional Header */}
+      {showHeader && (
+        <div className="flex items-center justify-between p-4 border-b-2 border-border-strong dark:border-border-strong-dark">
+          <h2 className="font-semibold text-lg">Timeline</h2>
+          <p className="text-sm text-muted-foreground">
+            Click and drag to create • Drag sessions to move • Resize edges • Drop tasks here
+          </p>
+        </div>
+      )}
 
       {/* Timeline Content */}
       <div
@@ -441,18 +448,20 @@ export function PlanningTimeline({
         className="flex-1 overflow-auto relative"
       >
         <div className="flex" style={{ minHeight: totalHeight }}>
-          {/* Time Labels Column */}
-          <div className="shrink-0 border-r-2 border-border-strong dark:border-border-strong-dark bg-surface-elevated/30 dark:bg-surface-elevated-dark/30">
-            {HOURS.map((hour) => (
-              <div
-                key={hour}
-                className="flex items-start justify-end px-3 text-sm font-medium text-muted-foreground border-b border-border/30 dark:border-border-dark/30"
-                style={{ height: HOUR_HEIGHT, paddingTop: 8 }}
-              >
-                {hour === 0 || hour === 24 ? '12 AM' : hour === 12 ? '12 PM' : hour < 12 ? `${hour} AM` : `${hour - 12} PM`}
-              </div>
-            ))}
-          </div>
+          {/* Time Labels Column - Optional */}
+          {showTimeLabels && (
+            <div className="shrink-0 border-r-2 border-border-strong dark:border-border-strong-dark bg-surface-elevated/30 dark:bg-surface-elevated-dark/30">
+              {HOURS.map((hour) => (
+                <div
+                  key={hour}
+                  className="flex items-start justify-end px-3 text-sm font-medium text-muted-foreground border-b border-border/30 dark:border-border-dark/30"
+                  style={{ height: HOUR_HEIGHT, paddingTop: 8 }}
+                >
+                  {hour === 0 || hour === 24 ? '12 AM' : hour === 12 ? '12 PM' : hour < 12 ? `${hour} AM` : `${hour - 12} PM`}
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Timeline Grid */}
           <div
@@ -529,7 +538,7 @@ export function PlanningTimeline({
                   isSelected={selectedSessionId === session.id}
                   isHovered={hoveredSessionId === session.id}
                   isDragging={activeDrag?.sessionId === session.id}
-                  previewPosition={activeDrag?.sessionId === session.id && activeDrag ? {
+                  previewPosition={activeDrag?.sessionId === session.id && activeDrag && activeDrag.currentStart && activeDrag.currentEnd ? {
                     top: timestampToPixel(activeDrag.currentStart, startOfDay),
                     height: Math.max(timestampToPixel(activeDrag.currentEnd, startOfDay) - timestampToPixel(activeDrag.currentStart, startOfDay), 20)
                   } : null}

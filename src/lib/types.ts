@@ -45,7 +45,7 @@ export type HistorySession = {
   id: string;
   taskId: string;
   task: Task;
-  startedAt: number;
+  startedAt: number | null;
   endedAt: number | null;
   duration: number;
   title?: string;

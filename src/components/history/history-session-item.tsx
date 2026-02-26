@@ -58,7 +58,7 @@ export function HistorySessionItem({
 
                             {/* Time range */}
                             <p className='text-sm text-muted-foreground'>
-                                {formatTime(session.startedAt)} -{' '}
+                                {session.startedAt ? formatTime(session.startedAt) : '--:--'} -{' '}
                                 {session.endedAt ? formatTime(session.endedAt) : 'Ongoing'}
                             </p>
                         </div>

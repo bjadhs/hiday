@@ -33,9 +33,9 @@ export function HistoryTimelineRow({
                 </div>
 
                 {/* Task Blocks */}
-                {sessions.map((session) => {
+                {sessions.filter(s => s.startedAt !== null).map((session) => {
                     const { left, width } = calculateBlockPosition(
-                        session.startedAt,
+                        session.startedAt!,
                         session.endedAt,
                         hour
                     );
@@ -50,9 +50,9 @@ export function HistoryTimelineRow({
                                 width: `${width}%`,
                                 backgroundColor: session.task.color,
                             }}
-                            title={`${session.task.name}: ${formatTime(
+                            title={`${session.task.name}: ${session.startedAt ? formatTime(
                                 session.startedAt
-                            )} - ${session.endedAt ? formatTime(session.endedAt) : 'Ongoing'}`}
+                            ) : '--:--'} - ${session.endedAt ? formatTime(session.endedAt) : 'Ongoing'}`}
                         >
                             {/* Tooltip */}
                             <div className='absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-surface dark:bg-surface-dark border-2 border-border-strong dark:border-border-strong-dark rounded-lg shadow-brutal dark:shadow-brutal-dark opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-10 whitespace-nowrap'>
@@ -73,7 +73,7 @@ export function HistoryTimelineRow({
                                     </div>
                                 )}
                                 <div className='text-xs text-muted-foreground mt-1'>
-                                    {formatTime(session.startedAt)} -{' '}
+                                    {session.startedAt ? formatTime(session.startedAt) : '--:--'} -{' '}
                                     {session.endedAt ? formatTime(session.endedAt) : 'Ongoing'} (
                                     {formatDuration(session.duration)})
                                 </div>

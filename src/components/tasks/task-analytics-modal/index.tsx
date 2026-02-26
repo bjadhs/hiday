@@ -28,7 +28,7 @@ export function TaskAnalyticsModal({
         const monthStart = todayStart - 30 * 24 * 60 * 60 * 1000;
 
         const todayDuration = taskSessions
-            .filter(s => s.started_at >= todayStart)
+            .filter(s => (s.started_at || 0) >= todayStart)
             .reduce((acc, s) => acc + (s.duration || 0), 0);
 
         const weekDuration = taskSessions

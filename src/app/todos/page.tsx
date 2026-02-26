@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, CheckSquare, CalendarDays } from 'lucide-react';
 import { useTasks } from '@/lib/hooks/use-tasks';
 import {
   usePlannedSessions,
@@ -13,7 +13,7 @@ import {
 } from '@/lib/hooks/use-planned-sessions';
 import { TodoHeader } from '@/components/todos/todo-header';
 import { TaskColumn } from '@/components/todos/task-column';
-import { PlanningTimeline } from '@/components/todos/planning-timeline';
+import { TodoTimeline } from '@/components/todos/todo-timeline';
 import { CreateTodoDialog } from '@/components/todos/create-todo-dialog';
 import type { PlannedSession } from '@/lib/types';
 import type { Database } from '@/lib/supabase/database.types';
@@ -118,7 +118,7 @@ export default function TodosPage() {
   }, [createMutation, handleCloseDialog]);
 
   const handleUpdateSubmit = useCallback((sessionId: string, updates: {
-    plannedStartTime?: number;
+    plannedStartTime?: number | null;
     plannedEndTime?: number;
     plannedDuration?: number;
     title?: string;
@@ -131,8 +131,8 @@ export default function TodosPage() {
     } else if (updates.plannedEndTime && !updates.plannedStartTime) {
       // If only end time changed, need start time from existing session
       const session = plannedSessions.find(s => s.id === sessionId);
-      if (session) {
-        finalUpdates.plannedDuration = Math.round((updates.plannedEndTime - session.plannedStartTime) / 1000);
+      if (session && session.started_at) {
+        finalUpdates.plannedDuration = Math.round((updates.plannedEndTime - session.started_at) / 1000);
       }
     }
 
@@ -166,14 +166,14 @@ export default function TodosPage() {
     } else if (updates.plannedEndTime !== undefined) {
       // Only end time changed
       const session = plannedSessions.find(s => s.id === sessionId);
-      if (session) {
-        finalUpdates.plannedDuration = Math.round((updates.plannedEndTime - session.plannedStartTime) / 1000);
+      if (session && session.started_at) {
+        finalUpdates.plannedDuration = Math.round((updates.plannedEndTime - session.started_at) / 1000);
       }
     } else if (updates.plannedStartTime !== undefined) {
       // Only start time changed, keep same duration
       const session = plannedSessions.find(s => s.id === sessionId);
       if (session) {
-        finalUpdates.plannedDuration = session.plannedDuration;
+        finalUpdates.plannedDuration = session.duration || 3600;
       }
     }
 
@@ -283,33 +283,52 @@ export default function TodosPage() {
         }}
       />
 
-      {/* Main Content */}
+      {/* Main Content - Split View */}
       <div className="flex flex-1 overflow-hidden">
         {/* Left Column - Task List */}
-        <div className="w-80 flex-shrink-0 border-r-2 border-border-strong dark:border-border-strong-dark">
-          <TaskColumn
-            tasks={tasks}
-            plannedSessions={scheduledSessions}
-            unscheduledSessions={unscheduledSessions}
-            onCreateTodo={handleCreateTodo}
-            onEditSession={handleEditSession}
-            onDeleteSession={handleDeleteSession}
-            onStartSession={handleStartSession}
-            onSessionUnschedule={handleUnscheduleSession}
-          />
+        <div className="w-80 flex-shrink-0 border-r-2 border-border-strong dark:border-border-strong-dark flex flex-col">
+          {/* Task List Header */}
+          <div className="flex items-center gap-2 p-3 border-b-2 border-border-strong dark:border-border-strong-dark bg-primary/5 dark:bg-primary/10">
+            <CheckSquare className="w-4 h-4 text-primary" />
+            <span className="font-semibold text-sm">Tasks</span>
+          </div>
+          <div className="flex-1 overflow-auto">
+            <TaskColumn
+              tasks={tasks}
+              plannedSessions={scheduledSessions}
+              unscheduledSessions={unscheduledSessions}
+              onCreateTodo={handleCreateTodo}
+              onEditSession={handleEditSession}
+              onDeleteSession={handleDeleteSession}
+              onStartSession={handleStartSession}
+              onSessionUnschedule={handleUnscheduleSession}
+            />
+          </div>
         </div>
 
-        {/* Right Column - Timeline */}
-        <div className="flex-1 min-w-0">
-          <PlanningTimeline
-            plannedSessions={scheduledSessions}
-            selectedDate={selectedDate}
-            onSessionClick={handleEditSession}
-            onTimeSlotClick={handleTimeSlotClick}
-            onSessionUpdate={handleSessionUpdate}
-            onTaskDrop={handleTaskDrop}
-            onSessionUnschedule={handleUnscheduleSession}
-          />
+        {/* Right Column - Todo Timeline */}
+        <div className="flex-1 min-w-0 flex flex-col">
+          {/* Timeline Header */}
+          <div className="flex items-center gap-2 p-3 border-b-2 border-border-strong dark:border-border-strong-dark bg-surface-elevated/30 dark:bg-surface-elevated-dark/30">
+            <CalendarDays className="w-4 h-4 text-muted-foreground" />
+            <span className="font-semibold text-sm">Todo Timeline (12am - 12am)</span>
+            <span className="text-xs text-muted-foreground ml-auto">
+              Click and drag to create • Drag sessions to move • Resize edges
+            </span>
+          </div>
+          <div className="flex-1 overflow-hidden">
+            <TodoTimeline
+              plannedSessions={scheduledSessions}
+              selectedDate={selectedDate}
+              onSessionClick={handleEditSession}
+              onTimeSlotClick={handleTimeSlotClick}
+              onSessionUpdate={handleSessionUpdate}
+              onTaskDrop={handleTaskDrop}
+              onSessionUnschedule={handleUnscheduleSession}
+              showTimeLabels={true}
+              showHeader={false}
+            />
+          </div>
         </div>
       </div>
 

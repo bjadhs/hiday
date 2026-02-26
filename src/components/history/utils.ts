@@ -40,6 +40,7 @@ export function getSessionsForHour(
     const hourEnd = (hour + 1) * 60 * 60 * 1000;
 
     return sessions.filter((session) => {
+        if (!session.startedAt) return false;
         const sessionStart = session.startedAt % (24 * 60 * 60 * 1000);
         const sessionEnd = session.endedAt
             ? session.endedAt % (24 * 60 * 60 * 1000)

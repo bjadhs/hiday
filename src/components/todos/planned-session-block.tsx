@@ -218,7 +218,7 @@ export function PlannedSessionBlock({
           <div className="mt-auto flex items-center justify-between gap-1 pt-1 border-t border-black/10 dark:border-white/20">
             <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
               <Clock className="w-3 h-3" />
-              <span>{formatTime(session.plannedStartTime)}</span>
+              <span>{session.plannedStartTime ? formatTime(session.plannedStartTime) : '--:--'}</span>
               {session.isCrossDayEnd && (
                 <span className="text-[8px] opacity-70">+</span>
               )}

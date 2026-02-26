@@ -51,8 +51,12 @@ export function SessionEditDialog({
       setSelectedTask(session.task);
       
       // Format times for datetime-local input (YYYY-MM-DDTHH:mm)
-      const startDate = new Date(session.startedAt);
-      setStartTime(formatDateTimeLocal(startDate));
+      if (session.startedAt) {
+        const startDate = new Date(session.startedAt);
+        setStartTime(formatDateTimeLocal(startDate));
+      } else {
+        setStartTime('');
+      }
       
       if (session.endedAt) {
         const endDate = new Date(session.endedAt);

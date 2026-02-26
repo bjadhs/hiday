@@ -1,39 +1,59 @@
 'use client';
 
-import { useState, useCallback } from 'react';
-import { Loader2 } from 'lucide-react';
+import { useState, useCallback, useMemo } from 'react';
+import { Loader2, CalendarDays, History } from 'lucide-react';
 import { useTimeline } from '@/lib/hooks/use-timeline';
 import { useUpdateSession } from '@/lib/hooks/use-sessions';
+import { usePlannedSessions, useUpdatePlannedSession, useCreatePlannedSession } from '@/lib/hooks/use-planned-sessions';
 import { DayNavigation } from '@/components/timeline/day-navigation';
-import { TimeLabels } from '@/components/timeline/time-labels';
-import { TimelineGrid } from '@/components/timeline/timeline-grid';
+import { SessionTimeline } from '@/components/timeline/session-timeline';
+import { TodoTimeline } from '@/components/todos/todo-timeline';
 import { HOURS, HOUR_HEIGHT } from '@/components/timeline/constants';
 import { TimelineSession } from '@/components/timeline/types';
 import { SessionEditDialog } from '@/components/track/session-edit-dialog';
-import { HistorySession } from '@/lib/types';
+import { CreateTodoDialog } from '@/components/todos/create-todo-dialog';
+import { HistorySession, PlannedSession } from '@/lib/types';
+import { useTasks } from '@/lib/hooks/use-tasks';
 
 export default function TimelinePage() {
+  // Timeline hook for sessions
   const {
     selectedDate,
     isMounted,
     now,
     startOfDay,
-    isLoading,
+    isLoading: isLoadingSessions,
     timelineSessions,
-    scrollContainerRef,
+    scrollContainerRef: sessionScrollRef,
     goToPreviousDay,
     goToNextDay,
     goToToday,
     isToday,
   } = useTimeline();
 
-  // Edit dialog state
+  // Format date for planned sessions query
+  const formattedDate = selectedDate.toISOString().split('T')[0];
+
+  // Fetch planned sessions (todos)
+  const { data: plannedSessions = [], isLoading: isLoadingPlanned } = usePlannedSessions(formattedDate);
+  const { data: tasks = [], isLoading: isLoadingTasks } = useTasks();
+
+  // Mutations
+  const updateSessionMutation = useUpdateSession();
+  const updatePlannedMutation = useUpdatePlannedSession();
+  const createPlannedMutation = useCreatePlannedSession();
+
+  // Edit dialog state for sessions
   const [editingSession, setEditingSession] = useState<HistorySession | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
-  // Update session mutation
-  const updateSessionMutation = useUpdateSession();
+  // Todo dialog state
+  const [isTodoDialogOpen, setIsTodoDialogOpen] = useState(false);
+  const [preselectedTaskId, setPreselectedTaskId] = useState<string | null>(null);
+  const [preselectedTime, setPreselectedTime] = useState<number | null>(null);
+  const [editingPlannedSession, setEditingPlannedSession] = useState<PlannedSession | null>(null);
 
+  // Handle edit session
   const handleEditSession = (session: TimelineSession) => {
     const historySession: HistorySession = {
       id: session.id,
@@ -77,6 +97,97 @@ export default function TimelinePage() {
     });
   }, [updateSessionMutation]);
 
+  // Handle planned session (todo) click
+  const handlePlannedSessionClick = useCallback((session: PlannedSession) => {
+    setEditingPlannedSession(session);
+    setPreselectedTaskId(null);
+    setPreselectedTime(null);
+    setIsTodoDialogOpen(true);
+  }, []);
+
+  // Handle time slot click for new todo
+  const handleTimeSlotClick = useCallback((timestamp: number) => {
+    setPreselectedTime(timestamp);
+    setPreselectedTaskId(null);
+    setEditingPlannedSession(null);
+    setIsTodoDialogOpen(true);
+  }, []);
+
+  // Handle planned session update from drag/resize
+  const handlePlannedSessionUpdate = useCallback((sessionId: string, updates: { plannedStartTime?: number; plannedEndTime?: number }) => {
+    const finalUpdates: {
+      plannedStartTime?: number;
+      plannedDuration?: number;
+    } = {};
+
+    if (updates.plannedStartTime !== undefined) {
+      finalUpdates.plannedStartTime = updates.plannedStartTime;
+    }
+
+    if (updates.plannedEndTime !== undefined && updates.plannedStartTime !== undefined) {
+      finalUpdates.plannedDuration = Math.round((updates.plannedEndTime - updates.plannedStartTime) / 1000);
+    }
+
+    updatePlannedMutation.mutate({
+      sessionId,
+      plannedDate: formattedDate,
+      updates: finalUpdates,
+    });
+  }, [updatePlannedMutation, formattedDate]);
+
+  // Handle create todo submit
+  const handleCreateTodoSubmit = useCallback((data: {
+    taskId: string;
+    plannedDate: string;
+    plannedStartTime: number | null;
+    plannedDuration: number;
+    title?: string;
+    note?: string;
+  }) => {
+    createPlannedMutation.mutate(data, {
+      onSuccess: () => {
+        setIsTodoDialogOpen(false);
+        setPreselectedTaskId(null);
+        setPreselectedTime(null);
+      },
+    });
+  }, [createPlannedMutation]);
+
+  // Handle update todo submit
+  const handleUpdateTodoSubmit = useCallback((sessionId: string, updates: {
+    plannedStartTime?: number | null;
+    plannedEndTime?: number;
+    plannedDuration?: number;
+    title?: string;
+    note?: string;
+  }) => {
+    const finalUpdates = { ...updates };
+    if (updates.plannedEndTime && updates.plannedStartTime) {
+      finalUpdates.plannedDuration = Math.round((updates.plannedEndTime - updates.plannedStartTime) / 1000);
+    }
+
+    updatePlannedMutation.mutate(
+      { sessionId, plannedDate: formattedDate, updates: finalUpdates },
+      {
+        onSuccess: () => {
+          setIsTodoDialogOpen(false);
+          setEditingPlannedSession(null);
+        },
+      }
+    );
+  }, [updatePlannedMutation, formattedDate]);
+
+  const handleCloseTodoDialog = useCallback(() => {
+    setIsTodoDialogOpen(false);
+    setPreselectedTaskId(null);
+    setPreselectedTime(null);
+    setEditingPlannedSession(null);
+  }, []);
+
+  const totalHeight = HOURS.length * HOUR_HEIGHT;
+
+  const isLoading = isLoadingSessions || isLoadingPlanned || isLoadingTasks;
+
   if (isLoading) {
     return (
       <main className='flex-1 flex items-center justify-center pb-20 lg:pb-0'>
@@ -87,8 +198,6 @@ export default function TimelinePage() {
       </main>
     );
   }
-
-  const totalHeight = HOURS.length * HOUR_HEIGHT;
 
   return (
     <main className='flex-1 flex flex-col pb-20 lg:pb-0 overflow-hidden'>
@@ -103,27 +212,48 @@ export default function TimelinePage() {
           onToday={goToToday}
         />
 
-        {/* Timeline Container */}
+        {/* Split Timeline View */}
         <div className='flex-1 bg-surface dark:bg-surface-dark border-2 border-border-strong dark:border-border-strong-dark rounded-xl shadow-brutal dark:shadow-brutal-dark overflow-hidden flex flex-col min-h-0'>
-          {/* Scrollable Area */}
-          <div
-            ref={scrollContainerRef}
-            className='flex-1 overflow-auto'
-          >
-            <div className='flex min-w-full'>
-              {/* Time Labels Column - Sticky */}
-              <TimeLabels />
+          {/* Timeline Headers */}
+          <div className="flex border-b-2 border-border-strong dark:border-border-strong-dark">
+            {/* Left Header - Todo Timeline */}
+            <div className="flex-1 flex items-center gap-2 p-3 border-r-2 border-border-strong dark:border-border-strong-dark bg-primary/5 dark:bg-primary/10">
+              <CalendarDays className="w-4 h-4 text-primary" />
+              <span className="font-semibold text-sm">Planned (Todos)</span>
+            </div>
+            {/* Right Header - Session Timeline */}
+            <div className="flex-1 flex items-center gap-2 p-3 bg-surface-elevated/30 dark:bg-surface-elevated-dark/30">
+              <History className="w-4 h-4 text-muted-foreground" />
+              <span className="font-semibold text-sm">Completed Sessions</span>
+            </div>
+          </div>
 
-              {/* Timeline Content - Wider and Scrollable */}
-              <TimelineGrid
+          {/* Timelines Side by Side */}
+          <div className="flex flex-1 overflow-hidden">
+            {/* Left Side - Todo Timeline */}
+            <div className="flex-1 border-r-2 border-border-strong dark:border-border-strong-dark min-w-0">
+              <TodoTimeline
+                plannedSessions={plannedSessions}
+                selectedDate={selectedDate}
+                onSessionClick={handlePlannedSessionClick}
+                onTimeSlotClick={handleTimeSlotClick}
+                onSessionUpdate={handlePlannedSessionUpdate}
+                showTimeLabels={true}
+                showHeader={false}
+              />
+            </div>
+
+            {/* Right Side - Session Timeline */}
+            <div className="flex-1 min-w-0">
+              <SessionTimeline
                 totalHeight={totalHeight}
                 isToday={isToday}
                 now={now}
                 startOfDay={startOfDay}
-                timelineSessions={timelineSessions}
+                sessions={timelineSessions}
                 onEditSession={handleEditSession}
                 onSessionUpdate={handleSessionUpdate}
-                scrollContainerRef={scrollContainerRef}
+                showTimeLabels={false}
               />
             </div>
           </div>
@@ -135,6 +265,21 @@ export default function TimelinePage() {
         session={editingSession}
         isOpen={isEditDialogOpen}
         onClose={handleCloseEditDialog}
+      />
+
+      {/* Create/Edit Todo Dialog */}
+      <CreateTodoDialog
+        isOpen={isTodoDialogOpen}
+        onClose={handleCloseTodoDialog}
+        tasks={tasks}
+        preselectedTaskId={preselectedTaskId}
+        preselectedTime={preselectedTime}
+        selectedDate={selectedDate}
+        editingSession={editingPlannedSession}
+        onCreate={handleCreateTodoSubmit}
+        onUpdate={handleUpdateTodoSubmit}
+        isSubmitting={createPlannedMutation.isPending || updatePlannedMutation.isPending}
+        error={createPlannedMutation.error?.message || updatePlannedMutation.error?.message || null}
       />
     </main>
   );

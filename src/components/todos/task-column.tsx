@@ -92,7 +92,7 @@ function TaskGroup({
   const [isDragging, setIsDragging] = useState(false);
   const [isDropTarget, setIsDropTarget] = useState(false);
 
-  const sortedScheduledSessions = [...sessions].sort((a, b) => a.started_at - b.started_at);
+  const sortedScheduledSessions = [...sessions].sort((a, b) => (a.started_at || 0) - (b.started_at || 0));
   const sortedUnscheduledSessions = [...unscheduledSessions].sort((a, b) =>
     (a.created_at || 0) - (b.created_at || 0)
   );

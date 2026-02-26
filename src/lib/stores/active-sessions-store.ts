@@ -62,7 +62,7 @@ interface ActiveSessionsState {
     task: Task;
     title: string;
     note: string;
-    started_at: number;
+    started_at: number | null;
   }>) => void;
 }
 
@@ -246,7 +246,7 @@ export const useActiveSessionsStore = create<ActiveSessionsState>((set, get) => 
             task: dbSession.task,
             title: dbSession.title || '',
             note: dbSession.note || '',
-            startTime: dbSession.started_at,
+            startTime: dbSession.started_at || Date.now(),
           });
           newSyncedIds.add(dbSession.id);
           hasChanges = true;

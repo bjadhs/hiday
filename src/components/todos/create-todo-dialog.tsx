@@ -34,7 +34,7 @@ interface CreateTodoDialogProps {
     note?: string;
   }) => void;
   onUpdate: (sessionId: string, data: {
-    plannedStartTime?: number;
+    plannedStartTime?: number | null;
     plannedDuration?: number;
     title?: string;
     note?: string;

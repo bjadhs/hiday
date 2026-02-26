@@ -3,7 +3,7 @@ import { TimelineSession, LayoutItem } from './types';
 import { HOUR_HEIGHT, MIN_SESSION_HEIGHT_PX } from './constants';
 
 export function calculateTimelineLayout(
-    sessions: { id: string; started_at: number; ended_at: number | null; duration: number | null; title: string | null; note: string | null; tasks: Task | null }[],
+    sessions: { id: string; started_at: number | null; ended_at: number | null; duration: number | null; title: string | null; note: string | null; tasks: Task | null }[],
     dayStart: number,
     now: number
 ): TimelineSession[] {
@@ -14,6 +14,7 @@ export function calculateTimelineLayout(
     // 1. Prepare visual layout data
     const initialLayout: LayoutItem[] = sessions.map(s => {
         const startedAt = s.started_at;
+        if (!startedAt) return null; // Skip sessions without start time
         const endedAt = s.ended_at || now;
         const top = (startedAt - dayStart) / msPerPixel;
         const actualHeight = (endedAt - startedAt) / msPerPixel;
@@ -32,7 +33,7 @@ export function calculateTimelineLayout(
             isRunning: s.ended_at === null,
             original: s
         };
-    }).sort((a, b) => a.top - b.top || b.height - a.height);
+    }).filter((s): s is NonNullable<typeof s> => s !== null).sort((a, b) => a.top - b.top || b.height - a.height);
 
     // 2. Group sessions into visually overlapping connected components
     const groups: LayoutItem[][] = [];
