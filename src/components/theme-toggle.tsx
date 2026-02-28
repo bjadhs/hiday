@@ -2,10 +2,39 @@
 
 import { Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
+import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+
+  // Prevent hydration mismatch by waiting for mount
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // Show neutral state during SSR to avoid hydration mismatch
+  if (!mounted) {
+    return (
+      <div className="flex items-center gap-1 p-1 bg-surface-elevated dark:bg-surface-elevated-dark rounded-lg border-2 border-border-strong dark:border-border-strong-dark shadow-brutal-xs dark:shadow-brutal-dark-xs">
+        <button
+          className="flex items-center justify-center w-8 h-8 rounded-md transition-all duration-200 text-muted-foreground"
+          aria-label="Light mode"
+          disabled
+        >
+          <Sun className="w-4 h-4" />
+        </button>
+        <button
+          className="flex items-center justify-center w-8 h-8 rounded-md transition-all duration-200 text-muted-foreground"
+          aria-label="Dark mode"
+          disabled
+        >
+          <Moon className="w-4 h-4" />
+        </button>
+      </div>
+    )
+  }
 
   return (
     <div className="flex items-center gap-1 p-1 bg-surface-elevated dark:bg-surface-elevated-dark rounded-lg border-2 border-border-strong dark:border-border-strong-dark shadow-brutal-xs dark:shadow-brutal-dark-xs">

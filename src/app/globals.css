@@ -89,6 +89,7 @@ html, body {
   background-color: var(--color-background);
   color: var(--color-foreground);
   min-height: 100vh;
+  transition: font-size 0.2s ease-out;
 }
 
 .dark html, .dark body {

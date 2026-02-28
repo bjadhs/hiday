@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { NavBarWrapper } from "@/components/nav-bar-wrapper";
 import { ThemeProvider } from "@/components/theme-provider";
+import { SettingsProvider } from "@/components/settings-provider";
 import { SupabaseProvider } from "@/lib/supabase/provider";
 import { QueryProvider } from "@/lib/query-provider";
 
@@ -31,18 +32,20 @@ export default function RootLayout({
       <body className="antialiased">
         <SupabaseProvider>
           <QueryProvider>
-            <ThemeProvider
-              attribute="class"
-              defaultTheme="system"
-              enableSystem
-              disableTransitionOnChange
-            >
-              <div className="flex min-h-screen w-full">
-                <NavBarWrapper>
-                  {children}
-                </NavBarWrapper>
-              </div>
-            </ThemeProvider>
+            <SettingsProvider>
+              <ThemeProvider
+                attribute="class"
+                defaultTheme="system"
+                enableSystem
+                disableTransitionOnChange
+              >
+                <div className="flex min-h-screen w-full">
+                  <NavBarWrapper>
+                    {children}
+                  </NavBarWrapper>
+                </div>
+              </ThemeProvider>
+            </SettingsProvider>
           </QueryProvider>
         </SupabaseProvider>
       </body>
