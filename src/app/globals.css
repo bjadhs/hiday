@@ -167,13 +167,9 @@ html, body {
   background-color: var(--background);
   color: var(--foreground);
   min-height: 100vh;
-<<<<<<< HEAD
-  transition: font-size 0.2s ease-out;
-=======
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background-color 0.3s ease, color 0.3s ease, font-size 0.2s ease-out;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
->>>>>>> 136810d (feat: Bruddle neo-brutalist theme system, shared auth component, and navbar)
 }
 
 /* ════════════════════════════════════════════════════════════════

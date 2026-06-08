@@ -4,13 +4,16 @@ import { calculateTimelineLayout } from '@/components/timeline/utils';
 import { HOUR_HEIGHT } from '@/components/timeline/constants';
 
 export function useTimeline() {
-    const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+    // Use fixed epoch date for SSR, sync to real date after hydration
+    const [selectedDate, setSelectedDate] = useState<Date>(new Date(0));
     const [isMounted, setIsMounted] = useState(false);
-    const [now, setNow] = useState(Date.now());
+    const [now, setNow] = useState(0);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         setIsMounted(true);
+        // Sync to real current date after hydration
+        setSelectedDate(new Date());
         // Update 'now' every minute to refresh timeline layout and indicator
         const interval = setInterval(() => setNow(Date.now()), 60000);
         return () => clearInterval(interval);
@@ -37,9 +40,9 @@ export function useTimeline() {
     // Scroll to current time on mount and when date changes (if today)
     useEffect(() => {
         if (!scrollContainerRef.current) return;
-        const isToday = selectedDate.toDateString() === new Date().toDateString();
+        const isTodayDate = selectedDate.toDateString() === new Date().toDateString();
 
-        if (isToday) {
+        if (isTodayDate) {
             const currentNow = Date.now();
             const msPerPixel = (60 * 60 * 1000) / HOUR_HEIGHT;
             const scrollPosition = (currentNow - startOfDay) / msPerPixel - 200;

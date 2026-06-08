@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useSessions } from '@/lib/hooks/use-sessions';
 import { useTasks } from '@/lib/hooks/use-tasks';
 import { HistorySession, Task, ViewMode } from '@/lib/types';
@@ -6,7 +6,13 @@ import { isToday } from '@/components/history/utils';
 
 export function useHistoryPage() {
     const [viewMode, setViewMode] = useState<ViewMode>('list');
-    const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+    // Use fixed epoch date for SSR, sync to real date after hydration
+    const [selectedDate, setSelectedDate] = useState<Date>(new Date(0));
+
+    // Sync to real current date after hydration
+    useEffect(() => {
+        setSelectedDate(new Date());
+    }, []);
 
     // Edit dialog state
     const [editingSession, setEditingSession] = useState<HistorySession | null>(null);
@@ -52,10 +58,12 @@ export function useHistoryPage() {
     }, [dbSessions, tasks]);
 
     const navigateDate = useCallback((days: number) => {
-        const newDate = new Date(selectedDate);
-        newDate.setDate(newDate.getDate() + days);
-        setSelectedDate(newDate);
-    }, [selectedDate]);
+        setSelectedDate((prev) => {
+            const newDate = new Date(prev);
+            newDate.setDate(newDate.getDate() + days);
+            return newDate;
+        });
+    }, []);
 
     const goToToday = useCallback(() => setSelectedDate(new Date()), []);
 
