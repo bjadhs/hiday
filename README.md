@@ -55,7 +55,6 @@ Hiday is a premium time-tracking application designed for clarity, functional mi
 ### Installation
 
 ```bash
-cd myapp
 npm install
 ```
 
