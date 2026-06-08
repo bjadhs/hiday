@@ -83,7 +83,7 @@ export const TaskDropdown = memo(function TaskDropdown({
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="start"
-        className="border-2 border-border-strong dark:border-border-strong-dark shadow-brutal w-44 bg-surface/95 dark:bg-surface-dark/95 backdrop-blur-sm"
+        className="border-2 border-border-strong shadow-brutal w-44 bg-surface/95 bg-surface/95 backdrop-blur-sm"
       >
         {tasks.map((task) => (
           <DropdownMenuItem

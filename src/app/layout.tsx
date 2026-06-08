@@ -1,10 +1,23 @@
 import type { Metadata, Viewport } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { NavBarWrapper } from "@/components/nav-bar-wrapper";
 import { ThemeProvider } from "@/components/theme-provider";
 import { SettingsProvider } from "@/components/settings-provider";
 import { SupabaseProvider } from "@/lib/supabase/provider";
 import { QueryProvider } from "@/lib/query-provider";
+
+const geistSans = Geist({
+  subsets: ["latin"],
+  variable: "--font-geist-sans",
+  display: "swap",
+});
+
+const geistMono = Geist_Mono({
+  subsets: ["latin"],
+  variable: "--font-geist-mono",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Hiday - Time Tracking",
@@ -17,8 +30,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#FDFCF5" },
-    { media: "(prefers-color-scheme: dark)", color: "#0A0A0A" },
+    { media: "(prefers-color-scheme: light)", color: "#F8F7F4" },
+    { media: "(prefers-color-scheme: dark)", color: "#0C0C0E" },
   ],
 };
 
@@ -29,7 +42,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="antialiased">
+      <body className={`${geistSans.variable} ${geistMono.variable} ${geistSans.className} antialiased`}>
         <SupabaseProvider>
           <QueryProvider>
             <SettingsProvider>

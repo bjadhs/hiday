@@ -185,7 +185,7 @@ export function CreateTodoDialog({
         onClose();
       }
     }}>
-      <DialogContent className="sm:max-w-[425px] bg-surface dark:bg-surface-dark border-border-strong dark:border-border-strong-dark text-foreground dark:text-foreground-dark">
+      <DialogContent className="sm:max-w-[425px] bg-surface border-border-strong text-foreground">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>
@@ -206,13 +206,13 @@ export function CreateTodoDialog({
                 id="task"
                 value={taskId}
                 onChange={(e) => setTaskId(e.target.value)}
-                className="flex h-9 w-full rounded-md border border-input bg-surface dark:bg-surface-dark px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 text-foreground dark:text-foreground-dark"
+                className="flex h-9 w-full rounded-md border border-input bg-surface px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 text-foreground"
                 required
                 disabled={isEditing} // Can't change task when editing
               >
-                <option value="" className="bg-surface dark:bg-surface-dark">Select a task</option>
+                <option value="" className="bg-surface">Select a task</option>
                 {activeTasks.map((task) => (
-                  <option key={task.id} value={task.id} className="bg-surface dark:bg-surface-dark">
+                  <option key={task.id} value={task.id} className="bg-surface">
                     {task.name}
                   </option>
                 ))}
@@ -229,18 +229,18 @@ export function CreateTodoDialog({
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Session title"
-                className="bg-surface dark:bg-surface-dark"
+                className="bg-surface"
               />
             </div>
 
             {/* Schedule Toggle */}
-            <div className="flex items-center gap-3 p-3 rounded-lg border border-border dark:border-border-dark bg-muted/30">
+            <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-muted/30">
               <input
                 type="checkbox"
                 id="isScheduled"
                 checked={isScheduled}
                 onChange={(e) => setIsScheduled(e.target.checked)}
-                className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+                className="w-4 h-4 rounded border-input text-primary focus:ring-primary"
               />
               <Label htmlFor="isScheduled" className="text-sm font-medium cursor-pointer flex-1">
                 Schedule on timeline
@@ -260,7 +260,7 @@ export function CreateTodoDialog({
                   value={startTime}
                   onChange={(e) => setStartTime(e.target.value)}
                   required={isScheduled}
-                  className="bg-surface dark:bg-surface-dark"
+                  className="bg-surface"
                 />
               </div>
             )}
@@ -274,7 +274,7 @@ export function CreateTodoDialog({
                 value={duration}
                 onChange={(e) => setDuration(e.target.value)}
                 required
-                className="bg-surface dark:bg-surface-dark"
+                className="bg-surface"
               />
               <p className="text-xs text-muted-foreground">
                 Format: hours:minutes (e.g., 01:30 for 1 hour 30 minutes)
@@ -291,7 +291,7 @@ export function CreateTodoDialog({
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 placeholder="Add a note about this session"
-                className="flex min-h-[80px] w-full rounded-md border border-input bg-surface dark:bg-surface-dark px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 resize-none text-foreground dark:text-foreground-dark"
+                className="flex min-h-[80px] w-full rounded-md border border-input bg-surface px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 resize-none text-foreground"
               />
             </div>
           </div>

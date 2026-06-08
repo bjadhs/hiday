@@ -60,10 +60,17 @@ export function ActiveTimerCard({
   const storeSessions = useActiveSessionsStore((state) => state.activeSessions);
   
   // Optimistic UI state - prepend to match store behavior
+  // Filters out duplicate optimistic sessions for the same task
   const [optimisticSessions, addOptimisticSession] = useOptimistic(
     storeSessions,
-    (state: ActiveSessionState[], newSession: { id: string; task: Task; title: string; startTime: number; isOptimistic?: boolean }) => 
-      [{ ...newSession, note: '' }, ...state]
+    (state: ActiveSessionState[], newSession: { id: string; task: Task; title: string; startTime: number; isOptimistic?: boolean }) => {
+      // Remove any existing optimistic sessions for the same task to prevent duplicates
+      const filteredState = state.filter((s) => {
+        const isOptimisticForThisTask = s.id.startsWith('optimistic-') && s.task.id === newSession.task.id;
+        return !isOptimisticForThisTask;
+      });
+      return [{ ...newSession, note: '' }, ...filteredState];
+    }
   );
   
   // Zustand store state
@@ -146,6 +153,12 @@ export function ActiveTimerCard({
 
   // Handlers with proper error handling and transitions
   const handleSaveTitle = useCallback((sessionId: string) => {
+    // Skip optimistic sessions that haven't been saved to database yet
+    if (sessionId.startsWith('optimistic-')) {
+      console.warn('Cannot save title for optimistic session - waiting for server confirmation');
+      return;
+    }
+
     const trimmedTitle = editTitle.trim();
     const newTitle = trimmedTitle || activeSessions.find(s => s.id === sessionId)?.task.name || '';
     saveTitle(sessionId, newTitle);
@@ -153,6 +166,12 @@ export function ActiveTimerCard({
   }, [editTitle, activeSessions, saveTitle, onUpdateSession]);
 
   const handleSaveNote = useCallback((sessionId: string) => {
+    // Skip optimistic sessions that haven't been saved to database yet
+    if (sessionId.startsWith('optimistic-')) {
+      console.warn('Cannot save note for optimistic session - waiting for server confirmation');
+      return;
+    }
+
     const note = sessionNotes[sessionId] || '';
     onUpdateSession(sessionId, { note }).catch(console.error);
   }, [sessionNotes, onUpdateSession]);
@@ -188,13 +207,19 @@ export function ActiveTimerCard({
 
   // Adjust time with transition
   const handleAdjustTime = useCallback((sessionId: string, offsetMinutes: number) => {
+    // Skip optimistic sessions that haven't been saved to database yet
+    if (sessionId.startsWith('optimistic-')) {
+      console.warn('Cannot adjust time for optimistic session - waiting for server confirmation');
+      return;
+    }
+
     adjustTransition(async () => {
       setActiveOperation({ type: 'adjust', id: `${sessionId}-${offsetMinutes}` });
-      
+
       try {
         const session = activeSessions.find((s: { id: string; startTime: number }) => s.id === sessionId);
         if (!session) return;
-        
+
         const newStartTime = session.startTime + (offsetMinutes * 60 * 1000);
         updateSession(sessionId, { startTime: newStartTime });
         await onUpdateSession(sessionId, { started_at: newStartTime });
@@ -206,8 +231,14 @@ export function ActiveTimerCard({
 
   // Stop session with transition
   const handleStopSession = useCallback((sessionId: string) => {
+    // Skip optimistic sessions that haven't been saved to database yet
+    if (sessionId.startsWith('optimistic-')) {
+      console.warn('Cannot stop optimistic session - waiting for server confirmation');
+      return;
+    }
+
     const session = activeSessions.find((s: { id: string }) => s.id === sessionId);
-    
+
     // Check if this session's task requires a note prompt
     if (session?.task.note_prompt) {
       // Show inline note prompt instead of modal
@@ -218,10 +249,10 @@ export function ActiveTimerCard({
       }
       return;
     }
-    
+
     stopTransition(async () => {
       setActiveOperation({ type: 'stop', id: sessionId });
-      
+
       try {
         removeSession(sessionId);
         await onStopSession(sessionId);
@@ -234,13 +265,25 @@ export function ActiveTimerCard({
   // Handle save note and stop (from inline prompt)
   const handleSaveNoteAndStop = useCallback(async (sessionId: string, note: string) => {
     if (!promptingSessionId) return;
-    
+
+    // Skip optimistic sessions that haven't been saved to database yet
+    if (sessionId?.startsWith('optimistic-')) {
+      console.warn('Cannot stop optimistic session - waiting for server confirmation');
+      return;
+    }
+
     stopTransition(async () => {
       setActiveOperation({ type: 'stop', id: sessionId });
-      
+
       try {
-        // 1. Update session with the note
-        await onUpdateSession(sessionId, { note: note.trim() || undefined });
+        // 1. Update session with the note (only if note is not empty)
+        const trimmedNote = note.trim();
+        if (trimmedNote) {
+          console.log('Calling onUpdateSession with:', sessionId, { note: trimmedNote });
+          await onUpdateSession(sessionId, { note: trimmedNote });
+        } else {
+          console.log('Note is empty, skipping update');
+        }
         // 2. Save note to local state
         setSessionNote(sessionId, note);
         // 3. Remove from local state and stop
@@ -259,10 +302,16 @@ export function ActiveTimerCard({
   // Handle delete session (from inline prompt)
   const handleDeleteSession = useCallback(async (sessionId: string) => {
     if (!promptingSessionId) return;
-    
+
+    // Skip optimistic sessions that haven't been saved to database yet
+    if (sessionId.startsWith('optimistic-')) {
+      console.warn('Cannot delete optimistic session - waiting for server confirmation');
+      return;
+    }
+
     stopTransition(async () => {
       setActiveOperation({ type: 'stop', id: sessionId });
-      
+
       try {
         // Remove from local state
         removeSession(sessionId);
@@ -291,7 +340,7 @@ export function ActiveTimerCard({
           'p-4 rounded-xl border-2 transition-all duration-200 h-full flex flex-col overflow-hidden',
           hasActiveSessions
             ? 'bg-primary/5 border-primary dark:border-primary shadow-brutal-colored'
-            : 'bg-surface dark:bg-surface-dark border-border-strong dark:border-border-strong-dark shadow-brutal dark:shadow-brutal-dark'
+            : 'bg-surface border-border-strong shadow-brutal'
         )}
       >
         {/* ARIA Live region for announcements */}
@@ -332,7 +381,14 @@ export function ActiveTimerCard({
               onStop={() => handleStopSession(expandedSessionId)}
               isStopping={isOperationLoading('stop', expandedSessionId)}
               tasks={tasks}
-              onTaskChange={(task) => onUpdateSession(expandedSessionId, { taskId: task.id })}
+              onTaskChange={(task) => {
+                // Skip optimistic sessions that haven't been saved to database yet
+                if (expandedSessionId?.startsWith('optimistic-')) {
+                  console.warn('Cannot change task for optimistic session - waiting for server confirmation');
+                  return;
+                }
+                onUpdateSession(expandedSessionId, { taskId: task.id });
+              }}
             />
           )
         ) : (
@@ -414,7 +470,7 @@ export function ActiveTimerCard({
                 {/* Active Sessions List */}
                 {hasActiveSessions && (
                   <div 
-                    className="space-y-1.5 pt-1 border-t border-border dark:border-border-dark"
+                    className="space-y-1.5 pt-1 border-t border-border"
                     role="list"
                     aria-label="Active sessions"
                   >
@@ -543,7 +599,7 @@ function StartButton({ onClick, isLoading, label, icon, text, variant, disabled 
   
   const variantClasses = {
     primary: "bg-primary text-white border-border-strong dark:border-white/20 shadow-brutal-xs hover:opacity-90",
-    secondary: "bg-surface-elevated dark:bg-surface-elevated-dark text-primary border-border dark:border-border-dark hover:border-primary/50 hover:bg-primary/5",
+    secondary: "bg-surface-elevated text-primary border-border hover:border-primary/50 hover:bg-primary/5",
     gap: "bg-primary/10 dark:bg-primary/20 text-primary border-primary hover:bg-primary/20"
   };
 
@@ -585,7 +641,7 @@ function TaskButton({ task, onClick, isLoading }: TaskButtonProps) {
       aria-label={`Start ${task.name} session`}
       aria-busy={isLoading}
       title={`Start ${task.name}`}
-      className="flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-md bg-surface-elevated dark:bg-surface-elevated-dark border-2 border-border dark:border-border-dark hover:border-primary hover:bg-primary/5 transition-all disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 w-full min-w-0"
+      className="flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-md bg-surface-elevated border-2 border-border hover:border-primary hover:bg-primary/5 transition-all disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 w-full min-w-0"
       style={{ borderColor: isLoading ? undefined : `${task.color}40` }}
     >
       <span className="text-sm" aria-hidden="true">{task.icon}</span>
@@ -593,7 +649,7 @@ function TaskButton({ task, onClick, isLoading }: TaskButtonProps) {
       {isLoading ? (
         <Loader2 className="w-3 h-3 animate-spin text-primary shrink-0" aria-hidden="true" />
       ) : (
-        <Play className="w-3 h-3 text-primary fill-current shrink-0" aria-hidden="true" />
+        <Play className="w-3 h-3 text-primary text-foreground fill-current shrink-0" aria-hidden="true" />
       )}
     </button>
   );
@@ -633,7 +689,7 @@ function CompactSessionItem({
 
   return (
     <div 
-      className="w-full flex items-center gap-1 p-1.5 rounded-lg bg-surface dark:bg-surface-dark border-2 border-border-strong dark:border-border-strong-dark shadow-brutal-sm"
+      className="w-full flex items-center gap-1 p-1.5 rounded-lg bg-surface border-2 border-border-strong shadow-brutal-sm"
       role="listitem"
     >
       {/* Task info - clickable to expand */}
@@ -644,7 +700,7 @@ function CompactSessionItem({
         aria-label={`${session.title || session.task.name}, duration ${formatDuration(elapsedTime)}. Click to expand`}
       >
         <div
-          className="w-7 h-7 rounded-md flex items-center justify-center text-sm border-2 border-black/10 shadow-brutal-xs shrink-0"
+          className="w-7 h-7 rounded-md flex items-center justify-center text-sm border-2 border-black/10 dark:border-white/25 shadow-brutal-xs shrink-0"
           style={{ backgroundColor: session.task.color }}
           aria-hidden="true"
         >
@@ -730,7 +786,7 @@ function AdjustButton({ onClick, isLoading, disabled, label, text }: AdjustButto
       aria-label={label}
       aria-busy={isLoading}
       title={label}
-      className="px-1.5 py-1 rounded bg-muted dark:bg-muted-dark text-muted-foreground hover:text-foreground border border-border dark:border-border-dark flex items-center justify-center disabled:opacity-50 text-[10px] font-bold min-w-[28px] focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1"
+      className="px-1.5 py-1 rounded bg-muted dark:bg-muted-dark text-foreground-muted hover:text-foreground border border-border flex items-center justify-center disabled:opacity-50 text-[10px] font-bold min-w-[28px] focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1"
     >
       {isLoading ? (
         <Loader2 className="w-2.5 h-2.5 animate-spin" aria-hidden="true" />

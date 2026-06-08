@@ -113,7 +113,7 @@ export function SessionBlock({
                     'h-full rounded-xl border-2 overflow-hidden transition-all',
                     isRunning && 'ring-2 ring-primary ring-offset-2 animate-pulse-soft',
                     isHovered && !isDragging
-                        ? 'ring-2 ring-primary/50 shadow-brutal-sm dark:shadow-brutal-dark-sm scale-[1.02] z-10'
+                        ? 'ring-2 ring-primary/50 shadow-brutal-sm scale-[1.02] z-10'
                         : 'shadow-sm'
                 )}
                 style={{
@@ -146,7 +146,7 @@ export function SessionBlock({
                     {/* Top: Icon and Task Name */}
                     <div className='flex items-center gap-3 min-w-0'>
                         <span
-                            className='w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0 border-2 border-black/10 dark:border-white/10 shadow-brutal-xs'
+                            className='w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0 border-2 border-black/10 dark:border-white/25 shadow-brutal-xs'
                             style={{ backgroundColor: session.task.color }} // Solid color icon
                         >
                             <div className="filter drop-shadow-sm">
@@ -184,7 +184,7 @@ export function SessionBlock({
                     </div>
 
                     {/* Bottom: Time and Duration */}
-                    <div className='mt-auto flex items-end justify-between gap-2 pt-2 border-t border-black/10 dark:border-white/10'>
+                    <div className='mt-auto flex items-end justify-between gap-2 pt-2 border-t border-black/10 dark:border-white/25'>
                         <div className='flex flex-col min-w-0'>
                             <p className='text-[10px] sm:text-xs font-mono font-bold whitespace-nowrap overflow-hidden text-ellipsis'>
                                 {formatTime(session.startedAt)} - {isRunning ? 'Now' : formatTime(session.endedAt)}
@@ -194,7 +194,7 @@ export function SessionBlock({
                             </p>
                         </div>
                         <p
-                            className='text-xs font-black px-2.5 py-1 rounded-lg shrink-0 border-2 border-black/10 shadow-brutal-xs'
+                            className='text-xs font-black px-2.5 py-1 rounded-lg shrink-0 border-2 border-black/10 dark:border-white/25 shadow-brutal-xs'
                             style={{
                                 backgroundColor: 'white',
                                 color: 'black'

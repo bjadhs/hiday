@@ -16,7 +16,7 @@ export function HistoryTimelineRow({
     const hourLabel = `${hour.toString().padStart(2, '0')}:00`;
 
     return (
-        <div className='flex items-center gap-4 h-14 border-b border-border/50 dark:border-border-dark/50'>
+        <div className='flex items-center gap-4 h-14 border-b border-border/50 border-border/50'>
             {/* Hour Label */}
             <div className='w-16 flex-shrink-0 text-sm text-muted-foreground font-mono'>
                 {hourLabel}
@@ -26,9 +26,9 @@ export function HistoryTimelineRow({
             <div className='flex-1 relative h-full'>
                 {/* Hour background grid lines */}
                 <div className='absolute inset-0 flex'>
-                    <div className='flex-1 border-r border-border/30 dark:border-border-dark/30' />
-                    <div className='flex-1 border-r border-border/30 dark:border-border-dark/30' />
-                    <div className='flex-1 border-r border-border/30 dark:border-border-dark/30' />
+                    <div className='flex-1 border-r border-border/30 border-border/30' />
+                    <div className='flex-1 border-r border-border/30 border-border/30' />
+                    <div className='flex-1 border-r border-border/30 border-border/30' />
                     <div className='flex-1' />
                 </div>
 
@@ -44,7 +44,7 @@ export function HistoryTimelineRow({
                         <div
                             key={session.id}
                             onClick={() => onEditSession(session)}
-                            className='absolute top-1 bottom-1 rounded-md border-2 border-black/20 shadow-brutal-xs hover:shadow-brutal-sm hover:scale-[1.02] transition-all cursor-pointer group'
+                            className='absolute top-1 bottom-1 rounded-md border-2 border-black/20 dark:border-white/20 shadow-brutal-xs hover:shadow-brutal-sm hover:shadow-brutal-dark-sm hover:scale-[1.02] transition-all cursor-pointer group'
                             style={{
                                 left: `${left}%`,
                                 width: `${width}%`,
@@ -55,7 +55,7 @@ export function HistoryTimelineRow({
                             ) : '--:--'} - ${session.endedAt ? formatTime(session.endedAt) : 'Ongoing'}`}
                         >
                             {/* Tooltip */}
-                            <div className='absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-surface dark:bg-surface-dark border-2 border-border-strong dark:border-border-strong-dark rounded-lg shadow-brutal dark:shadow-brutal-dark opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-10 whitespace-nowrap'>
+                            <div className='absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-surface border-2 border-border-strong rounded-lg shadow-brutal opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-10 whitespace-nowrap'>
                                 <div className='flex items-center gap-2'>
                                     <span>{session.task.icon}</span>
                                     <span className='font-semibold'>
@@ -77,7 +77,7 @@ export function HistoryTimelineRow({
                                     {session.endedAt ? formatTime(session.endedAt) : 'Ongoing'} (
                                     {formatDuration(session.duration)})
                                 </div>
-                                <div className='text-xs text-primary mt-1 pt-1 border-t border-border dark:border-border-dark'>
+                                <div className='text-xs text-primary mt-1 pt-1 border-t border-border'>
                                     Click to edit
                                 </div>
                             </div>

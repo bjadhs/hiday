@@ -11,7 +11,7 @@ export function StatCard({
   bgColor,
 }: StatCardProps) {
   return (
-    <div className='bg-surface dark:bg-surface-dark border-2 border-border-strong dark:border-border-strong-dark rounded-xl shadow-brutal dark:shadow-brutal-dark p-4 card-interactive'>
+    <div className='bg-surface border-2 border-border-strong rounded-xl shadow-brutal p-4 card-interactive'>
       <div className='flex items-center gap-3 mb-2'>
         <div className={cn('p-2 rounded-lg', bgColor)}>
           <Icon className={cn('w-4 h-4', color)} />

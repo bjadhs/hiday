@@ -434,7 +434,7 @@ export function TodoTimeline({
     <div className="flex flex-col h-full">
       {/* Optional Header */}
       {showHeader && (
-        <div className="flex items-center justify-between p-4 border-b-2 border-border-strong dark:border-border-strong-dark">
+        <div className="flex items-center justify-between p-4 border-b-2 border-border-strong">
           <h2 className="font-semibold text-lg">Timeline</h2>
           <p className="text-sm text-muted-foreground">
             Click and drag to create • Drag sessions to move • Resize edges • Drop tasks here
@@ -450,11 +450,11 @@ export function TodoTimeline({
         <div className="flex" style={{ minHeight: totalHeight }}>
           {/* Time Labels Column - Optional */}
           {showTimeLabels && (
-            <div className="shrink-0 border-r-2 border-border-strong dark:border-border-strong-dark bg-surface-elevated/30 dark:bg-surface-elevated-dark/30">
+            <div className="shrink-0 border-r-2 border-border-strong bg-surface-elevated/30">
               {HOURS.map((hour) => (
                 <div
                   key={hour}
-                  className="flex items-start justify-end px-3 text-sm font-medium text-muted-foreground border-b border-border/30 dark:border-border-dark/30"
+                  className="flex items-start justify-end px-3 text-sm font-medium text-muted-foreground border-b border-border/30 border-border/30"
                   style={{ height: HOUR_HEIGHT, paddingTop: 8 }}
                 >
                   {hour === 0 || hour === 24 ? '12 AM' : hour === 12 ? '12 PM' : hour < 12 ? `${hour} AM` : `${hour - 12} PM`}
@@ -484,7 +484,7 @@ export function TodoTimeline({
               {HOURS.map((hour) => (
                 <div
                   key={hour}
-                  className="border-b border-border/30 dark:border-border-dark/30"
+                  className="border-b border-border/30 border-border/30"
                   style={{ height: HOUR_HEIGHT }}
                 />
               ))}
@@ -497,7 +497,7 @@ export function TodoTimeline({
                   key={index}
                   className={cn(
                     "absolute left-0 right-0",
-                    line.isHour ? "" : "border-t border-dashed border-border/10 dark:border-border-dark/10"
+                    line.isHour ? "" : "border-t border-dashed border-border/10 border-border/10"
                   )}
                   style={{ top: line.top }}
                 />

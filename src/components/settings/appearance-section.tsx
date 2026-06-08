@@ -27,7 +27,11 @@ export function AppearanceSection() {
         </div>
         <ThemeToggle />
       </div>
+<<<<<<< HEAD
       <div className='flex items-center justify-between py-3 border-t border-border dark:border-border-dark'>
+=======
+      <div className='flex items-center justify-between py-3 border-t border-border'>
+>>>>>>> 136810d (feat: Bruddle neo-brutalist theme system, shared auth component, and navbar)
         <div>
           <p className='font-semibold'>Font Size</p>
           <p className='text-sm text-muted-foreground'>

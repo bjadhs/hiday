@@ -19,18 +19,18 @@ export function HistorySessionItem({
 
     return (
         <div
-            className='p-4 lg:p-6 hover:bg-surface-elevated dark:hover:bg-surface-elevated-dark transition-colors group cursor-pointer'
+            className='p-4 lg:p-6 hover:bg-surface-elevated transition-colors group cursor-pointer'
             onClick={() => onEdit(session)}
         >
             <div className='flex items-start gap-4'>
                 {/* Index */}
-                <div className='flex-shrink-0 w-8 h-8 rounded-full bg-surface-elevated dark:bg-surface-elevated-dark border-2 border-border-strong dark:border-border-strong-dark flex items-center justify-center text-sm font-mono text-muted-foreground shadow-brutal-xs dark:shadow-brutal-dark-xs'>
+                <div className='flex-shrink-0 w-8 h-8 rounded-full bg-surface-elevated border-2 border-border-strong flex items-center justify-center text-sm font-mono text-muted-foreground shadow-brutal-xs'>
                     {index}
                 </div>
 
                 {/* Task Icon */}
                 <div
-                    className='flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center text-2xl border-2 border-black/10 shadow-brutal-xs'
+                    className='flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center text-2xl border-2 border-black/10 dark:border-white/25 shadow-brutal-xs'
                     style={{ backgroundColor: session.task.color + '20' }}
                 >
                     {session.task.icon}
@@ -65,7 +65,7 @@ export function HistorySessionItem({
 
                         <div className='flex items-center gap-3 shrink-0'>
                             {/* Duration Badge */}
-                            <div className='px-3 py-1.5 rounded-lg bg-surface-elevated dark:bg-surface-elevated-dark border-2 border-border-strong dark:border-border-strong-dark font-mono text-sm font-semibold shadow-brutal-xs dark:shadow-brutal-dark-xs'>
+                            <div className='px-3 py-1.5 rounded-lg bg-surface-elevated border-2 border-border-strong font-mono text-sm font-semibold shadow-brutal-xs'>
                                 {formatDuration(session.duration)}
                             </div>
 

@@ -30,7 +30,7 @@ export function NavHeader({ title }: NavHeaderProps) {
   return (
     <>
       {/* Mobile Header - Shows app logo and page title */}
-      <header className='lg:hidden flex items-center justify-between px-4 py-4 bg-surface dark:bg-surface-dark border-b-2 border-border-strong dark:border-border-strong-dark sticky top-0 z-40'>
+      <header className='lg:hidden flex items-center justify-between px-4 py-4 bg-surface border-b-2 border-border-strong sticky top-0 z-40'>
         <h1 className='text-xl font-bold text-primary tracking-tight'>
           ATracker
         </h1>
@@ -38,7 +38,7 @@ export function NavHeader({ title }: NavHeaderProps) {
       </header>
 
       {/* Desktop Header - Shows page title and current date */}
-      <header className='hidden lg:flex items-center justify-between px-8 py-6 border-b-2 border-border-strong dark:border-border-strong-dark bg-surface dark:bg-surface-dark'>
+      <header className='hidden lg:flex items-center justify-between px-8 py-6 border-b-2 border-border-strong bg-surface'>
         <h1 className='text-3xl font-bold tracking-tight'>{title}</h1>
         <div className='flex items-center gap-3 text-muted-foreground'>
           <Calendar className='w-5 h-5' />

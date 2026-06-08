@@ -14,8 +14,8 @@ export function HistoryTimelineView({
     const hours = Array.from({ length: 25 }, (_, i) => i);
 
     return (
-        <div className='bg-surface dark:bg-surface-dark border-2 border-border-strong dark:border-border-strong-dark rounded-xl shadow-brutal dark:shadow-brutal-dark overflow-hidden'>
-            <div className='p-4 lg:p-6 border-b-2 border-border dark:border-border-dark'>
+        <div className='bg-surface border-2 border-border-strong rounded-xl shadow-brutal overflow-hidden'>
+            <div className='p-4 lg:p-6 border-b-2 border-border'>
                 <h2 className='text-xl font-bold tracking-tight'>Day Timeline</h2>
                 <p className='text-sm text-muted-foreground mt-1'>
                     Visual overview of your day from 00:00 to 24:00
@@ -52,13 +52,13 @@ export function HistoryTimelineView({
                     </div>
 
                     {/* Legend */}
-                    <div className='mt-6 pt-4 border-t-2 border-border dark:border-border-dark'>
+                    <div className='mt-6 pt-4 border-t-2 border-border'>
                         <p className='text-sm font-semibold mb-3'>Tasks</p>
                         <div className='flex flex-wrap gap-3'>
                             {getUniqueTasks(sessions).map((task) => (
                                 <div key={task.id} className='flex items-center gap-2'>
                                     <div
-                                        className='w-4 h-4 rounded border-2 border-black/10 shadow-brutal-xs'
+                                        className='w-4 h-4 rounded border-2 border-black/10 dark:border-white/25 shadow-brutal-xs'
                                         style={{ backgroundColor: task.color }}
                                     />
                                     <span className='text-sm'>{task.icon}</span>

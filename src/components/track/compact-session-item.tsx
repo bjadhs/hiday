@@ -38,7 +38,7 @@ export const CompactSessionItem = memo(function CompactSessionItem({
   isStopping,
 }: CompactSessionItemProps) {
   return (
-    <div className="w-full flex items-center gap-2 p-2 rounded-lg bg-surface dark:bg-surface-dark border-2 border-border-strong dark:border-border-strong-dark shadow-brutal-sm">
+    <div className="w-full flex items-center gap-2 p-2 rounded-lg bg-surface border-2 border-border-strong shadow-brutal-sm">
       {/* Clickable area for expanding */}
       <button
         onClick={onExpand}
@@ -46,7 +46,7 @@ export const CompactSessionItem = memo(function CompactSessionItem({
       >
         {/* Small Task icon */}
         <div
-          className="w-8 h-8 rounded-md flex items-center justify-center text-base border-2 border-black/10 shadow-brutal-xs shrink-0"
+          className="w-8 h-8 rounded-md flex items-center justify-center text-base border-2 border-black/10 dark:border-white/25 shadow-brutal-xs shrink-0"
           style={{ backgroundColor: session.task.color }}
         >
           {session.task.icon}

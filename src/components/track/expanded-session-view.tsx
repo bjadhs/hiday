@@ -80,7 +80,7 @@ export const ExpandedSessionView = memo(function ExpandedSessionView({
         <div className="flex items-center gap-3 mb-3 shrink-0">
           {/* Task icon */}
           <div
-            className="w-10 h-10 rounded-lg flex items-center justify-center text-lg border-2 border-black/10 shadow-brutal-xs shrink-0"
+            className="w-10 h-10 rounded-lg flex items-center justify-center text-lg border-2 border-black/10 dark:border-white/25 shadow-brutal-xs shrink-0"
             style={{ backgroundColor: session.task.color }}
           >
             {session.task.icon}
@@ -99,7 +99,7 @@ export const ExpandedSessionView = memo(function ExpandedSessionView({
                     if (e.key === 'Escape') onCancelEdit();
                   }}
                   placeholder={session.task.name}
-                  className="flex-1 min-w-0 px-2 py-1 text-sm font-bold bg-surface dark:bg-surface-dark border-2 border-primary rounded-md focus:outline-hidden focus:ring-2 focus:ring-primary/50"
+                  className="flex-1 min-w-0 px-2 py-1 text-sm font-bold bg-surface border-2 border-primary rounded-md focus:outline-hidden focus:ring-2 focus:ring-primary/50"
                   autoFocus
                 />
                 <button
@@ -176,7 +176,7 @@ export const ExpandedSessionView = memo(function ExpandedSessionView({
             </button>
             <button
               onClick={onClose}
-              className="w-8 h-8 rounded-md bg-muted dark:bg-muted-dark text-muted-foreground dark:text-muted-foreground-dark border-2 border-border-strong dark:border-white/20 shadow-brutal-xs btn-brutal flex items-center justify-center hover:bg-surface-elevated dark:hover:bg-surface-elevated-dark transition-colors"
+              className="w-8 h-8 rounded-md bg-muted dark:bg-muted-dark text-foreground-muted border-2 border-border-strong dark:border-white/20 shadow-brutal-xs btn-brutal flex items-center justify-center hover:bg-surface-elevated transition-colors"
               title="Close"
             >
               <X className="w-3.5 h-3.5" />
@@ -185,7 +185,7 @@ export const ExpandedSessionView = memo(function ExpandedSessionView({
         </div>
 
         {/* Big note text area - takes all remaining space */}
-        <div className="flex-1 flex flex-col min-h-0 bg-surface dark:bg-surface-dark rounded-xl border-2 border-border-strong dark:border-border-strong-dark shadow-brutal-sm overflow-hidden">
+        <div className="flex-1 flex flex-col min-h-0 bg-surface rounded-xl border-2 border-border-strong shadow-brutal-sm overflow-hidden">
           <textarea
             value={editNote}
             onChange={(e) => onEditNoteChange(e.target.value)}

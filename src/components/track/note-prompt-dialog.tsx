@@ -47,9 +47,9 @@ export function NotePromptDialog({
       open={isOpen}
       onOpenChange={(open) => !open && !isStopping && onClose()}
     >
-      <DialogContent className='sm:max-w-md bg-surface dark:bg-surface-dark border-2 border-border-strong dark:border-border-strong-dark shadow-brutal dark:shadow-brutal-dark'>
+      <DialogContent className='sm:max-w-md bg-surface border-2 border-border-strong shadow-brutal'>
         <DialogHeader>
-          <DialogTitle className='text-xl font-bold flex items-center gap-2 text-foreground dark:text-foreground-dark'>
+          <DialogTitle className='text-xl font-bold flex items-center gap-2 text-foreground'>
             <span className='text-2xl'>📝</span>
             Session Reflection
           </DialogTitle>
@@ -60,14 +60,14 @@ export function NotePromptDialog({
             <span className='text-sm font-medium text-muted-foreground'>
               Stopping session:
             </span>
-            <div className='flex items-center gap-2 px-3 py-2 rounded-lg bg-surface-elevated dark:bg-surface-elevated-dark border-2 border-border dark:border-border-dark'>
+            <div className='flex items-center gap-2 px-3 py-2 rounded-lg bg-surface-elevated border-2 border-border'>
               <span
-                className='w-5 h-5 rounded flex items-center justify-center text-xs border border-black/10'
+                className='w-5 h-5 rounded flex items-center justify-center text-xs border border-black/10 dark:border-white/25'
                 style={{ backgroundColor: session.task.color }}
               >
                 {session.task.icon}
               </span>
-              <span className='font-semibold text-foreground dark:text-foreground-dark capitalize'>
+              <span className='font-semibold text-foreground capitalize'>
                 {session.title || session.task.name}
               </span>
             </div>
@@ -76,7 +76,7 @@ export function NotePromptDialog({
           <div className='space-y-2'>
             <Label
               htmlFor='note'
-              className='text-sm font-semibold text-foreground dark:text-foreground-dark'
+              className='text-sm font-semibold text-foreground'
             >
               What did you accomplish?
             </Label>
@@ -86,7 +86,7 @@ export function NotePromptDialog({
               onChange={(e) => setNote(e.target.value)}
               placeholder='Add a quick note about your progress...'
               className={cn(
-                'w-full min-h-30 p-3 rounded-md border-2 border-border-strong dark:border-border-strong-dark bg-transparent text-foreground dark:text-foreground-dark focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none',
+                'w-full min-h-30 p-3 rounded-md border-2 border-border-strong bg-transparent text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none',
                 'placeholder:text-muted-foreground/50 text-sm',
               )}
               disabled={isStopping}
@@ -101,7 +101,7 @@ export function NotePromptDialog({
             variant='outline'
             onClick={onDelete}
             disabled={isStopping}
-            className='border-2 border-destructive dark:border-destructive shadow-brutal-xs btn-brutal bg-surface dark:bg-surface-dark text-destructive hover:bg-destructive/10 dark:hover:bg-destructive/10 w-full sm:w-auto'
+            className='border-2 border-destructive dark:border-destructive shadow-brutal-xs btn-brutal bg-surface text-destructive hover:bg-destructive/10 dark:hover:bg-destructive/10 w-full sm:w-auto'
           >
             {isStopping ? (
               <Loader2 className='w-4 h-4 animate-spin mr-1' />
@@ -116,7 +116,7 @@ export function NotePromptDialog({
               variant='outline'
               onClick={onClose}
               disabled={isStopping}
-              className='border-2 border-border-strong dark:border-border-strong-dark shadow-brutal-xs btn-brutal bg-surface dark:bg-surface-dark text-foreground dark:text-foreground-dark hover:bg-surface-elevated dark:hover:bg-surface-elevated-dark order-2 sm:order-1'
+              className='border-2 border-border-strong shadow-brutal-xs btn-brutal bg-surface text-foreground hover:bg-surface-elevated order-2 sm:order-1'
             >
               <X className='w-4 h-4 mr-1' />
               Cancel

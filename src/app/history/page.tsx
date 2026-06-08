@@ -121,16 +121,16 @@ function HistoryPageContent() {
         <HistoryStats sessions={sessions} />
 
         {/* Split View: Session List | Session Timeline */}
-        <div className='flex-1 bg-surface dark:bg-surface-dark border-2 border-border-strong dark:border-border-strong-dark rounded-xl shadow-brutal dark:shadow-brutal-dark overflow-hidden flex flex-col min-h-0'>
+        <div className='flex-1 bg-surface border-2 border-border-strong rounded-xl shadow-brutal overflow-hidden flex flex-col min-h-0'>
           {/* Headers */}
-          <div className="flex border-b-2 border-border-strong dark:border-border-strong-dark">
+          <div className="flex border-b-2 border-border-strong">
             {/* Left Header - Session List */}
-            <div className="w-96 flex-shrink-0 flex items-center gap-2 p-3 border-r-2 border-border-strong dark:border-border-strong-dark bg-primary/5 dark:bg-primary/10">
+            <div className="w-96 flex-shrink-0 flex items-center gap-2 p-3 border-r-2 border-border-strong bg-primary/5 dark:bg-primary/10">
               <List className="w-4 h-4 text-primary" />
               <span className="font-semibold text-sm">Session Log</span>
             </div>
             {/* Right Header - Timeline */}
-            <div className="flex-1 flex items-center gap-2 p-3 bg-surface-elevated/30 dark:bg-surface-elevated-dark/30">
+            <div className="flex-1 flex items-center gap-2 p-3 bg-surface-elevated/30">
               <Clock className="w-4 h-4 text-muted-foreground" />
               <span className="font-semibold text-sm">Day Timeline (12am - 12am)</span>
             </div>
@@ -139,7 +139,7 @@ function HistoryPageContent() {
           {/* Content */}
           <div className="flex flex-1 overflow-hidden">
             {/* Left Side - Session List */}
-            <div className="w-96 flex-shrink-0 border-r-2 border-border-strong dark:border-border-strong-dark overflow-auto">
+            <div className="w-96 flex-shrink-0 border-r-2 border-border-strong overflow-auto">
               {sessions.length === 0 ? (
                 <div className="p-8">
                   <EmptyState message='No sessions recorded for this date' />

@@ -70,8 +70,8 @@ export function TasksList({
             </DndContext>
 
             {orderedTasks.length === 0 && (
-                <div className='text-center py-24 border-4 border-dashed border-border-strong dark:border-border-strong-dark rounded-[2rem] bg-muted/20 dark:bg-muted/10'>
-                    <div className='w-24 h-24 rounded-3xl bg-surface dark:bg-surface-dark border-4 border-border-strong dark:border-border-strong-dark flex items-center justify-center mx-auto mb-8 shadow-brutal dark:shadow-brutal-dark'>
+                <div className='text-center py-24 border-4 border-dashed border-border-strong rounded-[2rem] bg-muted/20 dark:bg-muted/10'>
+                    <div className='w-24 h-24 rounded-3xl bg-surface border-4 border-border-strong flex items-center justify-center mx-auto mb-8 shadow-brutal'>
                         <Activity className='w-12 h-12 text-primary' />
                     </div>
                     <h3 className='text-3xl font-black mb-4'>PROTOCOL EMPTY</h3>
@@ -80,7 +80,7 @@ export function TasksList({
                     </p>
                     <button
                         onClick={onCreate}
-                        className='px-10 py-4 rounded-2xl bg-primary text-white text-xl font-black border-4 border-border-strong dark:border-border-strong-dark shadow-brutal dark:shadow-brutal-dark btn-brutal'
+                        className='px-10 py-4 rounded-2xl bg-primary text-white text-xl font-black border-4 border-border-strong shadow-brutal btn-brutal'
                     >
                         INITIALIZE
                     </button>

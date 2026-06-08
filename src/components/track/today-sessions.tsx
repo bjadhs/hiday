@@ -67,8 +67,8 @@ export function TodaySessions({ sessions, onEditSession }: TodaySessionsProps) {
   };
 
   return (
-    <div className="bg-surface dark:bg-surface-dark border-2 border-border-strong dark:border-border-strong-dark rounded-xl shadow-brutal dark:shadow-brutal-dark h-full min-h-0 flex flex-col overflow-hidden">
-      <div className="p-2 lg:p-3 border-b-2 border-border dark:border-border-dark shrink-0">
+    <div className="bg-surface border-2 border-border-strong rounded-xl shadow-brutal h-full min-h-0 flex flex-col overflow-hidden">
+      <div className="p-2 lg:p-3 border-b-2 border-border shrink-0">
         <h2 className="text-xl font-bold tracking-tight">
           Today&apos;s Sessions ({sessions.length})
         </h2>
@@ -76,7 +76,7 @@ export function TodaySessions({ sessions, onEditSession }: TodaySessionsProps) {
       <div className="p-4 lg:p-6 space-y-3 flex-1 overflow-y-auto min-h-0">
         {sessions.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-muted-foreground text-sm">
+            <p className="text-foreground-muted text-sm">
               Today you haven&apos;t started any session.
             </p>
           </div>
@@ -87,10 +87,10 @@ export function TodaySessions({ sessions, onEditSession }: TodaySessionsProps) {
             return (
               <div
                 key={session.id}
-                className="flex items-center gap-3 p-3 rounded-lg bg-surface-elevated dark:bg-surface-elevated-dark border-2 border-border dark:border-border-dark group/session hover:border-primary/50 transition-colors"
+                className="flex items-center gap-3 p-3 rounded-lg bg-surface-elevated border-2 border-border group/session hover:border-primary/50 transition-colors"
               >
                 <div
-                  className="w-10 h-10 rounded-lg flex items-center justify-center text-lg border-2 border-black/10 shrink-0"
+                  className="w-10 h-10 rounded-lg flex items-center justify-center text-lg border-2 border-black/10 dark:border-white/25 shrink-0"
                   style={{ backgroundColor: session.tasks?.color }}
                 >
                   {session.tasks?.icon}
@@ -109,7 +109,7 @@ export function TodaySessions({ sessions, onEditSession }: TodaySessionsProps) {
                     {session.tasks?.icon} {session.tasks?.name}
                   </span>
                   {session.note && (
-                    <p className="text-xs text-muted-foreground truncate mt-1">
+                    <p className="text-xs text-foreground-muted truncate mt-1">
                       {session.note}
                     </p>
                   )}
@@ -119,7 +119,7 @@ export function TodaySessions({ sessions, onEditSession }: TodaySessionsProps) {
                     {formatDuration(session.duration || 0)}
                   </p>
                   <div className="flex items-center justify-end gap-2">
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-foreground-muted">
                       {session.ended_at &&
                         new Date(session.ended_at).toLocaleTimeString('en-US', {
                           hour: '2-digit',
@@ -129,7 +129,7 @@ export function TodaySessions({ sessions, onEditSession }: TodaySessionsProps) {
                     </p>
                     <button
                       onClick={() => onEditSession(historySession)}
-                      className="opacity-0 group-hover/session:opacity-100 p-1.5 rounded-md hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all"
+                      className="opacity-0 group-hover/session:opacity-100 p-1.5 rounded-md hover:bg-primary/10 text-foreground-muted hover:text-primary dark:hover:text-foreground-dark transition-all"
                       title="Edit session"
                     >
                       <Pencil className="w-3.5 h-3.5" />

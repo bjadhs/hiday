@@ -115,14 +115,25 @@ export async function stopSession(sessionId: string) {
   const now = Date.now()
 
   // First get the session to calculate duration
-  const { data: session } = await supabase
+  const { data: session, error: fetchError } = await supabase
     .from('sessions')
-    .select('started_at')
+    .select('started_at, ended_at')
     .eq('id', sessionId)
     .eq('user_id', user.id)
-    .single()
+    .maybeSingle()
 
-  if (!session) throw new Error('Session not found')
+  if (fetchError) {
+    console.error('Error fetching session:', fetchError)
+    throw new Error('Failed to fetch session')
+  }
+
+  if (!session) {
+    throw new Error('Session not found - it may have been deleted')
+  }
+
+  if (session.ended_at) {
+    throw new Error('Session is already stopped')
+  }
 
   const duration = Math.floor((now - session.started_at) / 1000)
 
@@ -136,9 +147,10 @@ export async function stopSession(sessionId: string) {
     .eq('id', sessionId)
     .eq('user_id', user.id)
     .select()
-    .single()
+    .maybeSingle()
 
   if (error) throw error
+  if (!data) throw new Error('Failed to stop session - session not found')
   return data as Session
 }
 
@@ -154,9 +166,17 @@ export async function updateSession(sessionId: string, updates: SessionUpdate) {
     .eq('id', sessionId)
     .eq('user_id', user.id)
     .select()
-    .single()
+    .maybeSingle()
 
-  if (error) throw error
+  if (error) {
+    console.error('Error updating session:', error)
+    throw new Error('Failed to update session')
+  }
+
+  if (!data) {
+    throw new Error('Session not found - it may have been deleted')
+  }
+
   return data as Session
 }
 

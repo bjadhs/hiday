@@ -38,8 +38,8 @@ export function TasksGrid({
   isPending,
 }: TasksGridProps) {
   return (
-    <div className="bg-surface dark:bg-surface-dark border-2 border-border-strong dark:border-border-strong-dark rounded-xl shadow-brutal dark:shadow-brutal-dark h-full min-h-0 flex flex-col overflow-hidden">
-      <div className="p-2 lg:p-3 border-b-2 border-border dark:border-border-dark">
+    <div className="bg-surface border-2 border-border-strong rounded-xl shadow-brutal h-full min-h-0 flex flex-col overflow-hidden">
+      <div className="p-2 lg:p-3 border-b-2 border-border">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-xl font-bold tracking-tight">Tasks</h2>
@@ -54,8 +54,8 @@ export function TasksGrid({
       <div className="p-4 lg:p-6 flex-1 overflow-y-auto min-h-0">
         {tasks.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-muted-foreground">No tasks yet</p>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-foreground-muted">No tasks yet</p>
+            <p className="text-sm text-foreground-muted">
               Create your first task to start tracking
             </p>
           </div>

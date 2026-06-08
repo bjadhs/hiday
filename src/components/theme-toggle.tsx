@@ -17,6 +17,7 @@ export function ThemeToggle() {
   // Show neutral state during SSR to avoid hydration mismatch
   if (!mounted) {
     return (
+<<<<<<< HEAD
       <div className="flex items-center gap-1 p-1 bg-surface-elevated dark:bg-surface-elevated-dark rounded-lg border-2 border-border-strong dark:border-border-strong-dark shadow-brutal-xs dark:shadow-brutal-dark-xs">
         <button
           className="flex items-center justify-center w-8 h-8 rounded-md transition-all duration-200 text-muted-foreground"
@@ -31,36 +32,52 @@ export function ThemeToggle() {
           disabled
         >
           <Moon className="w-4 h-4" />
+=======
+      <div className="flex items-center gap-1 p-1 bg-surface-elevated rounded-lg border-2 border-border-strong shadow-brutal-xs">
+        <button
+          className="flex items-center justify-center size-8 rounded-md transition-all duration-200 text-muted-foreground"
+          aria-label="Light mode"
+          disabled
+        >
+          <Sun className="size-4" />
+        </button>
+        <button
+          className="flex items-center justify-center size-8 rounded-md transition-all duration-200 text-muted-foreground"
+          aria-label="Dark mode"
+          disabled
+        >
+          <Moon className="size-4" />
+>>>>>>> 136810d (feat: Bruddle neo-brutalist theme system, shared auth component, and navbar)
         </button>
       </div>
     )
   }
 
   return (
-    <div className="flex items-center gap-1 p-1 bg-surface-elevated dark:bg-surface-elevated-dark rounded-lg border-2 border-border-strong dark:border-border-strong-dark shadow-brutal-xs dark:shadow-brutal-dark-xs">
+    <div className="flex items-center gap-1 p-1 bg-surface-elevated rounded-lg border-2 border-border-strong shadow-brutal-xs">
       <button
         onClick={() => setTheme("light")}
         className={cn(
-          "flex items-center justify-center w-8 h-8 rounded-md transition-all duration-200",
+          "flex items-center justify-center size-8 rounded-md transition-all duration-200",
           theme === "light"
             ? "bg-primary text-white shadow-brutal-xs"
             : "text-muted-foreground hover:text-foreground"
         )}
         aria-label="Light mode"
       >
-        <Sun className="w-4 h-4" />
+        <Sun className="size-4" />
       </button>
       <button
         onClick={() => setTheme("dark")}
         className={cn(
-          "flex items-center justify-center w-8 h-8 rounded-md transition-all duration-200",
+          "flex items-center justify-center size-8 rounded-md transition-all duration-200",
           theme === "dark"
             ? "bg-primary text-white shadow-brutal-xs"
             : "text-muted-foreground hover:text-foreground"
         )}
         aria-label="Dark mode"
       >
-        <Moon className="w-4 h-4" />
+        <Moon className="size-4" />
       </button>
     </div>
   )

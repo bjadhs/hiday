@@ -49,10 +49,10 @@ export function TaskAnalyticsModal({
 
     return (
         <Dialog open={!!task} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent showCloseButton={false} className='sm:max-w-md p-0 overflow-hidden border-4 border-border-strong dark:border-border-strong-dark bg-surface dark:bg-surface-dark rounded-3xl shadow-brutal dark:shadow-brutal-dark'>
-                <div className='relative p-6 border-b-4 border-border-strong dark:border-border-strong-dark flex items-center gap-4' style={{ backgroundColor: `${task.color}15` }}>
+            <DialogContent showCloseButton={false} className='sm:max-w-md p-0 overflow-hidden border-4 border-border-strong bg-surface rounded-3xl shadow-brutal'>
+                <div className='relative p-6 border-b-4 border-border-strong flex items-center gap-4' style={{ backgroundColor: `${task.color}15` }}>
                     <div
-                        className='w-14 h-14 rounded-2xl flex items-center justify-center text-3xl border-2 border-black/10 dark:border-white/10 shadow-brutal-sm'
+                        className='w-14 h-14 rounded-2xl flex items-center justify-center text-3xl border-2 border-black/10 dark:border-white/25 shadow-brutal-sm'
                         style={{ backgroundColor: task.color }}
                     >
                         {task.icon}
@@ -63,7 +63,7 @@ export function TaskAnalyticsModal({
                     </div>
                     <button
                         onClick={onClose}
-                        className='absolute top-6 right-6 p-2 rounded-xl bg-surface dark:bg-surface-dark border-2 border-border-strong dark:border-border-strong-dark shadow-brutal-xs dark:shadow-brutal-dark-xs hover:bg-muted transition-colors'
+                        className='absolute top-6 right-6 p-2 rounded-xl bg-surface border-2 border-border-strong shadow-brutal-xs hover:bg-muted transition-colors'
                     >
                         <X className='w-5 h-5' />
                     </button>
@@ -78,28 +78,28 @@ export function TaskAnalyticsModal({
                     ) : (
                         <>
                             <div className='grid grid-cols-2 gap-4'>
-                                <div className='p-4 rounded-2xl border-2 border-border-strong dark:border-border-strong-dark bg-secondary/10 space-y-1 shadow-brutal-xs dark:shadow-brutal-dark-xs'>
+                                <div className='p-4 rounded-2xl border-2 border-border-strong bg-secondary/10 space-y-1 shadow-brutal-xs'>
                                     <div className='flex items-center gap-2 text-secondary'>
                                         <Calendar className='w-4 h-4' />
                                         <span className='text-xs font-bold uppercase tracking-wider'>Today</span>
                                     </div>
                                     <p className='text-2xl font-black text-foreground'>{stats.today}</p>
                                 </div>
-                                <div className='p-4 rounded-2xl border-2 border-border-strong dark:border-border-strong-dark bg-primary/10 space-y-1 shadow-brutal-xs dark:shadow-brutal-dark-xs'>
+                                <div className='p-4 rounded-2xl border-2 border-border-strong bg-primary/10 space-y-1 shadow-brutal-xs'>
                                     <div className='flex items-center gap-2 text-primary'>
                                         <TrendingUp className='w-4 h-4' />
                                         <span className='text-xs font-bold uppercase tracking-wider'>7 Days</span>
                                     </div>
                                     <p className='text-2xl font-black text-foreground'>{stats.week}</p>
                                 </div>
-                                <div className='p-4 rounded-2xl border-2 border-border-strong dark:border-border-strong-dark bg-accent/10 space-y-1 shadow-brutal-xs dark:shadow-brutal-dark-xs'>
+                                <div className='p-4 rounded-2xl border-2 border-border-strong bg-accent/10 space-y-1 shadow-brutal-xs'>
                                     <div className='flex items-center gap-2 text-accent'>
                                         <Activity className='w-4 h-4' />
                                         <span className='text-xs font-bold uppercase tracking-wider'>30 Days</span>
                                     </div>
                                     <p className='text-2xl font-black text-foreground'>{stats.month}</p>
                                 </div>
-                                <div className='p-4 rounded-2xl border-2 border-border-strong dark:border-border-strong-dark bg-muted/50 dark:bg-muted/20 space-y-1 shadow-brutal-xs dark:shadow-brutal-dark-xs'>
+                                <div className='p-4 rounded-2xl border-2 border-border-strong bg-muted/50 space-y-1 shadow-brutal-xs'>
                                     <div className='flex items-center gap-2 text-muted-foreground'>
                                         <History className='w-4 h-4' />
                                         <span className='text-xs font-bold uppercase tracking-wider'>Sessions</span>
@@ -111,7 +111,7 @@ export function TaskAnalyticsModal({
                             <div className='pt-4 border-t-2 border-border/50'>
                                 <button
                                     onClick={onClose}
-                                    className='w-full py-3 rounded-xl bg-primary text-white font-bold border-2 border-border-strong dark:border-border-strong-dark shadow-brutal dark:shadow-brutal-dark btn-brutal'
+                                    className='w-full py-3 rounded-xl bg-primary text-white font-bold border-2 border-border-strong shadow-brutal btn-brutal'
                                 >
                                     Close Insights
                                 </button>

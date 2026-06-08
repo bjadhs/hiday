@@ -141,7 +141,7 @@ function TaskGroup({
   return (
     <div
       className={cn(
-        "border-b border-border-strong dark:border-border-strong-dark last:border-b-0 transition-colors",
+        "border-b border-border-strong last:border-b-0 transition-colors",
         isDropTarget && "bg-primary/10 border-primary"
       )}
       onDragOver={handleDragOver}
@@ -158,7 +158,7 @@ function TaskGroup({
         className={cn(
           "w-full flex items-center gap-3 p-3 transition-colors",
           hasAnySessions
-            ? "hover:bg-surface-elevated dark:hover:bg-surface-elevated-dark cursor-pointer"
+            ? "hover:bg-surface-elevated cursor-pointer"
             : "cursor-default",
           isDragging && "opacity-50"
         )}
@@ -301,7 +301,7 @@ function UnscheduledTodoItem({
         className={cn(
           'flex-1 flex items-center gap-2 px-3 py-2 rounded border transition-all mb-2 cursor-grab active:cursor-grabbing',
           'bg-muted/50 dark:bg-muted-dark/50',
-          'border-dashed border-border dark:border-border-dark',
+          'border-dashed border-border',
           'hover:border-primary/50 dark:hover:border-primary-dark/50',
           isDragging && 'opacity-50',
           isLast && 'mb-0'
@@ -372,8 +372,8 @@ function TodoItem({ session, taskColor, onEdit, onDelete, onStart, isLast }: Tod
       <div
         className={cn(
           'flex-1 flex items-center gap-2 px-3 py-2 rounded border transition-all mb-2',
-          'bg-white dark:bg-surface-dark',
-          'border-border-strong dark:border-border-strong-dark',
+          'bg-background-elevated',
+          'border-border-strong',
           'hover:border-primary/50 dark:hover:border-primary-dark/50',
           'shadow-sm dark:shadow-none',
           isLast && 'mb-0'
@@ -470,11 +470,11 @@ export function TaskColumn({
 
   return (
     <div
-      className="flex flex-col h-full border-r-2 border-border-strong dark:border-border-strong-dark bg-surface-elevated/50 dark:bg-surface-elevated-dark/50"
+      className="flex flex-col h-full border-r-2 border-border-strong bg-surface-elevated/50 bg-surface-elevated/50"
       onDragOver={handleColumnDragOver}
     >
       {/* Column Header */}
-      <div className="p-4 border-b-2 border-border-strong dark:border-border-strong-dark">
+      <div className="p-4 border-b-2 border-border-strong">
         <h2 className="font-semibold text-lg">Tasks</h2>
         <p className="text-sm text-muted-foreground">
           {activeTasks.length} tasks • {plannedSessions.length + unscheduledSessions.length} todos

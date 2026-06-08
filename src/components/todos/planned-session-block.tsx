@@ -137,9 +137,9 @@ export function PlannedSessionBlock({
         className={cn(
           'h-full rounded-xl border-2 overflow-hidden transition-all relative',
           isSelected
-            ? 'ring-2 ring-primary shadow-brutal dark:shadow-brutal-dark scale-[1.02] z-10'
+            ? 'ring-2 ring-primary shadow-brutal scale-[1.02] z-10'
             : isHovered
-            ? 'ring-2 ring-primary/50 shadow-brutal-sm dark:shadow-brutal-dark-sm scale-[1.02] z-10'
+            ? 'ring-2 ring-primary/50 shadow-brutal-sm scale-[1.02] z-10'
             : 'shadow-sm'
         )}
         style={{
@@ -190,7 +190,7 @@ export function PlannedSessionBlock({
           {/* Top: Icon and Task Name */}
           <div className="flex items-center gap-2 min-w-0">
             <span
-              className="w-6 h-6 rounded-lg flex items-center justify-center text-sm shrink-0 border border-black/10 dark:border-white/10 shadow-sm"
+              className="w-6 h-6 rounded-lg flex items-center justify-center text-sm shrink-0 border border-black/10 dark:border-white/25 shadow-sm"
               style={{ backgroundColor: taskColor }}
             >
               <span className="filter drop-shadow-sm">
@@ -208,14 +208,14 @@ export function PlannedSessionBlock({
           {/* Session Title */}
           {session.title && (
             <div className="min-w-0">
-              <p className="text-xs font-medium truncate text-foreground dark:text-foreground-dark">
+              <p className="text-xs font-medium truncate text-foreground">
                 {session.title}
               </p>
             </div>
           )}
 
           {/* Bottom: Time and Duration */}
-          <div className="mt-auto flex items-center justify-between gap-1 pt-1 border-t border-black/10 dark:border-white/20">
+          <div className="mt-auto flex items-center justify-between gap-1 pt-1 border-t border-border">
             <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
               <Clock className="w-3 h-3" />
               <span>{session.plannedStartTime ? formatTime(session.plannedStartTime) : '--:--'}</span>
@@ -224,7 +224,7 @@ export function PlannedSessionBlock({
               )}
             </div>
             <span
-              className="text-[10px] font-bold px-1.5 py-0.5 rounded border border-black/10 dark:border-white/20 bg-white dark:bg-surface-elevated-dark text-black dark:text-foreground-dark"
+              className="text-[10px] font-bold px-1.5 py-0.5 rounded border border-border bg-white bg-surface-elevated text-black text-foreground"
             >
               {formatDuration(session.plannedDuration)}
             </span>

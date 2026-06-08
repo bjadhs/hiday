@@ -23,7 +23,11 @@ export function FontSizeToggle() {
   // Show neutral state during SSR to avoid hydration mismatch
   if (!mounted) {
     return (
+<<<<<<< HEAD
       <div className="flex items-center gap-1 p-1 bg-surface-elevated dark:bg-surface-elevated-dark rounded-lg border-2 border-border-strong dark:border-border-strong-dark shadow-brutal-xs dark:shadow-brutal-dark-xs">
+=======
+      <div className="flex items-center gap-1 p-1 bg-surface-elevated rounded-lg border-2 border-border-strong shadow-brutal-xs">
+>>>>>>> 136810d (feat: Bruddle neo-brutalist theme system, shared auth component, and navbar)
         {fontSizeOptions.map((option) => (
           <button
             key={option.value}
@@ -40,7 +44,11 @@ export function FontSizeToggle() {
   }
 
   return (
+<<<<<<< HEAD
     <div className="flex items-center gap-1 p-1 bg-surface-elevated dark:bg-surface-elevated-dark rounded-lg border-2 border-border-strong dark:border-border-strong-dark shadow-brutal-xs dark:shadow-brutal-dark-xs">
+=======
+    <div className="flex items-center gap-1 p-1 bg-surface-elevated rounded-lg border-2 border-border-strong shadow-brutal-xs">
+>>>>>>> 136810d (feat: Bruddle neo-brutalist theme system, shared auth component, and navbar)
       {fontSizeOptions.map((option) => (
         <button
           key={option.value}

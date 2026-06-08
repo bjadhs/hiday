@@ -185,7 +185,7 @@ export function TimelineGrid({
                 {HOURS.map((hour) => (
                     <div
                         key={hour}
-                        className='border-b border-border/30 dark:border-border-dark/30'
+                        className='border-b border-border/30 border-border/30'
                         style={{ height: HOUR_HEIGHT }}
                     />
                 ))}
@@ -196,7 +196,7 @@ export function TimelineGrid({
                 {quarterHourLines.map((line, index) => (
                     <div
                         key={index}
-                        className={`absolute left-0 right-0 ${line.isHour ? '' : 'border-t border-dashed border-border/10 dark:border-border-dark/10'}`}
+                        className={`absolute left-0 right-0 ${line.isHour ? '' : 'border-t border-dashed border-border/10 border-border/10'}`}
                         style={{ top: line.top }}
                     />
                 ))}

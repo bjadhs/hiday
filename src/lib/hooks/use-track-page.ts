@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Task, HistorySession } from '@/lib/types';
 import { useTasks } from '@/lib/hooks/use-tasks';
 import {
@@ -83,9 +83,15 @@ export function useTrackPage() {
         return Array.from(taskMap.values());
     }, [todaySessions, tasks]);
 
+    // Track if we're in the middle of adding a session to prevent sync conflicts
+    const isAddingSessionRef = useRef(false);
+
     // Sync with database active sessions - ONE WAY sync from DB to local
+    // BUT skip if we're actively adding a session to prevent flickering
     useEffect(() => {
-        if (isLoadingActiveSessions || !activeDbSessions.length) return;
+        if (isLoadingActiveSessions) return;
+        if (isAddingSessionRef.current) return; // Skip while adding
+        if (!activeDbSessions.length) return;
 
         // Convert DB sessions to the format expected by the store
         const sessionsForSync = activeDbSessions.map((dbSession) => ({
@@ -101,6 +107,8 @@ export function useTrackPage() {
 
     const startTask = useCallback(async (task: Task, startTime?: number) => {
         try {
+            isAddingSessionRef.current = true; // Mark that we're adding
+
             const newSession = await startSessionMutation.mutateAsync({
                 taskId: task.id,
                 title: task.name,
@@ -115,8 +123,14 @@ export function useTrackPage() {
                 note: '',
                 startTime: startTime || Date.now(),
             });
+
+            // Keep flag true briefly to let React Query stabilize
+            setTimeout(() => {
+                isAddingSessionRef.current = false;
+            }, 2000);
         } catch (error) {
             console.error('Failed to start session:', error);
+            isAddingSessionRef.current = false;
         }
     }, [startSessionMutation]);
 

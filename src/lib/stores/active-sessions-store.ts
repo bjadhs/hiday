@@ -78,13 +78,23 @@ export const useActiveSessionsStore = create<ActiveSessionsState>((set, get) => 
   sessionNotes: {},
 
   // Add a new session - prepend to maintain newest-first order
+  // Removes any optimistic sessions for the same task to prevent duplicates
   addSession: (session) => {
-    set((state) => ({
-      activeSessions: [session, ...state.activeSessions],
-      elapsedTimes: { ...state.elapsedTimes, [session.id]: 0 },
-      syncedSessionIds: new Set([...state.syncedSessionIds, session.id]),
-      sessionNotes: { ...state.sessionNotes, [session.id]: session.note || '' },
-    }));
+    set((state) => {
+      // Filter out optimistic sessions for the same task
+      const filteredSessions = state.activeSessions.filter((s) => {
+        // Keep if it's not an optimistic session for this task
+        const isOptimisticForThisTask = s.id.startsWith('optimistic-') && s.task.id === session.task.id;
+        return !isOptimisticForThisTask;
+      });
+
+      return {
+        activeSessions: [session, ...filteredSessions],
+        elapsedTimes: { ...state.elapsedTimes, [session.id]: 0 },
+        syncedSessionIds: new Set([...state.syncedSessionIds, session.id]),
+        sessionNotes: { ...state.sessionNotes, [session.id]: session.note || '' },
+      };
+    });
   },
 
   // Remove a session (when stopped)

@@ -26,7 +26,7 @@ export function ComingSoonPlaceholder({
   description = 'This feature is being built. Check back later for updates.',
 }: ComingSoonPlaceholderProps) {
   return (
-    <div className='bg-surface dark:bg-surface-dark border-2 border-border-strong dark:border-border-strong-dark rounded-xl shadow-brutal dark:shadow-brutal-dark p-12 text-center'>
+    <div className='bg-surface border-2 border-border-strong rounded-xl shadow-brutal p-12 text-center'>
       <div className='w-20 h-20 mx-auto mb-6 rounded-full bg-primary/10 border-2 border-primary flex items-center justify-center shadow-brutal-sm'>
         <Sparkles className='w-10 h-10 text-primary' />
       </div>

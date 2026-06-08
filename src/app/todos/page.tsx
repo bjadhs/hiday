@@ -286,9 +286,9 @@ export default function TodosPage() {
       {/* Main Content - Split View */}
       <div className="flex flex-1 overflow-hidden">
         {/* Left Column - Task List */}
-        <div className="w-80 flex-shrink-0 border-r-2 border-border-strong dark:border-border-strong-dark flex flex-col">
+        <div className="w-80 flex-shrink-0 border-r-2 border-border-strong flex flex-col">
           {/* Task List Header */}
-          <div className="flex items-center gap-2 p-3 border-b-2 border-border-strong dark:border-border-strong-dark bg-primary/5 dark:bg-primary/10">
+          <div className="flex items-center gap-2 p-3 border-b-2 border-border-strong bg-primary/5 dark:bg-primary/10">
             <CheckSquare className="w-4 h-4 text-primary" />
             <span className="font-semibold text-sm">Tasks</span>
           </div>
@@ -309,7 +309,7 @@ export default function TodosPage() {
         {/* Right Column - Todo Timeline */}
         <div className="flex-1 min-w-0 flex flex-col">
           {/* Timeline Header */}
-          <div className="flex items-center gap-2 p-3 border-b-2 border-border-strong dark:border-border-strong-dark bg-surface-elevated/30 dark:bg-surface-elevated-dark/30">
+          <div className="flex items-center gap-2 p-3 border-b-2 border-border-strong bg-surface-elevated/30">
             <CalendarDays className="w-4 h-4 text-muted-foreground" />
             <span className="font-semibold text-sm">Todo Timeline (12am - 12am)</span>
             <span className="text-xs text-muted-foreground ml-auto">

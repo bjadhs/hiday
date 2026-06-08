@@ -51,7 +51,7 @@ export function TaskCard({
                 style={style}
                 onClick={onClick}
                 className={cn(
-                    'group relative flex flex-col items-center gap-3 p-6 rounded-2xl bg-surface dark:bg-surface-dark border-2 border-border-strong dark:border-border-strong-dark shadow-brutal dark:shadow-brutal-dark card-interactive cursor-pointer text-center',
+                    'group relative flex flex-col items-center gap-3 p-6 rounded-2xl bg-surface border-2 border-border-strong shadow-brutal card-interactive cursor-pointer text-center',
                     isDragging && 'opacity-50 ring-4 ring-primary ring-inset border-primary'
                 )}
             >
@@ -59,13 +59,13 @@ export function TaskCard({
                     <div
                         {...attributes}
                         {...listeners}
-                        className='absolute top-3 left-3 p-1 rounded-lg hover:bg-muted dark:hover:bg-muted-dark cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity'
+                        className='absolute top-3 left-3 p-1 rounded-lg hover:bg-muted cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity'
                     >
                         <GripVertical className='w-4 h-4 text-muted-foreground' />
                     </div>
                 )}
                 <div
-                    className='w-16 h-16 rounded-2xl flex items-center justify-center text-3xl border-2 border-black/10 dark:border-white/10 shadow-brutal-sm shrink-0'
+                    className='w-16 h-16 rounded-2xl flex items-center justify-center text-3xl border-2 border-black/10 dark:border-white/25 shadow-brutal-sm shrink-0'
                     style={{ backgroundColor: task.color }}
                 >
                     {task.icon}
@@ -78,7 +78,7 @@ export function TaskCard({
                 </div>
                 <button
                     onClick={onEdit}
-                    className='absolute top-2 right-2 p-2 rounded-lg border-2 border-border-strong dark:border-border-strong-dark bg-surface-elevated dark:bg-surface-elevated-dark shadow-brutal-xs dark:shadow-brutal-dark-xs btn-brutal sm:opacity-0 group-hover:opacity-100 transition-opacity'
+                    className='absolute top-2 right-2 p-2 rounded-lg border-2 border-border-strong bg-surface-elevated shadow-brutal-xs btn-brutal sm:opacity-0 group-hover:opacity-100 transition-opacity'
                     title='Edit task'
                 >
                     <Pencil className='w-3 h-3 text-muted-foreground' />
@@ -93,7 +93,7 @@ export function TaskCard({
             style={style}
             onClick={onClick}
             className={cn(
-                'group flex items-center gap-4 p-4 rounded-xl bg-surface dark:bg-surface-dark border-2 border-border-strong dark:border-border-strong-dark shadow-brutal dark:shadow-brutal-dark card-interactive cursor-pointer',
+                'group flex items-center gap-4 p-4 rounded-xl bg-surface border-2 border-border-strong shadow-brutal card-interactive cursor-pointer',
                 isDragging && 'opacity-50 ring-4 ring-primary border-primary'
             )}
         >
@@ -101,14 +101,14 @@ export function TaskCard({
                 <div
                     {...attributes}
                     {...listeners}
-                    className='p-1 rounded-lg hover:bg-muted dark:hover:bg-muted-dark cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground transition-colors'
+                    className='p-1 rounded-lg hover:bg-muted cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground transition-colors'
                 >
                     <GripVertical className='w-5 h-5' />
                 </div>
             )}
 
             <div
-                className='w-12 h-12 rounded-xl flex items-center justify-center text-2xl border-2 border-black/10 dark:border-white/10 shadow-brutal-xs shrink-0'
+                className='w-12 h-12 rounded-xl flex items-center justify-center text-2xl border-2 border-black/10 dark:border-white/25 shadow-brutal-xs shrink-0'
                 style={{ backgroundColor: task.color }}
             >
                 {task.icon}
@@ -124,7 +124,7 @@ export function TaskCard({
                     {task.task_tags && task.task_tags.length > 0 && (
                         <div className='flex items-center gap-1 overflow-hidden h-5'>
                             {task.task_tags.slice(0, 2).map((tag, i) => (
-                                <span key={i} className='text-[10px] px-1.5 py-0 border border-border dark:border-border-dark rounded-md bg-muted dark:bg-muted-dark uppercase font-bold'>
+                                <span key={i} className='text-[10px] px-1.5 py-0 border border-border rounded-md bg-muted dark:bg-muted-dark uppercase font-bold'>
                                     {tag}
                                 </span>
                             ))}
@@ -137,7 +137,7 @@ export function TaskCard({
             <div className='flex items-center gap-2'>
                 <button
                     onClick={onEdit}
-                    className='p-2.5 rounded-lg border-2 border-border-strong dark:border-border-strong-dark bg-surface-elevated dark:bg-surface-elevated-dark shadow-brutal-xs dark:shadow-brutal-dark-xs btn-brutal sm:opacity-0 group-hover:opacity-100 transition-opacity'
+                    className='p-2.5 rounded-lg border-2 border-border-strong bg-surface-elevated shadow-brutal-xs btn-brutal sm:opacity-0 group-hover:opacity-100 transition-opacity'
                     title='Edit task'
                 >
                     <Pencil className='w-4 h-4 text-muted-foreground' />

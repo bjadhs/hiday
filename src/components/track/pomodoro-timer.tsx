@@ -281,7 +281,7 @@ export function PomodoroTimer({
     completed: 'bg-success-bg dark:bg-success-bg-dark border-success',
     running: 'bg-orange-50 dark:bg-orange-950/20 border-orange-400',
     paused: 'bg-yellow-50 dark:bg-yellow-950/20 border-yellow-400',
-    idle: 'bg-surface dark:bg-surface-dark border-border-strong',
+    idle: 'bg-surface border-border-strong',
   };
 
   const timeColors = {
@@ -294,7 +294,7 @@ export function PomodoroTimer({
   return (
     <div
       className={cn(
-        'p-4 lg:p-5 rounded-xl border-2 shadow-brutal dark:shadow-brutal-dark h-full flex flex-col overflow-hidden',
+        'p-4 lg:p-5 rounded-xl border-2 shadow-brutal h-full flex flex-col overflow-hidden',
         cardStyles[cardState],
         className
       )}
@@ -312,7 +312,7 @@ export function PomodoroTimer({
                 if (e.key === 'Escape') cancelEditTitle();
               }}
               placeholder={selectedTask.name}
-              className="flex-1 min-w-0 px-2 py-1 text-sm font-bold bg-surface dark:bg-surface-dark border-2 border-primary rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50"
+              className="flex-1 min-w-0 px-2 py-1 text-sm font-bold bg-surface border-2 border-primary rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50"
               autoFocus
             />
             <button
@@ -358,7 +358,7 @@ export function PomodoroTimer({
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="end"
-                className="border-2 border-border-strong dark:border-border-strong-dark shadow-brutal w-44 bg-surface/95 dark:bg-surface-dark/95 backdrop-blur-sm"
+                className="border-2 border-border-strong shadow-brutal w-44 bg-surface/95 bg-surface/95 backdrop-blur-sm"
               >
                 {tasks.map((task) => (
                   <DropdownMenuItem
@@ -418,7 +418,7 @@ export function PomodoroTimer({
         {!isRunning ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="h-8 px-2.5 rounded-lg bg-surface-elevated dark:bg-surface-elevated-dark border-2 border-border-strong dark:border-border-strong-dark shadow-brutal-xs text-xs font-medium flex items-center justify-center gap-1.5 hover:border-primary/50 transition-colors min-w-[80px]">
+              <button className="h-8 px-2.5 rounded-lg bg-surface-elevated border-2 border-border-strong shadow-brutal-xs text-xs font-medium flex items-center justify-center gap-1.5 hover:border-primary/50 transition-colors min-w-[80px]">
                 <Clock className="w-3 h-3 text-muted-foreground" />
                 <span>{duration}m</span>
                 <ChevronDown className="w-3 h-3 text-muted-foreground" />
@@ -426,7 +426,7 @@ export function PomodoroTimer({
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="center"
-              className="border-2 border-border-strong dark:border-border-strong-dark shadow-brutal min-w-20 bg-surface/95 dark:bg-surface-dark/95 backdrop-blur-sm"
+              className="border-2 border-border-strong shadow-brutal min-w-20 bg-surface/95 bg-surface/95 backdrop-blur-sm"
             >
               {POMODORO_PRESETS.map((preset) => (
                 <DropdownMenuItem
@@ -443,7 +443,7 @@ export function PomodoroTimer({
             </DropdownMenuContent>
           </DropdownMenu>
         ) : (
-          <div className="h-8 px-2.5 rounded-lg bg-surface-elevated dark:bg-surface-elevated-dark border-2 border-border-strong dark:border-border-strong-dark text-xs flex items-center justify-center gap-1.5 min-w-[80px]">
+          <div className="h-8 px-2.5 rounded-lg bg-surface-elevated border-2 border-border-strong text-xs flex items-center justify-center gap-1.5 min-w-[80px]">
             <Clock className="w-3 h-3 text-muted-foreground" />
             <span className="font-medium">{duration}m</span>
           </div>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   Zap,
   BarChart3,
@@ -12,8 +12,20 @@ import {
   ListTodo,
   Clock,
   CalendarCheck,
+  LogOut,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useUser, useSupabase } from '@/lib/supabase';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 type NavItem = {
   label: string;
@@ -35,9 +47,13 @@ interface NavBarProps {
   pomodoroCompletions?: number;
 }
 
-export function NavBar({ }: NavBarProps) {
+export function NavBar({}: NavBarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user } = useUser();
+  const { supabase } = useSupabase();
   const [mounted, setMounted] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -57,16 +73,31 @@ export function NavBar({ }: NavBarProps) {
     }
   }, [mounted]);
 
+  // Derive user display info
+  const email = user?.email ?? 'user@example.com';
+  const name =
+    (user?.user_metadata?.full_name as string | undefined) ??
+    (user?.user_metadata?.name as string | undefined) ??
+    email.split('@')[0] ??
+    'User';
+  const initial = name.charAt(0).toUpperCase();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setDialogOpen(false);
+    router.push('/login');
+  };
+
   return (
     <>
       {/* Desktop Sidebar - 280px width per Design.md */}
-      <aside className='hidden lg:flex w-[280px] flex-col border-r-2 border-border-strong dark:border-border-strong-dark bg-surface dark:bg-surface-dark h-screen sticky top-0'>
+      <aside className='hidden lg:flex w-70 flex-col border-r-2 border-border-strong bg-surface h-screen sticky top-0'>
         {/* Logo Area */}
-        <div className='p-6 border-b-2 border-border-strong dark:border-border-strong-dark'>
+        <div className='p-6 border-b-2 border-border-strong'>
           <h1 className='text-2xl font-bold tracking-tight text-primary'>
             Hiday
           </h1>
-          <div className='flex items-center gap-2 text-muted-foreground mt-2'>
+          <div className='flex items-center gap-2 text-foreground-muted mt-2'>
             <Calendar className='w-4 h-4' />
             <span
               className='text-sm font-medium'
@@ -93,7 +124,7 @@ export function NavBar({ }: NavBarProps) {
                   'border-2',
                   isActive
                     ? 'bg-primary/10 text-primary border-transparent border-l-[3px] border-l-primary border-l-solid'
-                    : 'text-muted-foreground border-transparent hover:bg-surface-elevated dark:hover:bg-surface-elevated-dark hover:text-foreground',
+                    : 'text-foreground-muted border-transparent hover:bg-surface-elevated hover:text-foreground',
                 )}
               >
                 <Icon className={cn('w-5 h-5', isActive && 'text-primary')} />
@@ -104,24 +135,57 @@ export function NavBar({ }: NavBarProps) {
         </nav>
 
         {/* User Profile Section */}
-        <div className='p-4 border-t-2 border-border-strong dark:border-border-strong-dark'>
-          <div className='flex items-center gap-3 px-4 py-3 rounded-lg bg-surface-elevated dark:bg-surface-elevated-dark border-2 border-border-strong dark:border-border-strong-dark shadow-brutal-sm dark:shadow-brutal-dark-sm'>
-            {/* Avatar - 40px (MD) per Design.md */}
-            <div className='w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-bold text-sm border-2 border-white dark:border-surface-dark'>
-              U
-            </div>
-            <div className='flex-1 min-w-0'>
-              <p className='font-medium text-sm truncate'>User</p>
-              <p className='text-xs text-muted-foreground truncate'>
-                user@example.com
-              </p>
-            </div>
-          </div>
+        <div className='p-4 border-t-2 border-border-strong'>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <button className='w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-surface-elevated border-2 border-border-strong shadow-brutal-sm cursor-pointer hover:bg-surface-elevated/80 hover:bg-surface-elevated/80 transition-colors text-left'>
+                {/* Avatar - 40px (MD) per Design.md */}
+                <div className='w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-bold text-sm border-2 border-background shrink-0'>
+                  {initial}
+                </div>
+                <div className='flex-1 min-w-0'>
+                  <p className='font-medium text-sm truncate'>{name}</p>
+                  <p className='text-xs text-foreground-muted truncate'>
+                    {email}
+                  </p>
+                </div>
+              </button>
+            </DialogTrigger>
+            <DialogContent className='bg-surface border-2 border-border-strong shadow-brutal'>
+              <DialogHeader>
+                <DialogTitle>Account</DialogTitle>
+                <DialogDescription>
+                  Signed in as {email}
+                </DialogDescription>
+              </DialogHeader>
+              <div className='flex flex-col items-center gap-4 py-4'>
+                <div className='w-14 h-14 rounded-full bg-primary flex items-center justify-center text-white font-bold text-xl border-2 border-background'>
+                  {initial}
+                </div>
+                <div className='text-center'>
+                  <p className='font-semibold text-base'>{name}</p>
+                  <p className='text-sm text-foreground-muted'>
+                    {email}
+                  </p>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button
+                  variant='destructive'
+                  onClick={handleLogout}
+                  className='w-full sm:w-auto'
+                >
+                  <LogOut className='w-4 h-4 mr-2' />
+                  Log out
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </aside>
 
       {/* Mobile Bottom Navigation - 64px height per Design.md */}
-      <nav className='lg:hidden fixed bottom-0 left-0 right-0 h-16 bg-surface dark:bg-surface-dark border-t-2 border-border-strong dark:border-border-strong-dark z-50'>
+      <nav className='lg:hidden fixed bottom-0 left-0 right-0 h-16 bg-surface border-t-2 border-border-strong z-50'>
         <div className='flex items-center justify-around h-full'>
           {navItems.map((item) => {
             const isActive =
@@ -134,7 +198,7 @@ export function NavBar({ }: NavBarProps) {
                 href={item.href}
                 className={cn(
                   'flex flex-col items-center justify-center gap-1 w-16 h-full transition-colors duration-150',
-                  isActive ? 'text-primary' : 'text-muted-foreground',
+                  isActive ? 'text-primary' : 'text-foreground-muted',
                 )}
               >
                 <Icon className={cn('w-5 h-5', isActive && 'text-primary')} />

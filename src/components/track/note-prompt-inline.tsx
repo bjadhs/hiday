@@ -52,7 +52,7 @@ export function NotePromptInline({
       <div className="flex items-center gap-3 mb-3 shrink-0">
         {/* Task icon */}
         <div
-          className="w-10 h-10 rounded-lg flex items-center justify-center text-lg border-2 border-black/10 shadow-brutal-xs shrink-0"
+          className="w-10 h-10 rounded-lg flex items-center justify-center text-lg border-2 border-black/10 dark:border-white/25 shadow-brutal-xs shrink-0"
           style={{ backgroundColor: session.task.color }}
         >
           {session.task.icon}
@@ -60,7 +60,7 @@ export function NotePromptInline({
 
         {/* Title and task info */}
         <div className="flex-1 min-w-0">
-          <h3 className="text-sm font-bold truncate text-foreground dark:text-foreground-dark">
+          <h3 className="text-sm font-bold truncate text-foreground">
             {session.title || session.task.name}
           </h3>
           <span className="text-[10px] text-muted-foreground">
@@ -72,7 +72,7 @@ export function NotePromptInline({
         <button
           onClick={onCancel}
           disabled={isStopping}
-          className="w-8 h-8 rounded-md bg-muted dark:bg-muted-dark text-muted-foreground dark:text-muted-foreground-dark border-2 border-border-strong dark:border-white/20 shadow-brutal-xs btn-brutal flex items-center justify-center hover:bg-surface-elevated dark:hover:bg-surface-elevated-dark transition-colors disabled:opacity-50"
+          className="w-8 h-8 rounded-md bg-muted dark:bg-muted-dark text-foreground-muted border-2 border-border-strong dark:border-white/20 shadow-brutal-xs btn-brutal flex items-center justify-center hover:bg-surface-elevated transition-colors disabled:opacity-50"
           title="Cancel"
         >
           <X className="w-3.5 h-3.5" />
@@ -80,7 +80,7 @@ export function NotePromptInline({
       </div>
 
       {/* Note textarea - takes remaining space */}
-      <div className="flex-1 flex flex-col min-h-0 bg-surface dark:bg-surface-dark rounded-xl border-2 border-border-strong dark:border-border-strong-dark shadow-brutal-sm overflow-hidden">
+      <div className="flex-1 flex flex-col min-h-0 bg-surface rounded-xl border-2 border-border-strong shadow-brutal-sm overflow-hidden">
         <Label
           htmlFor="note-inline"
           className="sr-only"
@@ -96,7 +96,7 @@ export function NotePromptInline({
           autoFocus
           className={cn(
             'flex-1 w-full px-3 py-2.5 text-sm bg-transparent resize-none focus:outline-hidden focus:bg-surface-elevated/50 dark:focus:bg-surface-elevated-dark/50 transition-colors',
-            'placeholder:text-muted-foreground/50 text-foreground dark:text-foreground-dark'
+            'placeholder:text-muted-foreground/50 text-foreground'
           )}
         />
       </div>
@@ -108,7 +108,7 @@ export function NotePromptInline({
           variant="outline"
           onClick={onDelete}
           disabled={isStopping}
-          className="border-2 border-destructive dark:border-destructive shadow-brutal-xs btn-brutal bg-surface dark:bg-surface-dark text-destructive hover:bg-destructive/10 dark:hover:bg-destructive/10"
+          className="border-2 border-destructive dark:border-destructive shadow-brutal-xs btn-brutal bg-surface text-destructive hover:bg-destructive/10 dark:hover:bg-destructive/10"
         >
           {isStopping ? (
             <Loader2 className="w-4 h-4 animate-spin mr-1" />

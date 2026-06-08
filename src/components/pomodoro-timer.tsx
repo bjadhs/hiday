@@ -135,7 +135,7 @@ export function PomodoroTimer({
     <Card className={cn(
       "border-2 border-foreground shadow-brutal transition-all duration-300 overflow-hidden",
       timerState === "running" && "border-primary shadow-brutal-primary",
-      timerState === "break" && "border-green-500 shadow-[4px_4px_0px_0px_#22C55E]"
+      timerState === "break" && "border-success-dark dark:border-success shadow-brutal-sm"
     )}>
       <CardContent className="p-3">
         {/* Header Row - Session Title + Edit + Task | POMODORO */}
@@ -330,7 +330,7 @@ export function PomodoroTimer({
                 <Button
                   size="sm"
                   onClick={skipBreak}
-                  className="h-7 px-2 text-[10px] bg-green-500 text-white border-2 border-green-600 shadow-[2px_2px_0px_0px_#16A34A] hover:shadow-[3px_3px_0px_0px_#16A34A] hover:translate-x-px hover:translate-y-px active:shadow-none active:translate-x-0.5 active:translate-y-0.5 transition-all duration-200"
+                  className="h-7 px-2 text-[10px] bg-success-dark dark:bg-success text-white border-2 border-success dark:border-success-dark shadow-brutal-xs btn-brutal"
                 >
                   Skip
                 </Button>
@@ -342,8 +342,8 @@ export function PomodoroTimer({
                   className={cn(
                     "h-7 w-7 p-0 border-2 transition-all duration-200",
                     timerState === "running"
-                      ? "border-foreground shadow-[2px_2px_0px_0px_rgb(0,0,0)] hover:shadow-[3px_3px_0px_0px_rgb(0,0,0)] hover:translate-x-px hover:translate-y-px active:shadow-none active:translate-x-0.5 active:translate-y-0.5"
-                      : "bg-primary text-primary-foreground border-primary shadow-[2px_2px_0px_0px_hsl(263,70%,56%)] hover:shadow-[3px_3px_0px_0px_hsl(263,70%,56%)] hover:translate-x-px hover:translate-y-px active:shadow-none active:translate-x-0.5 active:translate-y-0.5"
+                      ? "border-foreground shadow-brutal-xs hover:shadow-brutal-sm hover:shadow-brutal-dark-sm btn-brutal"
+                      : "bg-primary text-primary-foreground border-primary shadow-brutal-xs hover:shadow-brutal-sm hover:shadow-brutal-dark-sm btn-brutal"
                   )}
                 >
                   {timerState === "running" ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}

@@ -12,8 +12,8 @@ export function HistoryListView({
     onEditSession,
 }: HistoryListViewProps) {
     return (
-        <div className='bg-surface dark:bg-surface-dark border-2 border-border-strong dark:border-border-strong-dark rounded-xl shadow-brutal dark:shadow-brutal-dark overflow-hidden'>
-            <div className='p-4 lg:p-6 border-b-2 border-border dark:border-border-dark'>
+        <div className='bg-surface border-2 border-border-strong rounded-xl shadow-brutal overflow-hidden'>
+            <div className='p-4 lg:p-6 border-b-2 border-border'>
                 <h2 className='text-xl font-bold tracking-tight'>Session Log</h2>
                 <p className='text-sm text-muted-foreground mt-1'>
                     All tracked sessions for the selected date

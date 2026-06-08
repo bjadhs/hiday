@@ -213,16 +213,16 @@ export default function TimelinePage() {
         />
 
         {/* Split Timeline View */}
-        <div className='flex-1 bg-surface dark:bg-surface-dark border-2 border-border-strong dark:border-border-strong-dark rounded-xl shadow-brutal dark:shadow-brutal-dark overflow-hidden flex flex-col min-h-0'>
+        <div className='flex-1 bg-surface border-2 border-border-strong rounded-xl shadow-brutal overflow-hidden flex flex-col min-h-0'>
           {/* Timeline Headers */}
-          <div className="flex border-b-2 border-border-strong dark:border-border-strong-dark">
+          <div className="flex border-b-2 border-border-strong">
             {/* Left Header - Todo Timeline */}
-            <div className="flex-1 flex items-center gap-2 p-3 border-r-2 border-border-strong dark:border-border-strong-dark bg-primary/5 dark:bg-primary/10">
+            <div className="flex-1 flex items-center gap-2 p-3 border-r-2 border-border-strong bg-primary/5 dark:bg-primary/10">
               <CalendarDays className="w-4 h-4 text-primary" />
               <span className="font-semibold text-sm">Planned (Todos)</span>
             </div>
             {/* Right Header - Session Timeline */}
-            <div className="flex-1 flex items-center gap-2 p-3 bg-surface-elevated/30 dark:bg-surface-elevated-dark/30">
+            <div className="flex-1 flex items-center gap-2 p-3 bg-surface-elevated/30">
               <History className="w-4 h-4 text-muted-foreground" />
               <span className="font-semibold text-sm">Completed Sessions</span>
             </div>
@@ -231,7 +231,7 @@ export default function TimelinePage() {
           {/* Timelines Side by Side */}
           <div className="flex flex-1 overflow-hidden">
             {/* Left Side - Todo Timeline */}
-            <div className="flex-1 border-r-2 border-border-strong dark:border-border-strong-dark min-w-0">
+            <div className="flex-1 border-r-2 border-border-strong min-w-0">
               <TodoTimeline
                 plannedSessions={plannedSessions}
                 selectedDate={selectedDate}

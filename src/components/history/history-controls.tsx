@@ -19,13 +19,13 @@ export function HistoryControls({
     onGoToToday,
 }: HistoryControlsProps) {
     return (
-        <div className='bg-surface dark:bg-surface-dark border-2 border-border-strong dark:border-border-strong-dark rounded-xl shadow-brutal dark:shadow-brutal-dark p-4 lg:p-6'>
+        <div className='bg-surface border-2 border-border-strong rounded-xl shadow-brutal p-4 lg:p-6'>
             <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4'>
                 {/* Date Navigation */}
                 <div className='flex items-center gap-3'>
                     <button
                         onClick={() => onNavigateDate(-1)}
-                        className='p-2 rounded-lg border-2 border-border-strong dark:border-border-strong-dark hover:bg-surface-elevated dark:hover:bg-surface-elevated-dark transition-colors shadow-brutal-xs btn-brutal'
+                        className='p-2 rounded-lg border-2 border-border-strong hover:bg-surface-elevated transition-colors shadow-brutal-xs btn-brutal'
                     >
                         <ChevronLeft className='w-5 h-5' />
                     </button>
@@ -44,14 +44,14 @@ export function HistoryControls({
 
                     <button
                         onClick={() => onNavigateDate(1)}
-                        className='p-2 rounded-lg border-2 border-border-strong dark:border-border-strong-dark hover:bg-surface-elevated dark:hover:bg-surface-elevated-dark transition-colors shadow-brutal-xs btn-brutal'
+                        className='p-2 rounded-lg border-2 border-border-strong hover:bg-surface-elevated transition-colors shadow-brutal-xs btn-brutal'
                     >
                         <ChevronRight className='w-5 h-5' />
                     </button>
                 </div>
 
                 {/* View Toggle */}
-                <div className='flex items-center gap-1 p-1 bg-surface-elevated dark:bg-surface-elevated-dark rounded-lg border-2 border-border dark:border-border-dark shadow-brutal-xs dark:shadow-brutal-dark-xs'>
+                <div className='flex items-center gap-1 p-1 bg-surface-elevated rounded-lg border-2 border-border shadow-brutal-xs'>
                     <button
                         onClick={() => onSetViewMode('list')}
                         className={cn(

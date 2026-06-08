@@ -162,9 +162,10 @@ export async function updatePlannedSession(
     .eq('id', sessionId)
     .eq('user_id', user.id)
     .select('*, tasks(*)')
-    .single()
+    .maybeSingle()
 
   if (error) throw error
+  if (!data) throw new Error('Planned session not found')
   return data as PlannedSessionWithTask
 }
 
@@ -182,10 +183,10 @@ async function getPlannedSessionById(sessionId: string) {
     .select('*')
     .eq('id', sessionId)
     .eq('user_id', user.id)
-    .single()
+    .maybeSingle()
 
   if (error) return null
-  return data as Session
+  return data as Session | null
 }
 
 /**
@@ -232,9 +233,10 @@ export async function startPlannedSession(sessionId: string) {
     .eq('user_id', user.id)
     .eq('status', 'planned') // Only update if it's still planned
     .select('*, tasks(*)')
-    .single()
+    .maybeSingle()
 
   if (error) throw error
+  if (!data) throw new Error('Planned session not found or already started')
   return data as PlannedSessionWithTask
 }
 
@@ -270,9 +272,10 @@ export async function completePlannedSession(
     .eq('id', sessionId)
     .eq('user_id', user.id)
     .select('*, tasks(*)')
-    .single()
+    .maybeSingle()
 
   if (error) throw error
+  if (!data) throw new Error('Planned session not found')
   return data as PlannedSessionWithTask
 }
 
@@ -298,9 +301,10 @@ export async function unschedulePlannedSession(sessionId: string) {
     .eq('user_id', user.id)
     .eq('status', 'planned')
     .select('*, tasks(*)')
-    .single()
+    .maybeSingle()
 
   if (error) throw error
+  if (!data) throw new Error('Planned session not found')
   return data as PlannedSessionWithTask
 }
 

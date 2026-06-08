@@ -42,9 +42,9 @@ function TagInput({
         <div className='space-y-2'>
             <div className='flex flex-wrap gap-2 mb-2'>
                 {tags.map(tag => (
-                    <span key={tag} className='inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-surface dark:bg-surface-dark border-2 border-border-strong dark:border-border-strong-dark text-xs font-bold shadow-brutal-xs dark:shadow-brutal-dark-xs'>
+                    <span key={tag} className='inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-surface border-2 border-border-strong text-xs font-bold shadow-brutal-xs'>
                         {tag}
-                        <button onClick={() => removeTag(tag)} className='hover:text-red-500 transition-colors'>
+                        <button onClick={() => removeTag(tag)} className='hover:text-destructive transition-colors'>
                             <X className='w-3 h-3' />
                         </button>
                     </span>
@@ -62,11 +62,11 @@ function TagInput({
                             addTag();
                         }
                     }}
-                    className='pr-10 border-2 border-border-strong dark:border-border-strong-dark bg-surface dark:bg-surface-dark rounded-xl h-12'
+                    className='pr-10 border-2 border-border-strong bg-surface rounded-xl h-12'
                 />
                 <button
                     onClick={addTag}
-                    className='absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg bg-surface dark:bg-surface-dark border-2 border-border-strong dark:border-border-strong-dark shadow-brutal-xs dark:shadow-brutal-dark-xs active:shadow-none transition-all'
+                    className='absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg bg-surface border-2 border-border-strong shadow-brutal-xs active:shadow-none transition-all'
                 >
                     <Plus className='w-4 h-4' />
                 </button>
@@ -111,8 +111,8 @@ export function TaskFormModal({
 
     return (
         <Dialog open={true} onOpenChange={(open) => !open && !isSaving && !isDeleting && onCancel()}>
-            <DialogContent showCloseButton={false} className='max-w-2xl p-0 overflow-y-auto max-h-[90vh] border-4 border-border-strong dark:border-border-strong-dark bg-surface dark:bg-surface-dark rounded-3xl shadow-brutal dark:shadow-brutal-dark custom-scrollbar'>
-                <div className='p-6 border-b-4 border-border-strong dark:border-border-strong-dark bg-muted/10 flex items-center justify-between'>
+            <DialogContent showCloseButton={false} className='max-w-2xl p-0 overflow-y-auto max-h-[90vh] border-4 border-border-strong bg-surface rounded-3xl shadow-brutal custom-scrollbar'>
+                <div className='p-6 border-b-4 border-border-strong bg-muted/10 flex items-center justify-between'>
                     <div className='space-y-1'>
                         <DialogTitle className='text-3xl font-black tracking-tighter'>
                             {isNew ? 'CREATE TASK' : 'REFINE TASK'}
@@ -124,7 +124,7 @@ export function TaskFormModal({
                     <button
                         onClick={onCancel}
                         disabled={isSaving || isDeleting}
-                        className='p-2 rounded-xl border-2 border-border-strong dark:border-border-strong-dark bg-surface dark:bg-surface-dark hover:bg-muted dark:hover:bg-muted-dark transition-colors'
+                        className='p-2 rounded-xl border-2 border-border-strong bg-surface hover:bg-muted transition-colors'
                     >
                         <X className='w-5 h-5' />
                     </button>
@@ -132,10 +132,10 @@ export function TaskFormModal({
 
                 <div className='p-6 space-y-8'>
                     {/* Identity Section */}
-                    <div className='p-6 rounded-2xl bg-surface-elevated dark:bg-surface-elevated-dark border-4 border-border-strong dark:border-border-strong-dark shadow-brutal-xs dark:shadow-brutal-dark-xs space-y-6'>
+                    <div className='p-6 rounded-2xl bg-surface-elevated border-4 border-border-strong shadow-brutal-xs space-y-6'>
                         <div className='flex items-center gap-3 mb-2'>
                             <div
-                                className='w-10 h-10 rounded-xl flex items-center justify-center text-2xl border-2 border-black/10 dark:border-white/10 shadow-brutal-xs shrink-0 transition-all'
+                                className='w-10 h-10 rounded-xl flex items-center justify-center text-2xl border-2 border-black/10 dark:border-white/25 shadow-brutal-xs shrink-0 transition-all'
                                 style={{ backgroundColor: formData.color }}
                             >
                                 {formData.icon}
@@ -149,7 +149,7 @@ export function TaskFormModal({
                                 value={formData.name}
                                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                                 placeholder='What are we tracking?'
-                                className='h-14 text-xl font-bold border-2 border-border-strong dark:border-border-strong-dark bg-surface dark:bg-surface-dark rounded-xl'
+                                className='h-14 text-xl font-bold border-2 border-border-strong bg-surface rounded-xl'
                             />
                         </div>
 
@@ -175,7 +175,7 @@ export function TaskFormModal({
                                                 'w-11 h-11 rounded-xl text-2xl flex items-center justify-center border-2 transition-all btn-brutal',
                                                 formData.icon === icon
                                                     ? 'bg-primary/20 border-primary shadow-brutal-xs ring-2 ring-primary/20'
-                                                    : 'bg-surface dark:bg-surface-dark border-border-strong dark:border-border-strong-dark'
+                                                    : 'bg-surface border-border-strong'
                                             )}
                                         >
                                             {icon}
@@ -222,7 +222,7 @@ export function TaskFormModal({
                     </div>
 
                     {/* Classification Section */}
-                    <div className='p-6 rounded-2xl bg-surface-elevated dark:bg-surface-elevated-dark border-4 border-border-strong dark:border-border-strong-dark shadow-brutal-xs dark:shadow-brutal-dark-xs space-y-4'>
+                    <div className='p-6 rounded-2xl bg-surface-elevated border-4 border-border-strong shadow-brutal-xs space-y-4'>
                         <div className='flex items-center gap-2'>
                             <TagIcon className='w-5 h-5 text-secondary' />
                             <h3 className='text-lg font-bold uppercase tracking-tight'>Classification</h3>
@@ -234,7 +234,7 @@ export function TaskFormModal({
                     </div>
 
                     {/* Ambition Section */}
-                    <div className='p-6 rounded-2xl bg-surface-elevated dark:bg-surface-elevated-dark border-4 border-border-strong dark:border-border-strong-dark shadow-brutal-xs dark:shadow-brutal-dark-xs space-y-6'>
+                    <div className='p-6 rounded-2xl bg-surface-elevated border-4 border-border-strong shadow-brutal-xs space-y-6'>
                         <div className='flex items-center gap-2'>
                             <Target className='w-5 h-5 text-accent' />
                             <h3 className='text-lg font-bold uppercase tracking-tight'>Ambition</h3>
@@ -244,7 +244,7 @@ export function TaskFormModal({
                             <div className='space-y-2'>
                                 <Label className='text-sm font-bold'>Goal Strategy</Label>
                                 <select
-                                    className='w-full h-12 px-4 rounded-xl border-2 border-border-strong dark:border-border-strong-dark bg-surface dark:bg-surface-dark font-bold appearance-none cursor-pointer'
+                                    className='w-full h-12 px-4 rounded-xl border-2 border-border-strong bg-surface font-bold appearance-none cursor-pointer'
                                     value={formData.goal_type || 'none'}
                                     onChange={(e) => setFormData(prev => ({ ...prev, goal_type: e.target.value as any }))}
                                 >
@@ -271,7 +271,7 @@ export function TaskFormModal({
                                                     setFormData(prev => ({ ...prev, goal_duration: val }));
                                                 }
                                             }}
-                                            className='h-12 pl-10 border-2 border-border-strong dark:border-border-strong-dark bg-surface dark:bg-surface-dark rounded-xl font-bold'
+                                            className='h-12 pl-10 border-2 border-border-strong bg-surface rounded-xl font-bold'
                                         />
                                         <div className='absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground'>
                                             {formData.goal_type === 'count' ? <History className='w-4 h-4' /> : <Clock className='w-4 h-4' />}
@@ -283,7 +283,7 @@ export function TaskFormModal({
                     </div>
 
                     {/* Intelligence Section */}
-                    <div className='p-6 rounded-2xl bg-surface-elevated dark:bg-surface-elevated-dark border-4 border-border-strong dark:border-border-strong-dark shadow-brutal-xs dark:shadow-brutal-dark-xs space-y-6'>
+                    <div className='p-6 rounded-2xl bg-surface-elevated border-4 border-border-strong shadow-brutal-xs space-y-6'>
                         <div className='flex items-center justify-between'>
                             <div className='flex items-center gap-2'>
                                 <StickyNote className='w-5 h-5 text-primary' />
@@ -301,7 +301,7 @@ export function TaskFormModal({
                             value={formData.default_note || ''}
                             onChange={(e) => setFormData(prev => ({ ...prev, default_note: e.target.value }))}
                             placeholder='Default session note...'
-                            className='w-full min-h-[100px] p-4 rounded-xl border-2 border-border-strong dark:border-border-strong-dark bg-surface dark:bg-surface-dark text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all'
+                            className='w-full min-h-[100px] p-4 rounded-xl border-2 border-border-strong bg-surface text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all'
                         />
                     </div>
 
@@ -310,7 +310,7 @@ export function TaskFormModal({
                         <button
                             onClick={handleSave}
                             disabled={!formData.name.trim() || isSaving}
-                            className='flex-1 flex items-center justify-center gap-2 px-8 py-4 rounded-2xl bg-primary text-white text-lg font-black border-2 border-border-strong dark:border-border-strong-dark shadow-brutal dark:shadow-brutal-dark btn-brutal disabled:opacity-50'
+                            className='flex-1 flex items-center justify-center gap-2 px-8 py-4 rounded-2xl bg-primary text-white text-lg font-black border-2 border-border-strong shadow-brutal btn-brutal disabled:opacity-50'
                         >
                             {isSaving ? <Loader2 className='w-6 h-6 animate-spin' /> : <Check className='w-6 h-6' />}
                             {isNew ? 'ESTABLISH TASK' : 'LOCK CHANGES'}
@@ -320,7 +320,7 @@ export function TaskFormModal({
                             <button
                                 onClick={() => onDelete(task.id!)}
                                 disabled={isDeleting}
-                                className='flex items-center justify-center gap-2 px-6 py-4 rounded-2xl bg-red-500 text-white font-black border-2 border-border-strong dark:border-border-strong-dark shadow-brutal dark:shadow-brutal-dark btn-brutal disabled:opacity-50'
+                                className='flex items-center justify-center gap-2 px-6 py-4 rounded-2xl bg-red-500 text-white font-black border-2 border-border-strong shadow-brutal btn-brutal disabled:opacity-50'
                             >
                                 {isDeleting ? <Loader2 className='w-6 h-6 animate-spin' /> : <Trash2 className='w-6 h-6' />}
                             </button>

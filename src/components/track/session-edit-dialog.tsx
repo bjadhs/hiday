@@ -135,9 +135,9 @@ export function SessionEditDialog({
   return (
     <>
       <Dialog open={isOpen && !isDeleteConfirmOpen} onOpenChange={(open) => !open && onClose()}>
-        <DialogContent className="sm:max-w-md bg-surface dark:bg-surface-dark border-2 border-border-strong dark:border-border-strong-dark shadow-brutal dark:shadow-brutal-dark">
+        <DialogContent className="sm:max-w-md bg-surface border-2 border-border-strong shadow-brutal">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold flex items-center gap-2 text-foreground dark:text-foreground-dark">
+            <DialogTitle className="text-xl font-bold flex items-center gap-2 text-foreground">
               <span className="text-2xl">✏️</span>
               Edit Session
             </DialogTitle>
@@ -146,7 +146,7 @@ export function SessionEditDialog({
           <div className="space-y-5 py-4">
             {/* Session Title */}
             <div className="space-y-2">
-              <Label htmlFor="title" className="text-sm font-semibold text-foreground dark:text-foreground-dark">
+              <Label htmlFor="title" className="text-sm font-semibold text-foreground">
                 Session Title
               </Label>
               <Input
@@ -154,51 +154,51 @@ export function SessionEditDialog({
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="What did you work on?"
-                className="border-2 border-border-strong dark:border-border-strong-dark focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className="border-2 border-border-strong focus:border-primary focus:ring-2 focus:ring-primary/20"
               />
             </div>
 
             {/* Task Selection */}
             <div className="space-y-2">
-              <Label className="text-sm font-semibold text-foreground dark:text-foreground-dark">Task</Label>
+              <Label className="text-sm font-semibold text-foreground">Task</Label>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="outline"
                     disabled={isLoadingTasks}
-                    className="w-full justify-between border-2 border-border-strong dark:border-border-strong-dark shadow-brutal-xs btn-brutal bg-surface dark:bg-surface-dark text-foreground dark:text-foreground-dark hover:bg-surface-elevated dark:hover:bg-surface-elevated-dark"
+                    className="w-full justify-between border-2 border-border-strong shadow-brutal-xs btn-brutal bg-surface text-foreground hover:bg-surface-elevated"
                   >
                     {selectedTask ? (
                       <span className="flex items-center gap-2">
                         <span
-                          className="w-5 h-5 rounded-md flex items-center justify-center text-sm border-2 border-black/10"
+                          className="w-5 h-5 rounded-md flex items-center justify-center text-sm border-2 border-black/10 dark:border-white/25"
                           style={{ backgroundColor: selectedTask.color }}
                         >
                           {selectedTask.icon}
                         </span>
-                        <span className="text-foreground dark:text-foreground-dark">{selectedTask.name}</span>
+                        <span className="text-foreground">{selectedTask.name}</span>
                       </span>
                     ) : (
-                      <span className="text-muted-foreground dark:text-muted-foreground-dark">Select a task</span>
+                      <span className="text-foreground-muted">Select a task</span>
                     )}
-                    <ChevronDown className="w-4 h-4 text-muted-foreground dark:text-muted-foreground-dark" />
+                    <ChevronDown className="w-4 h-4 text-foreground-muted" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
                   align="start"
-                  className="w-56 max-h-60 overflow-y-auto bg-surface dark:bg-surface-dark border-2 border-border-strong dark:border-border-strong-dark shadow-brutal dark:shadow-brutal-dark"
+                  className="w-56 max-h-60 overflow-y-auto bg-surface border-2 border-border-strong shadow-brutal"
                 >
                   {tasks.map((task) => (
                     <DropdownMenuItem
                       key={task.id}
                       onClick={() => setSelectedTask(task as Task)}
                       className={cn(
-                        'flex items-center gap-2 cursor-pointer text-foreground dark:text-foreground-dark hover:text-foreground dark:hover:text-foreground-dark',
+                        'flex items-center gap-2 cursor-pointer text-foreground hover:text-foreground',
                         selectedTask?.id === task.id && 'bg-primary/10'
                       )}
                     >
                       <span
-                        className="w-5 h-5 rounded-md flex items-center justify-center text-sm border-2 border-black/10"
+                        className="w-5 h-5 rounded-md flex items-center justify-center text-sm border-2 border-black/10 dark:border-white/25"
                         style={{ backgroundColor: task.color }}
                       >
                         {task.icon}
@@ -213,7 +213,7 @@ export function SessionEditDialog({
             {/* Start and End Times */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="startTime" className="text-sm font-semibold flex items-center gap-1 text-foreground dark:text-foreground-dark">
+                <Label htmlFor="startTime" className="text-sm font-semibold flex items-center gap-1 text-foreground">
                   <Clock className="w-3.5 h-3.5" />
                   Start Time
                 </Label>
@@ -222,11 +222,11 @@ export function SessionEditDialog({
                   type="datetime-local"
                   value={startTime}
                   onChange={(e) => setStartTime(e.target.value)}
-                  className="border-2 border-border-strong dark:border-border-strong-dark focus:border-primary focus:ring-2 focus:ring-primary/20 text-sm"
+                  className="border-2 border-border-strong focus:border-primary focus:ring-2 focus:ring-primary/20 text-sm"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="endTime" className="text-sm font-semibold flex items-center gap-1 text-foreground dark:text-foreground-dark">
+                <Label htmlFor="endTime" className="text-sm font-semibold flex items-center gap-1 text-foreground">
                   <Clock className="w-3.5 h-3.5" />
                   End Time
                 </Label>
@@ -236,14 +236,14 @@ export function SessionEditDialog({
                   value={endTime}
                   onChange={(e) => setEndTime(e.target.value)}
                   placeholder="Still ongoing..."
-                  className="border-2 border-border-strong dark:border-border-strong-dark focus:border-primary focus:ring-2 focus:ring-primary/20 text-sm"
+                  className="border-2 border-border-strong focus:border-primary focus:ring-2 focus:ring-primary/20 text-sm"
                 />
               </div>
             </div>
 
             {/* Duration Preview */}
-            <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-surface-elevated dark:bg-surface-elevated-dark border-2 border-border dark:border-border-dark">
-              <span className="text-sm text-muted-foreground dark:text-muted-foreground-dark">Duration</span>
+            <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-surface-elevated border-2 border-border">
+              <span className="text-sm text-foreground-muted">Duration</span>
               <span className="font-mono font-semibold text-primary">
                 {calculateDuration()}
               </span>
@@ -254,7 +254,7 @@ export function SessionEditDialog({
             <Button
               variant="outline"
               onClick={() => setIsDeleteConfirmOpen(true)}
-              className="border-2 border-danger text-danger dark:text-danger-dark hover:bg-danger/10 shadow-brutal-xs btn-brutal bg-surface dark:bg-surface-dark"
+              className="border-2 border-danger text-danger dark:text-danger-dark hover:bg-danger/10 shadow-brutal-xs btn-brutal bg-surface"
             >
               <Trash2 className="w-4 h-4 mr-1" />
               Delete
@@ -263,7 +263,7 @@ export function SessionEditDialog({
               <Button
                 variant="outline"
                 onClick={onClose}
-                className="border-2 border-border-strong dark:border-border-strong-dark shadow-brutal-xs btn-brutal bg-surface dark:bg-surface-dark text-foreground dark:text-foreground-dark hover:bg-surface-elevated dark:hover:bg-surface-elevated-dark"
+                className="border-2 border-border-strong shadow-brutal-xs btn-brutal bg-surface text-foreground hover:bg-surface-elevated"
               >
                 Cancel
               </Button>
@@ -284,14 +284,14 @@ export function SessionEditDialog({
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteConfirmOpen} onOpenChange={(open) => !open && setIsDeleteConfirmOpen(false)}>
-        <DialogContent className="sm:max-w-sm bg-surface dark:bg-surface-dark border-2 border-danger shadow-brutal dark:shadow-brutal-dark">
+        <DialogContent className="sm:max-w-sm bg-surface border-2 border-danger shadow-brutal">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-danger dark:text-danger-dark flex items-center gap-2">
               <Trash2 className="w-5 h-5" />
               Delete Session?
             </DialogTitle>
           </DialogHeader>
-          <p className="text-muted-foreground dark:text-muted-foreground-dark py-4">
+          <p className="text-foreground-muted py-4">
             This will permanently delete the session &quot;{session.title || session.task.name}&quot;. 
             This action cannot be undone.
           </p>
@@ -299,7 +299,7 @@ export function SessionEditDialog({
             <Button
               variant="outline"
               onClick={() => setIsDeleteConfirmOpen(false)}
-              className="border-2 border-border-strong dark:border-border-strong-dark shadow-brutal-xs btn-brutal bg-surface dark:bg-surface-dark text-foreground dark:text-foreground-dark hover:bg-surface-elevated dark:hover:bg-surface-elevated-dark"
+              className="border-2 border-border-strong shadow-brutal-xs btn-brutal bg-surface text-foreground hover:bg-surface-elevated"
             >
               Cancel
             </Button>

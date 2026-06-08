@@ -23,7 +23,7 @@ export function DayNavigation({
             <div className='flex items-center gap-2'>
                 <button
                     onClick={onPrev}
-                    className='p-2 rounded-lg border-2 border-border-strong dark:border-border-strong-dark hover:bg-surface-elevated dark:hover:bg-surface-elevated-dark transition-colors'
+                    className='p-2 rounded-lg border-2 border-border-strong hover:bg-surface-elevated transition-colors'
                 >
                     <ChevronLeft className='w-5 h-5' />
                 </button>
@@ -48,7 +48,7 @@ export function DayNavigation({
                 </div>
                 <button
                     onClick={onNext}
-                    className='p-2 rounded-lg border-2 border-border-strong dark:border-border-strong-dark hover:bg-surface-elevated dark:hover:bg-surface-elevated-dark transition-colors'
+                    className='p-2 rounded-lg border-2 border-border-strong hover:bg-surface-elevated transition-colors'
                 >
                     <ChevronRight className='w-5 h-5' />
                 </button>

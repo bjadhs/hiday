@@ -37,9 +37,10 @@ export async function getTaskById(id: string) {
     .select('*')
     .eq('id', id)
     .eq('user_id', user.id)
-    .single()
+    .maybeSingle()
 
   if (error) throw error
+  if (!data) throw new Error('Task not found')
   return data as Task
 }
 
@@ -80,9 +81,10 @@ export async function updateTask(id: string, updates: TaskUpdate) {
     .eq('id', id)
     .eq('user_id', user.id)
     .select()
-    .single()
+    .maybeSingle()
 
   if (error) throw error
+  if (!data) throw new Error('Task not found')
   return data as Task
 }
 

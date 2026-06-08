@@ -27,27 +27,27 @@ export function TasksHeader({
             </div>
 
             <div className='flex items-center gap-3'>
-                <div className='flex items-center border-4 border-border-strong dark:border-border-strong-dark rounded-2xl overflow-hidden shadow-brutal-xs dark:shadow-brutal-dark-xs'>
+                <div className='flex items-center border-4 border-border-strong rounded-2xl overflow-hidden shadow-brutal-xs'>
                     <button
                         onClick={() => setViewMode('list')}
-                        className={cn('p-3', viewMode === 'list' ? 'bg-primary text-white' : 'bg-surface dark:bg-surface-dark hover:bg-muted dark:hover:bg-muted-dark')}
+                        className={cn('p-3', viewMode === 'list' ? 'bg-primary text-white' : 'bg-surface hover:bg-muted')}
                     >
                         <List className='w-5 h-5' />
                     </button>
                     <button
                         onClick={() => setViewMode('grid')}
-                        className={cn('p-3', viewMode === 'grid' ? 'bg-primary text-white' : 'bg-surface dark:bg-surface-dark hover:bg-muted dark:hover:bg-muted-dark')}
+                        className={cn('p-3', viewMode === 'grid' ? 'bg-primary text-white' : 'bg-surface hover:bg-muted')}
                     >
                         <LayoutGrid className='w-5 h-5' />
                     </button>
                 </div>
 
                 <div className='relative group/sort'>
-                    <button className='flex items-center gap-2 px-5 py-3 rounded-2xl bg-surface dark:bg-surface-dark border-4 border-border-strong dark:border-border-strong-dark shadow-brutal-xs dark:shadow-brutal-dark-xs font-black text-sm btn-brutal'>
+                    <button className='flex items-center gap-2 px-5 py-3 rounded-2xl bg-surface border-4 border-border-strong shadow-brutal-xs font-black text-sm btn-brutal'>
                         <ArrowUpDown className='w-5 h-5' />
                         <span className='hidden sm:inline'>{sortBy.toUpperCase()}</span>
                     </button>
-                    <div className='absolute right-0 top-full mt-2 w-56 bg-surface dark:bg-surface-dark border-4 border-border-strong dark:border-border-strong-dark rounded-2xl shadow-brutal dark:shadow-brutal-dark z-30 opacity-0 invisible group-hover/sort:opacity-100 group-hover/sort:visible transition-all overflow-hidden'>
+                    <div className='absolute right-0 top-full mt-2 w-56 bg-surface border-4 border-border-strong rounded-2xl shadow-brutal z-30 opacity-0 invisible group-hover/sort:opacity-100 group-hover/sort:visible transition-all overflow-hidden'>
                         {['order', 'name', 'newest'].map((s) => (
                             <button
                                 key={s}
@@ -62,7 +62,7 @@ export function TasksHeader({
 
                 <button
                     onClick={onCreate}
-                    className='flex items-center gap-2 px-6 py-4 rounded-2xl bg-primary text-white font-black border-4 border-border-strong dark:border-border-strong-dark shadow-brutal dark:shadow-brutal-dark btn-brutal'
+                    className='flex items-center gap-2 px-6 py-4 rounded-2xl bg-primary text-white font-black border-4 border-border-strong shadow-brutal btn-brutal'
                 >
                     <Plus className='w-6 h-6' />
                     <span className='hidden sm:inline'>NEW TASK</span>
