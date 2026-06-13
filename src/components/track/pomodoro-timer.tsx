@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { Task } from '@/lib/types';
 import { useTasks } from '@/lib/hooks/use-tasks';
@@ -116,8 +116,11 @@ export function PomodoroTimer({
   // Fetch tasks if not provided as prop
   const { data: fetchedTasks = [] } = useTasks();
   const tasks = propTasks || fetchedTasks;
-  const firstTask = tasks[0] || { id: 'default', name: 'Task', color: '#8B5CF6', icon: '📝' };
-  
+  const firstTask = useMemo(
+    () => tasks[0] || { id: 'default', name: 'Task', color: '#8B5CF6', icon: '📝' },
+    [tasks]
+  );
+
   const [duration, setDuration] = useState(defaultDuration);
   const [selectedTask, setSelectedTask] = useState<Task>(defaultTask || firstTask);
   const [sessionTitle, setSessionTitle] = useState(selectedTask.name);
@@ -126,11 +129,13 @@ export function PomodoroTimer({
   const [timeLeft, setTimeLeft] = useState(defaultDuration * 60);
   const [isRunning, setIsRunning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [needsReset, setNeedsReset] = useState(false);
 
   // Refs for timer to avoid effect re-runs
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const callbacksRef = useRef({ onComplete, onStop });
   const sessionDataRef = useRef({ selectedTask, sessionTitle, duration });
+  const resetPendingRef = useRef(false);
 
   // Keep refs in sync
   useEffect(() => {
@@ -150,6 +155,28 @@ export function PomodoroTimer({
     };
   }, []);
 
+  const resetInternal = useCallback(() => {
+    setIsRunning(false);
+    setIsPaused(false);
+    setTimeLeft(duration * 60);
+    const defaultTaskValue = defaultTask || firstTask;
+    setSelectedTask(defaultTaskValue);
+    setSessionTitle(defaultTaskValue.name);
+    setNeedsReset(false);
+  }, [duration, defaultTask, firstTask]);
+
+  // Process pending reset from completion callback
+  useEffect(() => {
+    if (needsReset && !resetPendingRef.current) {
+      resetPendingRef.current = true;
+      const timeout = setTimeout(() => {
+        resetInternal();
+        resetPendingRef.current = false;
+      }, 500);
+      return () => clearTimeout(timeout);
+    }
+  }, [needsReset, resetInternal]);
+
   const stopTimer = useCallback(() => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
@@ -159,14 +186,14 @@ export function PomodoroTimer({
 
   const startTimer = useCallback(() => {
     stopTimer(); // Clear any existing timer
-    
+
     timerRef.current = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           // Timer complete
           stopTimer();
           setIsRunning(false);
-          
+
           // Call completion callback using ref
           const { selectedTask, sessionTitle, duration } = sessionDataRef.current;
           callbacksRef.current.onComplete?.({
@@ -175,12 +202,10 @@ export function PomodoroTimer({
             duration: duration * 60,
             elapsed: duration * 60,
           });
-          
-          // Reset after completion
-          setTimeout(() => {
-            resetInternal();
-          }, 500);
-          
+
+          // Schedule reset via effect to avoid setState in callback issue
+          setNeedsReset(true);
+
           return 0;
         }
         return prev - 1;
@@ -195,20 +220,11 @@ export function PomodoroTimer({
     } else {
       stopTimer();
     }
-    
+
     return () => {
       stopTimer();
     };
   }, [isRunning, isPaused, startTimer, stopTimer]);
-
-  const resetInternal = useCallback(() => {
-    setIsRunning(false);
-    setIsPaused(false);
-    setTimeLeft(duration * 60);
-    const defaultTaskValue = defaultTask || firstTask;
-    setSelectedTask(defaultTaskValue);
-    setSessionTitle(defaultTaskValue.name);
-  }, [duration, defaultTask, firstTask]);
 
   const handleManualStop = useCallback(() => {
     const elapsed = duration * 60 - timeLeft;
@@ -228,6 +244,15 @@ export function PomodoroTimer({
     setIsRunning(true);
     setIsPaused(false);
   }, [duration, timeLeft]);
+
+  // Listen for global shortcut to start the pomodoro timer
+  useEffect(() => {
+    function handleStartPomodoro() {
+      start();
+    }
+    window.addEventListener('hiday:start-pomodoro', handleStartPomodoro);
+    return () => window.removeEventListener('hiday:start-pomodoro', handleStartPomodoro);
+  }, [start]);
 
   const pause = useCallback(() => {
     setIsPaused(true);

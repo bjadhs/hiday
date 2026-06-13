@@ -4,10 +4,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getTasks, createTask, updateTask, deleteTask, archiveTask, reorderTasks } from '@/actions/tasks'
 import type { Database } from '@/lib/supabase/database.types'
 
-type Task = Database['public']['Tables']['tasks']['Row']
-type TaskInsert = Database['public']['Tables']['tasks']['Insert']
-type TaskUpdate = Database['public']['Tables']['tasks']['Update']
-
 // Query keys
 export const taskKeys = {
   all: ['tasks'] as const,
@@ -30,7 +26,7 @@ export function useCreateTask() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (task: Omit<TaskInsert, 'user_id' | 'created_at' | 'updated_at'>) => createTask(task),
+    mutationFn: (task: Omit<Database['public']['Tables']['tasks']['Insert'], 'user_id' | 'created_at' | 'updated_at'>) => createTask(task),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: taskKeys.lists() })
     },
@@ -42,7 +38,7 @@ export function useUpdateTask() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ id, updates }: { id: string; updates: TaskUpdate }) => updateTask(id, updates),
+    mutationFn: ({ id, updates }: { id: string; updates: Database['public']['Tables']['tasks']['Update'] }) => updateTask(id, updates),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: taskKeys.lists() })
       queryClient.invalidateQueries({ queryKey: taskKeys.detail(variables.id) })

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -20,8 +20,9 @@ import {
 import { Task, HistorySession } from '@/lib/types';
 import { useTasks } from '@/lib/hooks/use-tasks';
 import { useUpdateSession, useDeleteSession } from '@/lib/hooks/use-sessions';
+import { useNow } from '@/lib/hooks/use-now';
 import { ChevronDown, Trash2, Loader2, Clock } from 'lucide-react';
-import { formatDuration, formatTime, cn } from '@/lib/utils';
+import { formatDuration, cn } from '@/lib/utils';
 
 export type SessionEditDialogProps = {
   session: HistorySession | null;
@@ -43,38 +44,38 @@ export function SessionEditDialog({
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const now = useNow(1000);
 
-  // Initialize form when session changes
-  useEffect(() => {
-    if (session) {
-      setTitle(session.title || session.task.name);
-      setSelectedTask(session.task);
-      
-      // Format times for datetime-local input (YYYY-MM-DDTHH:mm)
-      if (session.startedAt) {
-        const startDate = new Date(session.startedAt);
-        setStartTime(formatDateTimeLocal(startDate));
-      } else {
-        setStartTime('');
-      }
-      
-      if (session.endedAt) {
-        const endDate = new Date(session.endedAt);
-        setEndTime(formatDateTimeLocal(endDate));
-      } else {
-        setEndTime('');
-      }
-    }
-  }, [session]);
-
-  const formatDateTimeLocal = (date: Date): string => {
+  const formatDateTimeLocal = useCallback((date: Date): string => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     const hours = String(date.getHours()).padStart(2, '0');
     const minutes = String(date.getMinutes()).padStart(2, '0');
     return `${year}-${month}-${day}T${hours}:${minutes}`;
-  };
+  }, []);
+
+  const getInitialValues = useCallback(() => {
+    if (!session) return null;
+    return {
+      title: session.title || session.task.name,
+      selectedTask: session.task,
+      startTime: session.startedAt ? formatDateTimeLocal(new Date(session.startedAt)) : '',
+      endTime: session.endedAt ? formatDateTimeLocal(new Date(session.endedAt)) : '',
+    };
+  }, [session, formatDateTimeLocal]);
+
+  // Initialize form when session changes
+  useEffect(() => {
+    const initial = getInitialValues();
+    if (!initial) return;
+    requestAnimationFrame(() => {
+      setTitle(initial.title);
+      setSelectedTask(initial.selectedTask);
+      setStartTime(initial.startTime);
+      setEndTime(initial.endTime);
+    });
+  }, [getInitialValues]);
 
   const handleSave = async () => {
     if (!session || !selectedTask) return;
@@ -83,9 +84,9 @@ export function SessionEditDialog({
     const endedAt = endTime ? new Date(endTime).getTime() : null;
     
     // Calculate duration in seconds
-    const duration = endedAt 
+    const duration = endedAt
       ? Math.floor((endedAt - startedAt) / 1000)
-      : Math.floor((Date.now() - startedAt) / 1000);
+      : Math.floor((now - startedAt) / 1000);
 
     try {
       await updateSessionMutation.mutateAsync({
@@ -119,7 +120,7 @@ export function SessionEditDialog({
   const calculateDuration = (): string => {
     if (!startTime) return '--:--';
     const start = new Date(startTime).getTime();
-    const end = endTime ? new Date(endTime).getTime() : Date.now();
+    const end = endTime ? new Date(endTime).getTime() : now;
     const seconds = Math.floor((end - start) / 1000);
     return formatDuration(seconds > 0 ? seconds : 0);
   };

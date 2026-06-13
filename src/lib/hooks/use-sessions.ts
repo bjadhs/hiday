@@ -1,21 +1,17 @@
 'use client'
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { 
-  getSessions, 
-  getActiveSession, 
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
+import {
+  getSessions,
+  getActiveSession,
   getActiveSessions,
   getTodaySessions,
-  startSession, 
-  stopSession, 
-  updateSession, 
-  deleteSession 
+  startSession,
+  stopSession,
+  updateSession,
+  deleteSession
 } from '@/actions/sessions'
 import type { Database } from '@/lib/supabase/database.types'
-
-type Session = Database['public']['Tables']['sessions']['Row']
-type SessionInsert = Database['public']['Tables']['sessions']['Insert']
-type SessionUpdate = Database['public']['Tables']['sessions']['Update']
 
 // Query keys
 export const sessionKeys = {
@@ -29,10 +25,16 @@ export const sessionKeys = {
 }
 
 // Hook to fetch sessions with date range
-export function useSessions(startDate?: number, endDate?: number) {
+export function useSessions(
+  startDate?: number,
+  endDate?: number,
+  options?: { enabled?: boolean; placeholderData?: typeof keepPreviousData }
+) {
   return useQuery({
     queryKey: sessionKeys.list({ startDate, endDate }),
     queryFn: () => getSessions(startDate, endDate),
+    enabled: options?.enabled ?? !!(startDate && endDate),
+    placeholderData: options?.placeholderData,
   })
 }
 
@@ -97,9 +99,9 @@ export function useStopSession() {
 // Hook to update a session
 export function useUpdateSession() {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
-    mutationFn: ({ id, updates }: { id: string; updates: SessionUpdate }) => updateSession(id, updates),
+    mutationFn: ({ id, updates }: { id: string; updates: Database['public']['Tables']['sessions']['Update'] }) => updateSession(id, updates),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: sessionKeys.lists() })
       queryClient.invalidateQueries({ queryKey: sessionKeys.today() })

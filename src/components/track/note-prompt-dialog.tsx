@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -31,14 +31,7 @@ export function NotePromptDialog({
   onDelete,
   isStopping,
 }: NotePromptDialogProps) {
-  const [note, setNote] = useState('');
-
-  // Reset note when dialog opens with a new session
-  useEffect(() => {
-    if (isOpen && session) {
-      setNote(session.note || '');
-    }
-  }, [isOpen, session]);
+  const [note, setNote] = useState(session?.note || '');
 
   if (!session) return null;
 

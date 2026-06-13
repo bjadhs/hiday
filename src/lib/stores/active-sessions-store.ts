@@ -100,11 +100,15 @@ export const useActiveSessionsStore = create<ActiveSessionsState>((set, get) => 
   // Remove a session (when stopped)
   removeSession: (sessionId) => {
     set((state) => {
-      const { [sessionId]: _, ...restElapsed } = state.elapsedTimes;
-      const { [sessionId]: __, ...restNotes } = state.sessionNotes;
+      const restElapsed = Object.fromEntries(
+        Object.entries(state.elapsedTimes).filter(([key]) => key !== sessionId)
+      );
+      const restNotes = Object.fromEntries(
+        Object.entries(state.sessionNotes).filter(([key]) => key !== sessionId)
+      );
       const newSyncedIds = new Set(state.syncedSessionIds);
       newSyncedIds.delete(sessionId);
-      
+
       return {
         activeSessions: state.activeSessions.filter((s) => s.id !== sessionId),
         elapsedTimes: restElapsed,

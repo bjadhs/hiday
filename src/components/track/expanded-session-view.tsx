@@ -9,6 +9,7 @@ import { TaskDropdown } from './task-dropdown';
 
 interface ExpandedSessionViewProps {
   session: ActiveSessionState;
+  isOptimistic?: boolean;
   elapsedTime: number;
   isEditing: boolean;
   editTitle: string;
@@ -56,6 +57,7 @@ interface ExpandedSessionViewProps {
  */
 export const ExpandedSessionView = memo(function ExpandedSessionView({
   session,
+  isOptimistic = false,
   elapsedTime,
   isEditing,
   editTitle,
@@ -101,10 +103,13 @@ export const ExpandedSessionView = memo(function ExpandedSessionView({
                   placeholder={session.task.name}
                   className="flex-1 min-w-0 px-2 py-1 text-sm font-bold bg-surface border-2 border-primary rounded-md focus:outline-hidden focus:ring-2 focus:ring-primary/50"
                   autoFocus
+                  disabled={isOptimistic}
+                  title={isOptimistic ? 'Cannot edit title while session is being created' : undefined}
                 />
                 <button
                   onClick={onSaveTitle}
-                  className="p-1 rounded-md bg-success text-white hover:bg-success-dark transition-colors"
+                  disabled={isOptimistic}
+                  className="p-1 rounded-md bg-success text-white hover:bg-success-dark transition-colors disabled:opacity-50"
                 >
                   <Check className="w-3 h-3" />
                 </button>
@@ -120,7 +125,9 @@ export const ExpandedSessionView = memo(function ExpandedSessionView({
                 {/* Title - clickable for edit */}
                 <button
                   onClick={onStartEdit}
-                  className="text-left w-fit"
+                  disabled={isOptimistic}
+                  className="text-left w-fit disabled:opacity-70 disabled:cursor-not-allowed"
+                  title={isOptimistic ? 'Cannot edit title while session is being created' : 'Click to edit title'}
                 >
                   <h3 className="text-sm font-bold truncate hover:text-primary transition-colors">
                     {session.title || session.task.name}
@@ -134,6 +141,7 @@ export const ExpandedSessionView = memo(function ExpandedSessionView({
                       tasks={tasks}
                       onTaskChange={onTaskChange}
                       size="sm"
+                      disabled={isOptimistic}
                     />
                   ) : (
                     <span

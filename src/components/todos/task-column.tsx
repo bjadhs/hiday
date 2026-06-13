@@ -14,7 +14,6 @@ interface TaskColumnProps {
   tasks: DBTask[];
   plannedSessions: DBSession[];
   unscheduledSessions?: DBSession[];
-  onCreateTodo: (taskId: string) => void;
   onEditSession: (session: PlannedSession) => void;
   onDeleteSession: (sessionId: string) => void;
   onStartSession: (sessionId: string) => void;
@@ -66,7 +65,6 @@ interface TaskGroupProps {
   task: DBTask;
   sessions: DBSession[];
   unscheduledSessions: DBSession[];
-  onCreateTodo: (taskId: string) => void;
   onEditSession: (session: PlannedSession) => void;
   onDeleteSession: (sessionId: string) => void;
   onStartSession: (sessionId: string) => void;
@@ -78,7 +76,6 @@ function TaskGroup({
   task,
   sessions,
   unscheduledSessions,
-  onCreateTodo,
   onEditSession,
   onDeleteSession,
   onStartSession,
@@ -426,7 +423,6 @@ export function TaskColumn({
   tasks,
   plannedSessions,
   unscheduledSessions = [],
-  onCreateTodo,
   onEditSession,
   onDeleteSession,
   onStartSession,
@@ -497,7 +493,6 @@ export function TaskColumn({
               task={task}
               sessions={sessionsByTask[task.id] || []}
               unscheduledSessions={unscheduledByTask[task.id] || []}
-              onCreateTodo={onCreateTodo}
               onEditSession={onEditSession}
               onDeleteSession={onDeleteSession}
               onStartSession={onStartSession}

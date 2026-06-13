@@ -1,4 +1,5 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback } from 'react';
+import { keepPreviousData } from '@tanstack/react-query';
 import { useSessions } from '@/lib/hooks/use-sessions';
 import { useTasks } from '@/lib/hooks/use-tasks';
 import { HistorySession, Task, ViewMode } from '@/lib/types';
@@ -6,13 +7,8 @@ import { isToday } from '@/components/history/utils';
 
 export function useHistoryPage() {
     const [viewMode, setViewMode] = useState<ViewMode>('list');
-    // Use fixed epoch date for SSR, sync to real date after hydration
-    const [selectedDate, setSelectedDate] = useState<Date>(new Date(0));
-
-    // Sync to real current date after hydration
-    useEffect(() => {
-        setSelectedDate(new Date());
-    }, []);
+    // History content is client-only (ssr: false), so we can use the real date immediately.
+    const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
     // Edit dialog state
     const [editingSession, setEditingSession] = useState<HistorySession | null>(null);
@@ -32,7 +28,9 @@ export function useHistoryPage() {
     }, [selectedDate]);
 
     // Fetch real sessions and tasks
-    const { data: dbSessions = [], isLoading: isLoadingSessions } = useSessions(startOfDay, endOfDay);
+    const { data: dbSessions = [], isLoading: isLoadingSessions } = useSessions(startOfDay, endOfDay, {
+      placeholderData: keepPreviousData,
+    });
     const { data: tasks = [], isLoading: isLoadingTasks } = useTasks();
 
     // Transform DB sessions to HistorySession format

@@ -17,7 +17,7 @@ interface AppVersionProps {
 export function AppVersion({ version = '1.0.0' }: AppVersionProps) {
   return (
     <div className='mt-12 text-center text-sm text-muted-foreground'>
-      <p>ATracker v{version}</p>
+      <p>Hiday v{version}</p>
     </div>
   );
 }

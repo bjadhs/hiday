@@ -28,6 +28,11 @@ export interface LayoutItem {
     isRunning: boolean;
     original: {
         tasks: Task | null;
-        [key: string]: any;
+        id: string;
+        started_at: number | null;
+        ended_at: number | null;
+        duration: number | null;
+        title: string | null;
+        note: string | null;
     };
 }

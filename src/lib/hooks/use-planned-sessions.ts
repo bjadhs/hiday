@@ -10,9 +10,7 @@ import {
   startPlannedSession,
   completePlannedSession,
   unschedulePlannedSession,
-  type PlannedSessionWithTask,
 } from '@/actions/planned-sessions'
-import type { Database } from '@/lib/supabase/database.types'
 
 // Query keys
 export const plannedSessionKeys = {
@@ -94,7 +92,6 @@ export function useUpdatePlannedSession() {
   return useMutation({
     mutationFn: async ({
       sessionId,
-      plannedDate,
       updates,
     }: {
       sessionId: string
@@ -127,7 +124,6 @@ export function useUnschedulePlannedSession() {
   return useMutation({
     mutationFn: async ({
       sessionId,
-      plannedDate,
     }: {
       sessionId: string
       plannedDate: string
@@ -152,7 +148,6 @@ export function useDeletePlannedSession() {
   return useMutation({
     mutationFn: async ({
       sessionId,
-      plannedDate,
     }: {
       sessionId: string
       plannedDate: string
@@ -177,7 +172,6 @@ export function useStartPlannedSession() {
   return useMutation({
     mutationFn: async ({
       sessionId,
-      plannedDate,
     }: {
       sessionId: string
       plannedDate: string
@@ -204,7 +198,6 @@ export function useCompletePlannedSession() {
   return useMutation({
     mutationFn: async ({
       sessionId,
-      plannedDate,
       actualStartTime,
       actualEndTime,
     }: {

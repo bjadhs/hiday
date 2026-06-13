@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
@@ -52,26 +52,19 @@ export function NavBar({}: NavBarProps) {
   const router = useRouter();
   const { user } = useUser();
   const { supabase } = useSupabase();
-  const [mounted, setMounted] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
   // Use a stable date string only after mounting
-  const [dateStr, setDateStr] = useState<string>('');
-
-  useEffect(() => {
-    if (mounted) {
-      setDateStr(new Date().toLocaleDateString('en-US', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      }));
-    }
-  }, [mounted]);
+  const dateStr = useSyncExternalStore(
+    () => () => {},
+    () => new Date().toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    }),
+    () => ''
+  );
 
   // Derive user display info
   const email = user?.email ?? 'user@example.com';

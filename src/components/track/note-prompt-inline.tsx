@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { ActiveSessionState } from '@/lib/stores/active-sessions-store';
@@ -39,12 +39,7 @@ export function NotePromptInline({
   onCancel,
   isStopping,
 }: NotePromptInlineProps) {
-  const [note, setNote] = useState('');
-
-  // Reset note when component mounts with a new session
-  useEffect(() => {
-    setNote(session.note || '');
-  }, [session.id]);
+  const [note, setNote] = useState(session.note || '');
 
   return (
     <div className="flex flex-col h-full">

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -100,42 +100,43 @@ export function CreateTodoDialog({
 
   const isEditing = !!editingSession;
 
-  // Initialize form when dialog opens
-  useEffect(() => {
-    if (isOpen) {
-      if (editingSession) {
-        // Editing existing session
-        setTaskId(editingSession.taskId);
-        setTitle(editingSession.title || '');
-        // Check if session has time scheduled
-        const hasTime = editingSession.plannedStartTime !== null;
-        setIsScheduled(hasTime);
-        if (hasTime) {
-          setStartTime(formatTimeForInput(editingSession.plannedStartTime!));
-        } else {
-          setStartTime('09:00');
-        }
-        setDuration(formatDurationForInput(editingSession.plannedDuration));
-        setNote(editingSession.note || '');
-      } else {
-        // Creating new session - default to UNScheduled (no time)
-        // If preselectedTime is provided, schedule it
-        const defaultScheduled = !!preselectedTime;
-        setIsScheduled(defaultScheduled);
-
-        if (preselectedTime) {
-          setStartTime(formatTimeForInput(preselectedTime));
-        } else {
-          setStartTime('09:00');
-        }
-
-        setTaskId(preselectedTaskId || '');
-        setTitle('');
-        setDuration('01:00');
-        setNote('');
-      }
+  // Derive default form values from props/session
+  const getDefaultValues = useCallback(() => {
+    if (editingSession) {
+      const hasTime = editingSession.plannedStartTime !== null;
+      return {
+        taskId: editingSession.taskId,
+        title: editingSession.title || '',
+        isScheduled: hasTime,
+        startTime: hasTime ? formatTimeForInput(editingSession.plannedStartTime!) : '09:00',
+        duration: formatDurationForInput(editingSession.plannedDuration),
+        note: editingSession.note || '',
+      };
     }
-  }, [isOpen, editingSession, preselectedTaskId, preselectedTime, selectedDate]);
+    const defaultScheduled = !!preselectedTime;
+    return {
+      taskId: preselectedTaskId || '',
+      title: '',
+      isScheduled: defaultScheduled,
+      startTime: preselectedTime ? formatTimeForInput(preselectedTime) : '09:00',
+      duration: '01:00',
+      note: '',
+    };
+  }, [editingSession, preselectedTaskId, preselectedTime]);
+
+  // Reset form when dialog opens or session changes
+  useEffect(() => {
+    if (!isOpen) return;
+    const defaults = getDefaultValues();
+    requestAnimationFrame(() => {
+      setTaskId(defaults.taskId);
+      setTitle(defaults.title);
+      setIsScheduled(defaults.isScheduled);
+      setStartTime(defaults.startTime);
+      setDuration(defaults.duration);
+      setNote(defaults.note);
+    });
+  }, [isOpen, getDefaultValues]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

@@ -9,5 +9,7 @@ export { useUIStore } from './ui-store';
 export {
   useSettingsStore,
   type FontSize,
-  applyFontSize
+  type AccentColor,
+  applyFontSize,
+  applyAccentColor
 } from './settings-store';

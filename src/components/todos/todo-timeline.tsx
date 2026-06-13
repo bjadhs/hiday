@@ -5,6 +5,7 @@ import { HOURS, HOUR_HEIGHT, MIN_CONTENT_WIDTH } from '@/components/timeline/con
 import { PlannedSessionBlock } from './planned-session-block';
 import type { Database } from '@/lib/supabase/database.types';
 import type { PlannedSession, TimelinePlannedSession } from '@/lib/types';
+import { useNow } from '@/lib/hooks/use-now';
 
 type DBSession = Database['public']['Tables']['sessions']['Row'] & { tasks: Database['public']['Tables']['tasks']['Row'] | null };
 
@@ -180,12 +181,12 @@ export function TodoTimeline({
   onTimeSlotClick,
   onSessionUpdate,
   onTaskDrop,
-  onSessionUnschedule,
   showTimeLabels = true,
   showHeader = false,
 }: TodoTimelineProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const timelineRef = useRef<HTMLDivElement>(null);
+  const now = useNow(60000);
 
   // Drag state
   const [isDragging, setIsDragging] = useState(false);
@@ -231,10 +232,18 @@ export function TodoTimeline({
   const isToday = selectedDate.toDateString() === new Date().toDateString();
 
   // Scroll to 8 AM on mount
+  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
-    if (!scrollContainerRef.current) return;
-    const scrollPosition = timestampToPixel(startOfDay + 8 * 60 * 60 * 1000, startOfDay) - 100;
-    scrollContainerRef.current.scrollTop = Math.max(0, scrollPosition);
+    scrollTimeoutRef.current = setTimeout(() => {
+      if (!scrollContainerRef.current) return;
+      const scrollPosition = timestampToPixel(startOfDay + 8 * 60 * 60 * 1000, startOfDay) - 100;
+      scrollContainerRef.current.scrollTop = Math.max(0, scrollPosition);
+    }, 0);
+    return () => {
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
   }, [startOfDay]);
 
   // Handle drag start from session block
@@ -507,6 +516,7 @@ export function TodoTimeline({
             {/* Current time indicator */}
             {isToday && (
               <CurrentTimeIndicator
+                now={now}
                 startOfDay={startOfDay}
                 totalHeight={totalHeight}
               />
@@ -599,14 +609,7 @@ function cn(...classes: (string | false | null | undefined)[]) {
 /**
  * Current time indicator component
  */
-function CurrentTimeIndicator({ startOfDay, totalHeight }: { startOfDay: number; totalHeight: number }) {
-  const [now, setNow] = useState(Date.now());
-
-  useEffect(() => {
-    const interval = setInterval(() => setNow(Date.now()), 60000);
-    return () => clearInterval(interval);
-  }, []);
-
+function CurrentTimeIndicator({ now, startOfDay, totalHeight }: { now: number; startOfDay: number; totalHeight: number }) {
   const top = timestampToPixel(now, startOfDay);
 
   if (top < 0 || top > totalHeight) return null;

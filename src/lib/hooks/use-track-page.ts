@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { Task, HistorySession } from '@/lib/types';
 import { useTasks } from '@/lib/hooks/use-tasks';
 import {
@@ -8,7 +8,7 @@ import {
     useStopSession,
     useUpdateSession,
 } from '@/lib/hooks/use-sessions';
-import { useActiveSessionsStore, ActiveSessionState } from '@/lib/stores/active-sessions-store';
+import { useActiveSessionsStore } from '@/lib/stores/active-sessions-store';
 
 // Default task when no tasks exist
 const defaultTask: Task = {
@@ -22,7 +22,6 @@ export function useTrackPage() {
     // Zustand store
     const {
         activeSessions,
-        addSession,
         removeSession,
         syncFromDatabase
     } = useActiveSessionsStore();
@@ -192,6 +191,15 @@ export function useTrackPage() {
 
     // Get first task as default or use fallback
     const firstTask = tasks[0] || defaultTask;
+
+    // Listen for global shortcut to start a default session
+    useEffect(() => {
+        function handleStartDefaultSession() {
+            startTask(firstTask);
+        }
+        window.addEventListener('hiday:start-default-session', handleStartDefaultSession);
+        return () => window.removeEventListener('hiday:start-default-session', handleStartDefaultSession);
+    }, [firstTask, startTask]);
 
     return {
         activeSessions,

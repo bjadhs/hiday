@@ -1,10 +1,15 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTasks, useCreateTask, useUpdateTask, useDeleteTask, useReorderTasks } from '@/lib/hooks/use-tasks';
 import { DBTask, EditableTask } from '@/components/tasks/types';
 import { TASK_COLORS, TASK_ICONS } from '@/lib/constant';
 import { DragEndEvent } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
+
+interface ReorderTaskInput {
+  id: string;
+  name: string;
+}
 
 export function useTasksPage() {
     const router = useRouter();
@@ -23,10 +28,12 @@ export function useTasksPage() {
     const [sortBy, setSortBy] = useState<'name' | 'order' | 'newest'>('order');
     const [orderedTasks, setOrderedTasks] = useState<DBTask[]>([]);
 
+    // Initialize ordered tasks from fetched data only once or when empty
+    const initializedRef = useRef(false);
     useEffect(() => {
-        if (tasksData.length > 0) {
-            setOrderedTasks([...tasksData]);
-        }
+        if (initializedRef.current || tasksData.length === 0) return;
+        initializedRef.current = true;
+        setOrderedTasks([...tasksData]);
     }, [tasksData]);
 
     const editingTask = useMemo(() =>
@@ -46,7 +53,7 @@ export function useTasksPage() {
                 const newOrder = arrayMove(orderedTasks, oldIndex, newIndex);
                 setOrderedTasks(newOrder);
                 try {
-                    await reorderTasksMutation.mutateAsync(newOrder.map((t) => ({ id: t.id, name: t.name })));
+                    await reorderTasksMutation.mutateAsync(newOrder.map((t) => ({ id: t.id, name: t.name } as ReorderTaskInput)));
                 } catch (error) {
                     console.error('Failed to reorder tasks:', error);
                     setOrderedTasks(tasksData);
@@ -60,15 +67,16 @@ export function useTasksPage() {
         async (updatedTask: EditableTask) => {
             try {
                 if (!updatedTask.id || updatedTask.id.startsWith('new-')) {
-                    const { id, ...cleanTask } = updatedTask;
+                    const { id: _id, ...cleanTask } = updatedTask;
+                    void _id;
                     await createTaskMutation.mutateAsync({
                         ...cleanTask,
                         archived: false,
                         sort_order: -1, // Ensure new tasks come first
-                    } as any);
+                    } as Omit<EditableTask, 'id'>);
                 } else {
                     const { id, ...updates } = updatedTask;
-                    await updateTaskMutation.mutateAsync({ id: id!, updates: updates as any });
+                    await updateTaskMutation.mutateAsync({ id: id!, updates: updates as Partial<EditableTask> });
                 }
                 router.push('/tasks');
                 setIsCreating(false);

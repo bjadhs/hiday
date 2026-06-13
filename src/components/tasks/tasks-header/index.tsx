@@ -1,6 +1,5 @@
 import { List, LayoutGrid, Plus, ArrowUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useRouter } from 'next/navigation';
 
 interface TasksHeaderProps {
     viewMode: 'grid' | 'list';
@@ -51,7 +50,7 @@ export function TasksHeader({
                         {['order', 'name', 'newest'].map((s) => (
                             <button
                                 key={s}
-                                onClick={() => setSortBy(s as any)}
+                                onClick={() => setSortBy(s as TasksHeaderProps['sortBy'])}
                                 className={cn('w-full text-left px-5 py-4 hover:bg-primary/10 dark:hover:bg-primary/5 font-black border-b-2 border-border/10 last:border-0', sortBy === s && 'text-primary')}
                             >
                                 {s.toUpperCase()}

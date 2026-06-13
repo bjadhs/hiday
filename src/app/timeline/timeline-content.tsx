@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback } from 'react';
 import { Loader2, CalendarDays, History } from 'lucide-react';
 import { useTimeline } from '@/lib/hooks/use-timeline';
 import { useUpdateSession } from '@/lib/hooks/use-sessions';
@@ -24,7 +24,6 @@ export default function TimelineContent() {
     startOfDay,
     isLoading: isLoadingSessions,
     timelineSessions,
-    scrollContainerRef: sessionScrollRef,
     goToPreviousDay,
     goToNextDay,
     goToToday,

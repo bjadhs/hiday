@@ -1,14 +1,16 @@
 'use client';
 
-import { Moon, Type } from 'lucide-react';
+import { Moon, Palette } from 'lucide-react';
 import { SettingsSection } from './settings-section';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { FontSizeToggle } from '@/components/font-size-toggle';
+import { AccentColorToggle } from '@/components/accent-color-toggle';
 
 /**
  * AppearanceSection
  *
- * Settings section for appearance-related options like dark mode and font size.
+ * Settings section for appearance-related options like dark mode, font size,
+ * and accent color.
  *
  * @example
  * ```tsx
@@ -35,6 +37,18 @@ export function AppearanceSection() {
           </p>
         </div>
         <FontSizeToggle />
+      </div>
+      <div className='py-4 border-t border-border'>
+        <div className='flex items-center gap-3 mb-3'>
+          <Palette className='w-5 h-5 text-primary' />
+          <div>
+            <p className='font-semibold'>Accent Color</p>
+            <p className='text-sm text-muted-foreground'>
+              Choose a theme that matches your mood
+            </p>
+          </div>
+        </div>
+        <AccentColorToggle />
       </div>
     </SettingsSection>
   );

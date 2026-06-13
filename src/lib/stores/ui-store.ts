@@ -15,6 +15,9 @@ interface UIState {
   
   // Navigation drawer (mobile)
   isNavDrawerOpen: boolean;
+
+  // Command palette
+  isCommandPaletteOpen: boolean;
   
   // Toast notifications
   toasts: Array<{
@@ -30,6 +33,10 @@ interface UIState {
   openNavDrawer: () => void;
   closeNavDrawer: () => void;
   toggleNavDrawer: () => void;
+
+  openCommandPalette: () => void;
+  closeCommandPalette: () => void;
+  toggleCommandPalette: () => void;
   
   addToast: (message: string, type: 'success' | 'error' | 'info') => void;
   removeToast: (id: string) => void;
@@ -40,6 +47,7 @@ export const useUIStore = create<UIState>((set) => ({
   isEditDialogOpen: false,
   editingSessionId: null,
   isNavDrawerOpen: false,
+  isCommandPaletteOpen: false,
   toasts: [],
 
   // Edit dialog actions
@@ -61,6 +69,11 @@ export const useUIStore = create<UIState>((set) => ({
   openNavDrawer: () => set({ isNavDrawerOpen: true }),
   closeNavDrawer: () => set({ isNavDrawerOpen: false }),
   toggleNavDrawer: () => set((state) => ({ isNavDrawerOpen: !state.isNavDrawerOpen })),
+
+  // Command palette actions
+  openCommandPalette: () => set({ isCommandPaletteOpen: true }),
+  closeCommandPalette: () => set({ isCommandPaletteOpen: false }),
+  toggleCommandPalette: () => set((state) => ({ isCommandPaletteOpen: !state.isCommandPaletteOpen })),
 
   // Toast actions
   addToast: (message, type) => {

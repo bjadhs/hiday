@@ -1,8 +1,8 @@
 "use client"
 
 import { Type } from "lucide-react"
-import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
+import { useMounted } from "@/lib/hooks/use-mounted"
 import { useSettingsStore, type FontSize } from "@/lib/stores"
 
 const fontSizeOptions: { value: FontSize; label: string; size: string }[] = [
@@ -13,12 +13,7 @@ const fontSizeOptions: { value: FontSize; label: string; size: string }[] = [
 
 export function FontSizeToggle() {
   const { fontSize, setFontSize } = useSettingsStore()
-  const [mounted, setMounted] = useState(false)
-
-  // Prevent hydration mismatch by waiting for mount
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+  const mounted = useMounted()
 
   // Show neutral state during SSR to avoid hydration mismatch
   if (!mounted) {

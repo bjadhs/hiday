@@ -3,7 +3,6 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { createClient } from './client'
 import type { User } from '@supabase/supabase-js'
-import type { Database } from './database.types'
 
 type SupabaseClient = ReturnType<typeof createClient>
 

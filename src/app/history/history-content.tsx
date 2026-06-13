@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useMemo, useCallback, Suspense } from 'react';
+import { useMemo, useCallback, Suspense } from 'react';
 import { Loader2, List, Clock } from 'lucide-react';
 import { useHistoryPage } from '@/lib/hooks/use-history-page';
 import { useUpdateSession } from '@/lib/hooks/use-sessions';
+import { useNow } from '@/lib/hooks/use-now';
 import { SessionEditDialog } from '@/components/track';
 import { HistoryControls, HistoryStats, HistorySessionItem } from '@/components/history';
 import { SessionTimeline } from '@/components/timeline/session-timeline';
@@ -28,9 +29,9 @@ function HistoryPageContent() {
   } = useHistoryPage();
 
   const updateSessionMutation = useUpdateSession();
+  const now = useNow();
 
   // Calculate timeline sessions
-  const now = Date.now();
   const startOfDay = useMemo(() => {
     const date = new Date(selectedDate);
     date.setHours(0, 0, 0, 0);

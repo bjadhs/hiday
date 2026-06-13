@@ -2,10 +2,10 @@
 
 import {
   AppearanceSection,
-  AccountSection,
   NotificationsSection,
   DataPrivacySection,
   SecuritySection,
+  KeyboardShortcutsSection,
   AppVersion,
 } from '@/components/settings';
 
@@ -13,11 +13,11 @@ import {
  * SettingsPage
  * 
  * User settings and configuration page with sections for:
- * - Appearance (dark mode)
- * - Account information
+ * - Appearance (dark mode, font size, accent color)
  * - Notifications
  * - Data & Privacy
  * - Security
+ * - Keyboard Shortcuts
  */
 export default function SettingsPage() {
   return (
@@ -25,9 +25,6 @@ export default function SettingsPage() {
       <div className='flex-1 p-4 lg:p-8 max-w-3xl mx-auto w-full space-y-6'>
         {/* Appearance */}
         <AppearanceSection />
-
-        {/* Account */}
-        <AccountSection />
 
         {/* Notifications */}
         <NotificationsSection />
@@ -37,6 +34,9 @@ export default function SettingsPage() {
 
         {/* Security */}
         <SecuritySection />
+
+        {/* Keyboard Shortcuts */}
+        <KeyboardShortcutsSection />
 
         {/* Version */}
         <AppVersion version="1.0.0" />

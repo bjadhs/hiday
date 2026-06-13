@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Loader2, CheckSquare, CalendarDays } from 'lucide-react';
 import { useTasks } from '@/lib/hooks/use-tasks';
 import {
@@ -16,16 +16,15 @@ import { TaskColumn } from '@/components/todos/task-column';
 import { TodoTimeline } from '@/components/todos/todo-timeline';
 import { CreateTodoDialog } from '@/components/todos/create-todo-dialog';
 import type { PlannedSession } from '@/lib/types';
-import type { Database } from '@/lib/supabase/database.types';
 
 export default function TodosPage() {
   // Use fixed epoch date for SSR, sync to real date after hydration
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date(0));
-
-  // Sync to real current date after hydration
-  useEffect(() => {
-    setSelectedDate(new Date());
-  }, []);
+  const [selectedDate, setSelectedDate] = useState<Date>(() => {
+    if (typeof window === 'undefined') {
+      return new Date(0);
+    }
+    return new Date();
+  });
 
   // Dialog state
   const [isDialogOpen, setIsDialogOpen] = useState(false);

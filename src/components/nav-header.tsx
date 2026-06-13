@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useSyncExternalStore } from 'react';
 import { Calendar } from 'lucide-react';
 
 interface NavHeaderProps {
@@ -8,31 +8,23 @@ interface NavHeaderProps {
 }
 
 export function NavHeader({ title }: NavHeaderProps) {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
   // Use a stable date string only after mounting
-  const [dateStr, setDateStr] = useState<string>('');
-
-  useEffect(() => {
-    if (mounted) {
-      setDateStr(new Date().toLocaleDateString('en-US', {
-        weekday: 'long',
-        month: 'long',
-        day: 'numeric',
-      }));
-    }
-  }, [mounted]);
+  const dateStr = useSyncExternalStore(
+    () => () => {},
+    () => new Date().toLocaleDateString('en-US', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+    }),
+    () => ''
+  );
 
   return (
     <>
       {/* Mobile Header - Shows app logo and page title */}
       <header className='lg:hidden flex items-center justify-between px-4 py-4 bg-surface border-b-2 border-border-strong sticky top-0 z-40'>
         <h1 className='text-xl font-bold text-primary tracking-tight'>
-          ATracker
+          Hiday
         </h1>
         <h2 className='text-lg font-semibold'>{title}</h2>
       </header>

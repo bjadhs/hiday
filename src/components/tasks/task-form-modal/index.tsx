@@ -246,7 +246,7 @@ export function TaskFormModal({
                                 <select
                                     className='w-full h-12 px-4 rounded-xl border-2 border-border-strong bg-surface font-bold appearance-none cursor-pointer'
                                     value={formData.goal_type || 'none'}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, goal_type: e.target.value as any }))}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, goal_type: e.target.value as EditableTask['goal_type'] }))}
                                 >
                                     <option value='none'>No specific goal</option>
                                     <option value='daily'>Daily Duration (min)</option>

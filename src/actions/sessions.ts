@@ -6,7 +6,6 @@ import { createClient } from '@/lib/supabase/server'
 import type { Database } from '@/lib/supabase/database.types'
 
 type Session = Database['public']['Tables']['sessions']['Row']
-type SessionInsert = Database['public']['Tables']['sessions']['Insert']
 type SessionUpdate = Database['public']['Tables']['sessions']['Update']
 type Task = Database['public']['Tables']['tasks']['Row']
 

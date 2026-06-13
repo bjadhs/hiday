@@ -22,6 +22,8 @@ export type TaskDropdownProps = {
   className?: string;
   /** Size variant */
   size?: 'sm' | 'md';
+  /** Whether the dropdown is disabled */
+  disabled?: boolean;
 };
 
 /**
@@ -46,6 +48,7 @@ export const TaskDropdown = memo(function TaskDropdown({
   onTaskChange,
   className,
   size = 'sm',
+  disabled = false,
 }: TaskDropdownProps) {
   const sizeClasses = {
     sm: 'text-[10px] px-1.5 py-0.5',
@@ -67,7 +70,7 @@ export const TaskDropdown = memo(function TaskDropdown({
       <DropdownMenuTrigger asChild>
         <button
           className={cn(
-            'inline-flex items-center gap-1 rounded shrink-0 hover:opacity-80 transition-opacity cursor-pointer',
+            'inline-flex items-center gap-1 rounded shrink-0 hover:opacity-80 transition-opacity cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed',
             sizeClasses[size],
             className
           )}
@@ -75,6 +78,7 @@ export const TaskDropdown = memo(function TaskDropdown({
             backgroundColor: `${selectedTask.color}20`,
             color: selectedTask.color,
           }}
+          disabled={disabled}
         >
           <span>{selectedTask.icon}</span>
           <span className="font-medium">{selectedTask.name}</span>

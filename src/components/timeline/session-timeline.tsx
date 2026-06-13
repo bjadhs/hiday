@@ -50,7 +50,6 @@ export function SessionTimeline({
   onSessionUpdate,
   scrollContainerRef,
   showTimeLabels = true,
-  className,
 }: SessionTimelineProps) {
   const timelineRef = useRef<HTMLDivElement>(null);
 
@@ -86,8 +85,7 @@ export function SessionTimeline({
     if (!timelineRef.current) return;
 
     const rect = timelineRef.current.getBoundingClientRect();
-    const scrollTop = scrollContainerRef?.current?.scrollTop || 0;
-    const y = e.clientY - rect.top + scrollTop;
+    void rect;
 
     // Handle active drag (move or resize)
     if (activeDrag) {
@@ -123,7 +121,7 @@ export function SessionTimeline({
         currentEnd: newEnd,
       });
     }
-  }, [activeDrag, startOfDay, scrollContainerRef]);
+  }, [activeDrag, startOfDay]);
 
   // Handle mouse up
   const handleMouseUp = useCallback(() => {

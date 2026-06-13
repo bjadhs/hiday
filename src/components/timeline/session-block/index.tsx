@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { cn, formatDuration } from '@/lib/utils';
+import { useNow } from '@/lib/hooks/use-now';
 import { TimelineSession } from '../types';
 import { formatTime } from '../utils';
 import { GripVertical } from 'lucide-react';
@@ -28,18 +29,10 @@ export function SessionBlock({
 }: SessionBlockProps) {
     const [isHovered, setIsHovered] = useState(false);
     const [isResizing, setIsResizing] = useState<'top' | 'bottom' | null>(null);
-    const [now, setNow] = useState(Date.now());
+    const now = useNow(1000);
     const blockRef = useRef<HTMLDivElement>(null);
 
-    // Check if session is actually running based on source data
     const isRunning = session.isRunning;
-
-    useEffect(() => {
-        if (isRunning) {
-            const interval = setInterval(() => setNow(Date.now()), 1000);
-            return () => clearInterval(interval);
-        }
-    }, [isRunning]);
 
     const currentDuration = isRunning
         ? Math.floor((now - session.startedAt) / 1000)

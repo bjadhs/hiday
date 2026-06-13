@@ -4,6 +4,7 @@ import { useEffect, useCallback, useState, useMemo, useTransition, useOptimistic
 import { Play, Loader2 } from 'lucide-react';
 import { cn, formatDuration } from '@/lib/utils';
 import { Task } from '@/lib/types';
+import { useNow } from '@/lib/hooks/use-now';
 import { useActiveSessionsStore, ActiveSessionState } from '@/lib/stores/active-sessions-store';
 import { ExpandedSessionView } from './expanded-session-view';
 import { NotePromptInline } from './note-prompt-inline';
@@ -46,10 +47,10 @@ export function ActiveTimerCard({
   tasks = [],
 }: ActiveTimerCardProps) {
   // React 19 Transitions for async operations
-  const [startPending, startTransition] = useTransition();
-  const [adjustPending, adjustTransition] = useTransition();
-  const [stopPending, stopTransition] = useTransition();
-  
+  const [, startTransition] = useTransition();
+  const [, adjustTransition] = useTransition();
+  const [, stopTransition] = useTransition();
+
   // Track which specific operation is in progress
   const [activeOperation, setActiveOperation] = useState<{
     type: 'start' | 'adjust' | 'stop';
@@ -96,10 +97,9 @@ export function ActiveTimerCard({
 
   const activeSessions = optimisticSessions;
 
-  // Timer effect
+  // Timer effect - only tick via interval to avoid synchronous setState loop
   useEffect(() => {
     if (activeSessions.length === 0) return;
-    updateAllElapsedTimes();
     const interval = setInterval(() => updateAllElapsedTimes(), 1000);
     return () => clearInterval(interval);
   }, [activeSessions.length, updateAllElapsedTimes]);
@@ -137,19 +137,20 @@ export function ActiveTimerCard({
   }, [recentTasks, todaySessions, firstTask]);
 
   // Calculate last session end time
+  const now = useNow(1000);
   const lastSessionInfo = useMemo(() => {
     if (todaySessions.length === 0) return null;
     const sortedSessions = [...todaySessions]
       .filter(s => s.ended_at !== null)
       .sort((a, b) => (b.ended_at || 0) - (a.ended_at || 0));
     if (sortedSessions.length === 0) return null;
-    
+
     const lastSession = sortedSessions[0];
     const lastEndTime = lastSession.ended_at || 0;
-    const gapDuration = Math.floor((Date.now() - lastEndTime) / 1000);
-    
+    const gapDuration = Math.floor((now - lastEndTime) / 1000);
+
     return { lastEndTime, gapDuration, taskName: lastSession.tasks?.name || 'Unknown' };
-  }, [todaySessions]);
+  }, [todaySessions, now]);
 
   // Handlers with proper error handling and transitions
   const handleSaveTitle = useCallback((sessionId: string) => {
@@ -159,8 +160,14 @@ export function ActiveTimerCard({
       return;
     }
 
+    const session = activeSessions.find(s => s.id === sessionId);
+    if (!session) {
+      console.warn('Cannot save title - session not found in active sessions:', sessionId);
+      return;
+    }
+
     const trimmedTitle = editTitle.trim();
-    const newTitle = trimmedTitle || activeSessions.find(s => s.id === sessionId)?.task.name || '';
+    const newTitle = trimmedTitle || session.task.name || '';
     saveTitle(sessionId, newTitle);
     onUpdateSession(sessionId, { title: newTitle }).catch(console.error);
   }, [editTitle, activeSessions, saveTitle, onUpdateSession]);
@@ -367,6 +374,7 @@ export function ActiveTimerCard({
           ) : (
             <ExpandedSessionView
               session={activeSessions.find((s: { id: string }) => s.id === expandedSessionId)!}
+              isOptimistic={expandedSessionId?.startsWith('optimistic-') ?? false}
               elapsedTime={elapsedTimes[expandedSessionId] || 0}
               isEditing={editingSessionId === expandedSessionId}
               editTitle={editTitle}
@@ -551,9 +559,9 @@ function MotivationalQuote() {
   return (
     <div className="relative text-center px-4">
       {/* Big background quote mark - centered behind text */}
-      <span 
+      <span
         className="absolute text-[100px] font-serif leading-none opacity-[0.06] pointer-events-none select-none -z-10"
-        style={{ 
+        style={{
           color,
           top: '50%',
           left: '50%',
@@ -561,7 +569,7 @@ function MotivationalQuote() {
         }}
         aria-hidden="true"
       >
-        "
+        &ldquo;
       </span>
       
       {/* Quote text */}
@@ -681,14 +689,13 @@ function CompactSessionItem({
   isStopping,
   activeOperation,
 }: CompactSessionItemProps) {
-  const { id, task, title } = session;
   const isAdjusting5 = activeOperation?.type === 'adjust' && activeOperation?.id === `${session.id}--5`;
   const isAdjusting15 = activeOperation?.type === 'adjust' && activeOperation?.id === `${session.id}--15`;
   const isAdjusting30 = activeOperation?.type === 'adjust' && activeOperation?.id === `${session.id}--30`;
   const isAnyAdjusting = activeOperation?.type === 'adjust';
 
   return (
-    <div 
+    <div
       className="w-full flex items-center gap-1 p-1.5 rounded-lg bg-surface border-2 border-border-strong shadow-brutal-sm"
       role="listitem"
     >

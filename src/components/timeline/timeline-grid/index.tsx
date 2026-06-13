@@ -14,7 +14,6 @@ interface TimelineGridProps {
     timelineSessions: TimelineSession[];
     onEditSession: (session: TimelineSession) => void;
     onSessionUpdate?: (sessionId: string, updates: { startedAt?: number; endedAt?: number }) => void;
-    scrollContainerRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 // Constants for interaction
@@ -46,7 +45,6 @@ export function TimelineGrid({
     timelineSessions,
     onEditSession,
     onSessionUpdate,
-    scrollContainerRef,
 }: TimelineGridProps) {
     const timelineRef = useRef<HTMLDivElement>(null);
 
@@ -82,8 +80,7 @@ export function TimelineGrid({
         if (!timelineRef.current) return;
 
         const rect = timelineRef.current.getBoundingClientRect();
-        const scrollTop = scrollContainerRef?.current?.scrollTop || 0;
-        const y = e.clientY - rect.top + scrollTop;
+        void rect;
 
         // Handle active drag (move or resize)
         if (activeDrag) {
@@ -119,7 +116,7 @@ export function TimelineGrid({
                 currentEnd: newEnd,
             });
         }
-    }, [activeDrag, startOfDay, scrollContainerRef]);
+    }, [activeDrag, startOfDay]);
 
     // Handle mouse up
     const handleMouseUp = useCallback(() => {

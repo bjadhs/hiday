@@ -3,6 +3,7 @@
 import { Pencil } from 'lucide-react';
 import { formatDuration } from '@/lib/utils';
 import { Task, HistorySession } from '@/lib/types';
+import { useNow } from '@/lib/hooks/use-now';
 
 // Database session type from Supabase - matching the actual type
 interface DbSession {
@@ -41,6 +42,19 @@ interface TodaySessionsProps {
  * ```
  */
 export function TodaySessions({ sessions, onEditSession }: TodaySessionsProps) {
+  const now = useNow(1000);
+
+  const isRunning = (session: DbSession) =>
+    !session.ended_at && typeof session.started_at === 'number';
+
+  const getDuration = (session: DbSession): number => {
+    if (session.duration) return session.duration;
+    if (isRunning(session) && session.started_at) {
+      return Math.floor((now - session.started_at) / 1000);
+    }
+    return 0;
+  };
+
   const convertToHistorySession = (session: DbSession): HistorySession => {
     const task: Task = session.tasks ? {
       id: session.tasks.id,
@@ -116,17 +130,27 @@ export function TodaySessions({ sessions, onEditSession }: TodaySessionsProps) {
                 </div>
                 <div className="text-right shrink-0">
                   <p className="font-mono font-semibold text-sm">
-                    {formatDuration(session.duration || 0)}
+                    {formatDuration(getDuration(session))}
                   </p>
                   <div className="flex items-center justify-end gap-2">
-                    <p className="text-xs text-foreground-muted">
-                      {session.ended_at &&
-                        new Date(session.ended_at).toLocaleTimeString('en-US', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                          hour12: true,
-                        })}
-                    </p>
+                    {isRunning(session) ? (
+                      <span className="inline-flex items-center gap-1 text-xs text-green-600 dark:text-green-400 font-medium">
+                        <span className="relative flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+                        </span>
+                        Running
+                      </span>
+                    ) : (
+                      <p className="text-xs text-foreground-muted">
+                        {session.ended_at &&
+                          new Date(session.ended_at).toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: true,
+                          })}
+                      </p>
+                    )}
                     <button
                       onClick={() => onEditSession(historySession)}
                       className="opacity-0 group-hover/session:opacity-100 p-1.5 rounded-md hover:bg-primary/10 text-foreground-muted hover:text-primary dark:hover:text-foreground-dark transition-all"
