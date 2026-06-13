@@ -37,14 +37,14 @@ export function useHistoryPage() {
     const sessions: HistorySession[] = useMemo(() => {
         return dbSessions.map(session => {
             const task = tasks.find(t => t.id === session.task_id) || {
-                id: session.task_id,
+                id: session.task_id || 'unknown',
                 name: 'Unknown Task',
                 color: '#6B7280',
                 icon: '❓',
             };
             return {
                 id: session.id,
-                taskId: session.task_id,
+                taskId: session.task_id || '',
                 task: task as Task,
                 startedAt: session.started_at,
                 endedAt: session.ended_at,

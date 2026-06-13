@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 
 // Note: Server actions must import createClient directly from server.ts
 import type { Database } from '@/lib/supabase/database.types'
+import { taskInputSchema, taskUpdateSchema, uuid } from '@/lib/validation'
 
 type Task = Database['public']['Tables']['tasks']['Row']
 type TaskInsert = Database['public']['Tables']['tasks']['Insert']
@@ -32,10 +33,12 @@ export async function getTaskById(id: string) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
+  const taskId = uuid.parse(id)
+
   const { data, error } = await supabase
     .from('tasks')
     .select('*')
-    .eq('id', id)
+    .eq('id', taskId)
     .eq('user_id', user.id)
     .maybeSingle()
 
@@ -50,11 +53,13 @@ export async function createTask(task: Omit<TaskInsert, 'user_id' | 'created_at'
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
+  const validated = taskInputSchema.parse(task)
+
   const now = Date.now()
   const { data, error } = await supabase
     .from('tasks')
     .insert({
-      ...task,
+      ...validated,
       user_id: user.id,
       created_at: now,
       updated_at: now,
@@ -72,13 +77,16 @@ export async function updateTask(id: string, updates: TaskUpdate) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
+  const taskId = uuid.parse(id)
+  const validated = taskUpdateSchema.parse(updates)
+
   const { data, error } = await supabase
     .from('tasks')
     .update({
-      ...updates,
+      ...validated,
       updated_at: Date.now(),
     })
-    .eq('id', id)
+    .eq('id', taskId)
     .eq('user_id', user.id)
     .select()
     .maybeSingle()
@@ -94,10 +102,12 @@ export async function deleteTask(id: string) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
+  const taskId = uuid.parse(id)
+
   const { error } = await supabase
     .from('tasks')
     .delete()
-    .eq('id', id)
+    .eq('id', taskId)
     .eq('user_id', user.id)
 
   if (error) throw error

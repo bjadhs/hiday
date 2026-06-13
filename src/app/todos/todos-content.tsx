@@ -72,13 +72,6 @@ export default function TodosPage() {
   }, []);
 
   // Create todo handlers
-  const handleCreateTodo = useCallback((taskId: string) => {
-    setPreselectedTaskId(taskId);
-    setPreselectedTime(null);
-    setEditingSession(null);
-    setIsDialogOpen(true);
-  }, []);
-
   const handleTimeSlotClick = useCallback((timestamp: number) => {
     setPreselectedTaskId(null);
     setPreselectedTime(timestamp);
@@ -301,7 +294,6 @@ export default function TodosPage() {
               tasks={tasks}
               plannedSessions={scheduledSessions}
               unscheduledSessions={unscheduledSessions}
-              onCreateTodo={handleCreateTodo}
               onEditSession={handleEditSession}
               onDeleteSession={handleDeleteSession}
               onStartSession={handleStartSession}

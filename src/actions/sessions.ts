@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 
 // Note: Server actions must import createClient directly from server.ts
 import type { Database } from '@/lib/supabase/database.types'
+import { startSessionSchema, sessionUpdateSchema, uuid } from '@/lib/validation'
 
 type Session = Database['public']['Tables']['sessions']['Row']
 type SessionUpdate = Database['public']['Tables']['sessions']['Update']
@@ -50,6 +51,7 @@ export async function getActiveSession() {
     .from('sessions')
     .select('*, tasks(*)')
     .eq('user_id', user.id)
+    .eq('status', 'active')
     .is('ended_at', null)
     .order('started_at', { ascending: false })
     .limit(1)
@@ -70,6 +72,7 @@ export async function getActiveSessions() {
     .from('sessions')
     .select('*, tasks(*)')
     .eq('user_id', user.id)
+    .eq('status', 'active')
     .is('ended_at', null)
     .order('started_at', { ascending: false })
 
@@ -83,14 +86,16 @@ export async function startSession(taskId: string, title?: string, startTime?: n
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
+  const input = startSessionSchema.parse({ taskId, title, startTime })
+
   const now = Date.now()
-  const sessionStartTime = startTime || now
+  const sessionStartTime = input.startTime || now
   const { data, error } = await supabase
     .from('sessions')
     .insert({
-      task_id: taskId,
+      task_id: input.taskId,
       user_id: user.id,
-      title: title || null,
+      title: input.title || null,
       started_at: sessionStartTime,
       session_date: new Date(sessionStartTime).toISOString().split('T')[0], // YYYY-MM-DD
       source: 'manual',
@@ -159,10 +164,13 @@ export async function updateSession(sessionId: string, updates: SessionUpdate) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
+  const id = uuid.parse(sessionId)
+  const validated = sessionUpdateSchema.parse(updates)
+
   const { data, error } = await supabase
     .from('sessions')
-    .update(updates)
-    .eq('id', sessionId)
+    .update(validated)
+    .eq('id', id)
     .eq('user_id', user.id)
     .select()
     .maybeSingle()
@@ -185,10 +193,12 @@ export async function deleteSession(sessionId: string) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
+  const id = uuid.parse(sessionId)
+
   const { error } = await supabase
     .from('sessions')
     .delete()
-    .eq('id', sessionId)
+    .eq('id', id)
     .eq('user_id', user.id)
 
   if (error) throw error

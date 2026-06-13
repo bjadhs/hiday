@@ -22,7 +22,6 @@ export type Database = {
           default_note: string | null
           note_prompt: boolean
           task_tags: string[] | null
-          category_id: string | null
           archived: boolean
           sort_order: number
           created_at: number
@@ -40,7 +39,6 @@ export type Database = {
           default_note?: string | null
           note_prompt?: boolean
           task_tags?: string[] | null
-          category_id?: string | null
           archived?: boolean
           sort_order?: number
           created_at?: number
@@ -58,27 +56,20 @@ export type Database = {
           default_note?: string | null
           note_prompt?: boolean
           task_tags?: string[] | null
-          category_id?: string | null
           archived?: boolean
           sort_order?: number
           created_at?: number
           updated_at?: number
         }
-        Relationships: [
-          {
-            foreignKeyName: 'tasks_category_id_fkey'
-            columns: ['category_id']
-            isOneToOne: false
-            referencedRelation: 'categories'
-            referencedColumns: ['id']
-          },
-        ]
+        Relationships: []
       }
       sessions: {
         Row: {
           id: string
           user_id: string
-          task_id: string
+          task_id: string | null
+          project_id: string | null
+          kanban_status: 'inbox' | 'next' | 'doing' | 'done' | 'revise'
           title: string | null
           started_at: number | null
           ended_at: number | null
@@ -96,7 +87,9 @@ export type Database = {
         Insert: {
           id?: string
           user_id: string
-          task_id: string
+          task_id?: string | null
+          project_id?: string | null
+          kanban_status?: 'inbox' | 'next' | 'doing' | 'done' | 'revise'
           title?: string | null
           started_at?: number | null
           ended_at?: number | null
@@ -114,7 +107,9 @@ export type Database = {
         Update: {
           id?: string
           user_id?: string
-          task_id?: string
+          task_id?: string | null
+          project_id?: string | null
+          kanban_status?: 'inbox' | 'next' | 'doing' | 'done' | 'revise'
           title?: string | null
           started_at?: number | null
           ended_at?: number | null
@@ -137,79 +132,14 @@ export type Database = {
             referencedRelation: 'tasks'
             referencedColumns: ['id']
           },
+          {
+            foreignKeyName: 'sessions_project_id_fkey'
+            columns: ['project_id']
+            isOneToOne: false
+            referencedRelation: 'projects'
+            referencedColumns: ['id']
+          },
         ]
-      }
-      categories: {
-        Row: {
-          id: string
-          user_id: string
-          name: string
-          color: string
-          icon: string | null
-          sort_order: number
-          created_at: number
-          updated_at: number
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          name: string
-          color: string
-          icon?: string | null
-          sort_order?: number
-          created_at?: number
-          updated_at?: number
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          name?: string
-          color?: string
-          icon?: string | null
-          sort_order?: number
-          created_at?: number
-          updated_at?: number
-        }
-        Relationships: []
-      }
-      streaks: {
-        Row: {
-          id: string
-          user_id: string
-          type: 'daily' | 'goal' | 'category'
-          reference_id: string | null
-          current_count: number
-          longest_count: number
-          last_extended_at: number | null
-          frozen_until: number | null
-          created_at: number
-          updated_at: number
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          type: 'daily' | 'goal' | 'category'
-          reference_id?: string | null
-          current_count?: number
-          longest_count?: number
-          last_extended_at?: number | null
-          frozen_until?: number | null
-          created_at?: number
-          updated_at?: number
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          type?: 'daily' | 'goal' | 'category'
-          reference_id?: string | null
-          current_count?: number
-          longest_count?: number
-          last_extended_at?: number | null
-          frozen_until?: number | null
-          created_at?: number
-          updated_at?: number
-        }
-        Relationships: []
       }
       goals: {
         Row: {
@@ -220,7 +150,6 @@ export type Database = {
           target_value: number
           period: 'daily' | 'weekly'
           task_id: string | null
-          category_id: string | null
           active: boolean
           created_at: number
           updated_at: number
@@ -233,7 +162,6 @@ export type Database = {
           target_value: number
           period: 'daily' | 'weekly'
           task_id?: string | null
-          category_id?: string | null
           active?: boolean
           created_at?: number
           updated_at?: number
@@ -246,7 +174,6 @@ export type Database = {
           target_value?: number
           period?: 'daily' | 'weekly'
           task_id?: string | null
-          category_id?: string | null
           active?: boolean
           created_at?: number
           updated_at?: number
@@ -257,13 +184,6 @@ export type Database = {
             columns: ['task_id']
             isOneToOne: false
             referencedRelation: 'tasks'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'goals_category_id_fkey'
-            columns: ['category_id']
-            isOneToOne: false
-            referencedRelation: 'categories'
             referencedColumns: ['id']
           },
         ]
@@ -304,6 +224,36 @@ export type Database = {
         }
         Relationships: []
       }
+      projects: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          color: string
+          sort_order: number
+          created_at: number
+          updated_at: number
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          name: string
+          color?: string
+          sort_order?: number
+          created_at?: number
+          updated_at?: number
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          name?: string
+          color?: string
+          sort_order?: number
+          created_at?: number
+          updated_at?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -312,7 +262,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      kanban_status: 'inbox' | 'next' | 'doing' | 'done' | 'revise'
     }
     CompositeTypes: {
       [_ in never]: never

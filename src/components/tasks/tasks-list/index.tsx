@@ -16,7 +16,7 @@ import {
 import { cn } from '@/lib/utils';
 import { TaskCard } from '../task-card';
 import { DBTask } from '../types';
-import { Activity } from 'lucide-react';
+import { Sparkles, Clock, ListTodo, Pencil, Plus } from 'lucide-react';
 
 interface TasksListProps {
     sortedTasks: DBTask[];
@@ -70,20 +70,59 @@ export function TasksList({
             </DndContext>
 
             {orderedTasks.length === 0 && (
-                <div className='text-center py-24 border-4 border-dashed border-border-strong rounded-[2rem] bg-muted/20 dark:bg-muted/10'>
-                    <div className='w-24 h-24 rounded-3xl bg-surface border-4 border-border-strong flex items-center justify-center mx-auto mb-8 shadow-brutal'>
-                        <Activity className='w-12 h-12 text-primary' />
+                <div className='relative overflow-hidden text-center py-16 lg:py-24 border-4 border-dashed border-border-strong rounded-[2rem] bg-gradient-to-br from-muted/40 via-muted/20 to-primary/5 dark:from-muted/20 dark:via-muted/10 dark:to-primary/10'>
+                    {/* Decorative background blobs */}
+                    <div className='absolute -top-10 -right-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl pointer-events-none' />
+                    <div className='absolute -bottom-10 -left-10 w-40 h-40 bg-secondary/10 rounded-full blur-3xl pointer-events-none' />
+
+                    <div className='relative z-10 max-w-2xl mx-auto px-6'>
+                        {/* Hero icon */}
+                        <div className='w-24 h-24 rounded-3xl bg-surface border-4 border-border-strong flex items-center justify-center mx-auto mb-8 shadow-brutal rotate-3 hover:rotate-0 transition-transform duration-300'>
+                            <Sparkles className='w-12 h-12 text-primary' />
+                        </div>
+
+                        {/* Headline */}
+                        <h3 className='text-3xl lg:text-4xl font-black mb-4 tracking-tight'>
+                            Your task blueprint is empty
+                        </h3>
+
+                        {/* What is a task */}
+                        <p className='text-muted-foreground text-lg mb-8 max-w-lg mx-auto font-medium leading-relaxed'>
+                            A <span className='text-foreground font-bold'>task</span> is anything you want to spend focused time on — deep work, a project, a habit, or a hobby.
+                        </p>
+
+                        {/* Feature cards */}
+                        <div className='grid sm:grid-cols-2 gap-4 mb-10 text-left'>
+                            <div className='p-5 rounded-2xl bg-surface border-2 border-border-strong shadow-brutal-sm'>
+                                <div className='w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-3'>
+                                    <Clock className='w-5 h-5 text-primary' />
+                                </div>
+                                <h4 className='font-bold mb-1'>What is a session?</h4>
+                                <p className='text-sm text-muted-foreground leading-relaxed'>
+                                    A session is a single focused period of work on a task. Every time you press start, a new session begins.
+                                </p>
+                            </div>
+
+                            <div className='p-5 rounded-2xl bg-surface border-2 border-border-strong shadow-brutal-sm'>
+                                <div className='w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center mb-3'>
+                                    <Pencil className='w-5 h-5 text-secondary-foreground' />
+                                </div>
+                                <h4 className='font-bold mb-1'>Manage anytime</h4>
+                                <p className='text-sm text-muted-foreground leading-relaxed'>
+                                    You can edit, reorder, or analyze your tasks anytime from the <span className='inline-flex items-center gap-1 font-semibold text-foreground'><ListTodo className='w-3.5 h-3.5' /> Tasks</span> page in the sidebar.
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* CTA */}
+                        <button
+                            onClick={onCreate}
+                            className='inline-flex items-center gap-2 px-10 py-4 rounded-2xl bg-primary text-white text-xl font-black border-4 border-border-strong shadow-brutal btn-brutal hover:shadow-brutal-sm transition-shadow'
+                        >
+                            <Plus className='w-6 h-6' />
+                            Create your first task
+                        </button>
                     </div>
-                    <h3 className='text-3xl font-black mb-4'>PROTOCOL EMPTY</h3>
-                    <p className='text-muted-foreground mb-10 max-w-sm mx-auto font-bold'>
-                        Establish your first task blueprint to begin tracking your evolution.
-                    </p>
-                    <button
-                        onClick={onCreate}
-                        className='px-10 py-4 rounded-2xl bg-primary text-white text-xl font-black border-4 border-border-strong shadow-brutal btn-brutal'
-                    >
-                        INITIALIZE
-                    </button>
                 </div>
             )}
         </>

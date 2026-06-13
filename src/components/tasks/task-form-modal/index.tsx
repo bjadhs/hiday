@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { TASK_ICONS, TASK_COLORS } from '@/lib/constant';
 import { EditableTask } from '../types';
 import { cn } from '@/lib/utils';
+import { taskInputSchema, formatZodErrors } from '@/lib/validation';
 import {
     X, Check, Trash2, Loader2, Tag as TagIcon, Target,
     StickyNote, Plus, History, Clock
@@ -102,11 +103,30 @@ export function TaskFormModal({
         default_note: task.default_note || '',
     });
     const [showAllOptions, setShowAllOptions] = useState(false);
+    const [errors, setErrors] = useState<Record<string, string>>({});
     const INITIAL_OPTIONS_COUNT = 12;
 
     const handleSave = () => {
-        if (!formData.name.trim()) return;
-        onSave(formData);
+        // Clear goal fields that don't apply to the chosen goal type before validating.
+        const payload: EditableTask = {
+            ...formData,
+            goal_duration:
+                formData.goal_type === 'daily' || formData.goal_type === 'weekly'
+                    ? formData.goal_duration
+                    : null,
+            goal_value:
+                formData.goal_type === 'hour' || formData.goal_type === 'count'
+                    ? formData.goal_value
+                    : null,
+        };
+
+        const result = taskInputSchema.safeParse(payload);
+        if (!result.success) {
+            setErrors(formatZodErrors(result.error));
+            return;
+        }
+        setErrors({});
+        onSave(payload);
     };
 
     return (
@@ -151,6 +171,9 @@ export function TaskFormModal({
                                 placeholder='What are we tracking?'
                                 className='h-14 text-xl font-bold border-2 border-border-strong bg-surface rounded-xl'
                             />
+                            {errors.name && (
+                                <p className='text-xs font-bold text-destructive'>{errors.name}</p>
+                            )}
                         </div>
 
                         <div className='grid grid-cols-1 sm:grid-cols-2 gap-8'>
@@ -277,6 +300,11 @@ export function TaskFormModal({
                                             {formData.goal_type === 'count' ? <History className='w-4 h-4' /> : <Clock className='w-4 h-4' />}
                                         </div>
                                     </div>
+                                    {(errors.goal_duration || errors.goal_value) && (
+                                        <p className='text-xs font-bold text-destructive'>
+                                            {errors.goal_duration || errors.goal_value}
+                                        </p>
+                                    )}
                                 </div>
                             )}
                         </div>

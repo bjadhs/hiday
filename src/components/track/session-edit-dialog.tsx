@@ -23,6 +23,7 @@ import { useUpdateSession, useDeleteSession } from '@/lib/hooks/use-sessions';
 import { useNow } from '@/lib/hooks/use-now';
 import { ChevronDown, Trash2, Loader2, Clock } from 'lucide-react';
 import { formatDuration, cn } from '@/lib/utils';
+import { sessionUpdateSchema, formatZodErrors } from '@/lib/validation';
 
 export type SessionEditDialogProps = {
   session: HistorySession | null;
@@ -44,6 +45,7 @@ export function SessionEditDialog({
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
   const now = useNow(1000);
 
   const formatDateTimeLocal = useCallback((date: Date): string => {
@@ -82,22 +84,32 @@ export function SessionEditDialog({
 
     const startedAt = new Date(startTime).getTime();
     const endedAt = endTime ? new Date(endTime).getTime() : null;
-    
+
     // Calculate duration in seconds
     const duration = endedAt
       ? Math.floor((endedAt - startedAt) / 1000)
       : Math.floor((now - startedAt) / 1000);
 
+    const updates = {
+      title: title.trim() || null,
+      task_id: selectedTask.id,
+      started_at: startedAt,
+      ended_at: endedAt,
+      duration: duration > 0 ? duration : 0,
+    };
+
+    const result = sessionUpdateSchema.safeParse(updates);
+    if (!result.success) {
+      const fieldErrors = formatZodErrors(result.error);
+      setFormError(fieldErrors.ended_at || fieldErrors._form || Object.values(fieldErrors)[0] || 'Invalid session');
+      return;
+    }
+    setFormError(null);
+
     try {
       await updateSessionMutation.mutateAsync({
         id: session.id,
-        updates: {
-          title: title.trim() || null,
-          task_id: selectedTask.id,
-          started_at: startedAt,
-          ended_at: endedAt,
-          duration: duration > 0 ? duration : 0,
-        },
+        updates,
       });
       onClose();
     } catch (error) {
@@ -249,6 +261,12 @@ export function SessionEditDialog({
                 {calculateDuration()}
               </span>
             </div>
+
+            {formError && (
+              <p className="text-sm font-semibold text-danger dark:text-danger-dark">
+                {formError}
+              </p>
+            )}
           </div>
 
           <DialogFooter className="flex-row justify-between gap-2 sm:justify-between">

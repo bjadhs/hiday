@@ -69,7 +69,7 @@ function calculatePlannedSessionsLayout(
 
     return {
       id: s.id,
-      taskId: s.task_id,
+      taskId: s.task_id || '',
       task: s.tasks ? {
         id: s.tasks.id,
         name: s.tasks.name,
@@ -382,7 +382,7 @@ export function TodoTimeline({
     if (sessionId && onTaskDrop) {
       // Find the task ID from the session
       const session = plannedSessions.find(s => s.id === sessionId);
-      if (session) {
+      if (session && session.task_id) {
         onTaskDrop(session.task_id, timestamp, sessionId);
       }
       return;

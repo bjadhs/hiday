@@ -32,39 +32,29 @@ INSERT INTO auth.users (
 ) ON CONFLICT (id) DO NOTHING;
 
 -- ============================================================
--- 2. Categories
+-- 2. Tasks
 -- ============================================================
-INSERT INTO categories (id, user_id, name, color, icon, sort_order) VALUES
-  ('11111111-1111-1111-1111-111111111111', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Work', '#8B5CF6', '💼', 0),
-  ('22222222-2222-2222-2222-222222222222', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Health & Fitness', '#22C55E', '❤️', 1),
-  ('33333333-3333-3333-3333-333333333333', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Learning', '#3B82F6', '📚', 2),
-  ('44444444-4444-4444-4444-444444444444', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Personal', '#F59E0B', '🏠', 3),
-  ('55555555-5555-5555-5555-555555555555', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Social', '#EC4899', '👥', 4);
-
--- ============================================================
--- 3. Tasks
--- ============================================================
-INSERT INTO tasks (id, user_id, name, icon, color, goal_duration, goal_type, category_id, archived, sort_order) VALUES
+INSERT INTO tasks (id, user_id, name, icon, color, goal_duration, goal_type, archived, sort_order) VALUES
   -- Work tasks
-  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Inbox & Quick Tasks', '📥', '#6B7280', NULL, 'none', NULL, false, 0),
-  ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Hiday App Development', '💻', '#8B5CF6', 300, 'daily', '11111111-1111-1111-1111-111111111111', false, 1),
-  ('cccccccc-cccc-cccc-cccc-cccccccccccc', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Meetings & Calls', '🗣️', '#F59E0B', NULL, 'none', '11111111-1111-1111-1111-111111111111', false, 2),
-  ('dddddddd-dddd-dddd-dddd-dddddddddddd', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'UI/UX Design', '🎨', '#EC4899', 120, 'daily', '11111111-1111-1111-1111-111111111111', false, 3),
-  ('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Planning & Review', '📝', '#6366F1', NULL, 'none', '11111111-1111-1111-1111-111111111111', false, 4),
+  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Inbox & Quick Tasks', '📥', '#6B7280', NULL, 'none', false, 0),
+  ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Hiday App Development', '💻', '#8B5CF6', 300, 'daily', false, 1),
+  ('cccccccc-cccc-cccc-cccc-cccccccccccc', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Meetings & Calls', '🗣️', '#F59E0B', NULL, 'none', false, 2),
+  ('dddddddd-dddd-dddd-dddd-dddddddddddd', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'UI/UX Design', '🎨', '#EC4899', 120, 'daily', false, 3),
+  ('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Planning & Review', '📝', '#6366F1', NULL, 'none', false, 4),
 
   -- Health tasks
-  ('ffffffff-ffff-ffff-ffff-ffffffffffff', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Gym Workout', '💪', '#22C55E', 60, 'daily', '22222222-2222-2222-2222-222222222222', false, 5),
-  ('00000000-0000-0000-0000-000000000001', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Meditation', '🧘', '#14B8A6', 20, 'daily', '22222222-2222-2222-2222-222222222222', false, 6),
-  ('00000000-0000-0000-0000-000000000002', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Morning Walk', '🚶', '#84CC16', 30, 'daily', '22222222-2222-2222-2222-222222222222', false, 7),
+  ('ffffffff-ffff-ffff-ffff-ffffffffffff', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Gym Workout', '💪', '#22C55E', 60, 'daily', false, 5),
+  ('00000000-0000-0000-0000-000000000001', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Meditation', '🧘', '#14B8A6', 20, 'daily', false, 6),
+  ('00000000-0000-0000-0000-000000000002', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Morning Walk', '🚶', '#84CC16', 30, 'daily', false, 7),
 
   -- Learning tasks
-  ('00000000-0000-0000-0000-000000000003', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Reading', '📖', '#3B82F6', 30, 'daily', '33333333-3333-3333-3333-333333333333', false, 8),
-  ('00000000-0000-0000-0000-000000000004', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Online Courses', '🎓', '#8B5CF6', 60, 'daily', '33333333-3333-3333-3333-333333333333', false, 9),
+  ('00000000-0000-0000-0000-000000000003', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Reading', '📖', '#3B82F6', 30, 'daily', false, 8),
+  ('00000000-0000-0000-0000-000000000004', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Online Courses', '🎓', '#8B5CF6', 60, 'daily', false, 9),
 
   -- Personal tasks
-  ('00000000-0000-0000-0000-000000000005', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Cooking & Meals', '🍳', '#F97316', NULL, 'none', '44444444-4444-4444-4444-444444444444', false, 10),
-  ('00000000-0000-0000-0000-000000000006', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Break & Rest', '☕', '#EF4444', NULL, 'none', '44444444-4444-4444-4444-444444444444', false, 11),
-  ('00000000-0000-0000-0000-000000000007', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Household Chores', '🏠', '#6B7280', NULL, 'none', '44444444-4444-4444-4444-444444444444', false, 12);
+  ('00000000-0000-0000-0000-000000000005', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Cooking & Meals', '🍳', '#F97316', NULL, 'none', false, 10),
+  ('00000000-0000-0000-0000-000000000006', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Break & Rest', '☕', '#EF4444', NULL, 'none', false, 11),
+  ('00000000-0000-0000-0000-000000000007', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Household Chores', '🏠', '#6B7280', NULL, 'none', false, 12);
 
 -- ============================================================
 -- 4. Tags
@@ -146,23 +136,23 @@ INSERT INTO sessions (id, user_id, task_id, title, started_at, ended_at, duratio
 -- ============================================================
 -- 6. Goals
 -- ============================================================
-INSERT INTO goals (id, user_id, name, target_type, target_value, period, task_id, category_id, active) VALUES
+INSERT INTO goals (id, user_id, name, target_type, target_value, period, task_id, active) VALUES
   -- Daily work goals
-  ('a0111111-1111-1111-1111-111111111111', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Hiday Development - 5 hours daily', 'duration', 300, 'daily', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', NULL, true),
-  ('a0222222-2222-2222-2222-222222222222', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Design Work - 2 hours daily', 'duration', 120, 'daily', 'dddddddd-dddd-dddd-dddd-dddddddddddd', NULL, true),
+  ('a0111111-1111-1111-1111-111111111111', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Hiday Development - 5 hours daily', 'duration', 300, 'daily', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', true),
+  ('a0222222-2222-2222-2222-222222222222', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Design Work - 2 hours daily', 'duration', 120, 'daily', 'dddddddd-dddd-dddd-dddd-dddddddddddd', true),
 
   -- Health goals
-  ('a0333333-3333-3333-3333-333333333333', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Gym Session Daily', 'occurrence', 1, 'daily', 'ffffffff-ffff-ffff-ffff-ffffffffffff', NULL, true),
-  ('a0444444-4444-4444-4444-444444444444', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Meditation - 20 min daily', 'duration', 20, 'daily', '00000000-0000-0000-0000-000000000001', NULL, true),
-  ('a0555555-5555-5555-5555-555555555555', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Morning Walk - 30 min daily', 'duration', 30, 'daily', '00000000-0000-0000-0000-000000000002', NULL, true),
+  ('a0333333-3333-3333-3333-333333333333', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Gym Session Daily', 'occurrence', 1, 'daily', 'ffffffff-ffff-ffff-ffff-ffffffffffff', true),
+  ('a0444444-4444-4444-4444-444444444444', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Meditation - 20 min daily', 'duration', 20, 'daily', '00000000-0000-0000-0000-000000000001', true),
+  ('a0555555-5555-5555-5555-555555555555', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Morning Walk - 30 min daily', 'duration', 30, 'daily', '00000000-0000-0000-0000-000000000002', true),
 
   -- Learning goals
-  ('a0666666-6666-6666-6666-666666666666', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Reading - 30 min daily', 'duration', 30, 'daily', '00000000-0000-0000-0000-000000000003', NULL, true),
-  ('a0777777-7777-7777-7777-777777777777', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Online Course - 1 hour daily', 'duration', 60, 'daily', '00000000-0000-0000-0000-000000000004', NULL, true),
+  ('a0666666-6666-6666-6666-666666666666', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Reading - 30 min daily', 'duration', 30, 'daily', '00000000-0000-0000-0000-000000000003', true),
+  ('a0777777-7777-7777-7777-777777777777', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Online Course - 1 hour daily', 'duration', 60, 'daily', '00000000-0000-0000-0000-000000000004', true),
 
   -- Weekly goals
-  ('a0888888-8888-8888-8888-888888888888', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Complete Hiday MVP this week', 'occurrence', 5, 'weekly', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', NULL, true),
-  ('a0999999-9999-9999-9999-999999999999', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Workout 5 times this week', 'occurrence', 5, 'weekly', 'ffffffff-ffff-ffff-ffff-ffffffffffff', NULL, true);
+  ('a0888888-8888-8888-8888-888888888888', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Complete Hiday MVP this week', 'occurrence', 5, 'weekly', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', true),
+  ('a0999999-9999-9999-9999-999999999999', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Workout 5 times this week', 'occurrence', 5, 'weekly', 'ffffffff-ffff-ffff-ffff-ffffffffffff', true);
 
 -- ============================================================
 -- 7. Streaks
@@ -170,6 +160,4 @@ INSERT INTO goals (id, user_id, name, target_type, target_value, period, task_id
 INSERT INTO streaks (id, user_id, type, reference_id, current_count, longest_count, last_extended_at) VALUES
   ('b0111111-1111-1111-1111-111111111111', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'daily', NULL, 7, 12, EXTRACT(EPOCH FROM NOW()) * 1000),
   ('b0222222-2222-2222-2222-222222222222', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'goal', 'a0111111-1111-1111-1111-111111111111', 5, 10, EXTRACT(EPOCH FROM NOW()) * 1000),
-  ('b0333333-3333-3333-3333-333333333333', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'goal', 'a0333333-3333-3333-3333-333333333333', 12, 15, EXTRACT(EPOCH FROM NOW()) * 1000),
-  ('b0444444-4444-4444-4444-444444444444', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'category', '11111111-1111-1111-1111-111111111111', 7, 14, EXTRACT(EPOCH FROM NOW()) * 1000),
-  ('b0555555-5555-5555-5555-555555555555', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'category', '22222222-2222-2222-2222-222222222222', 5, 8, EXTRACT(EPOCH FROM NOW()) * 1000);
+  ('b0333333-3333-3333-3333-333333333333', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'goal', 'a0333333-3333-3333-3333-333333333333', 12, 15, EXTRACT(EPOCH FROM NOW()) * 1000);

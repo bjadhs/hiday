@@ -59,7 +59,7 @@ interface ActiveSessionsState {
   // Hydration from DB
   syncFromDatabase: (dbSessions: Array<{
     id: string;
-    task: Task;
+    task: Task | null;
     title: string;
     note: string;
     started_at: number | null;
@@ -254,6 +254,9 @@ export const useActiveSessionsStore = create<ActiveSessionsState>((set, get) => 
       const newSessions: ActiveSessionState[] = [];
 
       dbSessions.forEach((dbSession) => {
+        // A running timer always has a task; skip task-less rows (e.g. inbox /
+        // unscheduled todos) that should never appear as active sessions.
+        if (!dbSession.task) return;
         if (!localSessionIds.has(dbSession.id) && !state.syncedSessionIds.has(dbSession.id)) {
           newSessions.push({
             id: dbSession.id,
@@ -274,7 +277,9 @@ export const useActiveSessionsStore = create<ActiveSessionsState>((set, get) => 
       const now = Date.now();
 
       // Remove optimistic sessions for the same tasks to prevent duplicates
-      const dbTaskIds = new Set(dbSessions.map((s) => s.task.id));
+      const dbTaskIds = new Set(
+        dbSessions.map((s) => s.task?.id).filter((id): id is string => id != null),
+      );
       const filteredSessions = state.activeSessions.filter((s) => {
         // Keep non-optimistic sessions or optimistic sessions for different tasks
         const isOptimistic = s.id.startsWith('optimistic-');

@@ -95,7 +95,7 @@ export function useTrackPage() {
         // Convert DB sessions to the format expected by the store
         const sessionsForSync = activeDbSessions.map((dbSession) => ({
             id: dbSession.id,
-            task: dbSession.tasks as Task,
+            task: dbSession.tasks,
             title: dbSession.title || '',
             note: dbSession.note || '',
             started_at: dbSession.started_at,

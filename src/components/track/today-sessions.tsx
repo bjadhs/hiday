@@ -1,6 +1,6 @@
 'use client';
 
-import { Pencil } from 'lucide-react';
+import { Pencil, Clock, Play } from 'lucide-react';
 import { formatDuration } from '@/lib/utils';
 import { Task, HistorySession } from '@/lib/types';
 import { useNow } from '@/lib/hooks/use-now';
@@ -8,7 +8,7 @@ import { useNow } from '@/lib/hooks/use-now';
 // Database session type from Supabase - matching the actual type
 interface DbSession {
   id: string;
-  task_id: string;
+  task_id: string | null;
   tasks: {
     id: string;
     name: string;
@@ -62,7 +62,7 @@ export function TodaySessions({ sessions, onEditSession }: TodaySessionsProps) {
       color: session.tasks.color,
       icon: session.tasks.icon,
     } : {
-      id: session.task_id,
+      id: session.task_id || 'unknown',
       name: 'Unknown',
       color: '#6B7280',
       icon: '❓',
@@ -70,7 +70,7 @@ export function TodaySessions({ sessions, onEditSession }: TodaySessionsProps) {
 
     return {
       id: session.id,
-      taskId: session.task_id,
+      taskId: session.task_id || '',
       task,
       startedAt: session.started_at || 0,
       endedAt: session.ended_at,
@@ -89,10 +89,18 @@ export function TodaySessions({ sessions, onEditSession }: TodaySessionsProps) {
       </div>
       <div className="p-4 lg:p-6 space-y-3 flex-1 overflow-y-auto min-h-0">
         {sessions.length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-foreground-muted text-sm">
-              Today you haven&apos;t started any session.
+          <div className="flex-1 flex flex-col items-center justify-center text-center px-4 py-8">
+            <div className="w-16 h-16 rounded-2xl bg-primary/10 border-2 border-primary/20 flex items-center justify-center mb-5 shadow-brutal-sm">
+              <Clock className="w-8 h-8 text-primary" />
+            </div>
+            <h3 className="text-xl font-black mb-2">No sessions yet</h3>
+            <p className="text-sm text-muted-foreground max-w-xs mb-6 leading-relaxed">
+              A session is a focused block of time you spend on a task. Start one from a task to see it here.
             </p>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-surface-elevated border-2 border-border text-xs font-bold text-muted-foreground">
+              <Play className="w-3.5 h-3.5 text-primary" />
+              Press start on any task to begin
+            </div>
           </div>
         ) : (
           sessions.map((session) => {

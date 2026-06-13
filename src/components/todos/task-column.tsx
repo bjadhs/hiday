@@ -30,7 +30,7 @@ function convertToPlannedSession(session: DBSession): PlannedSession {
 
   return {
     id: session.id,
-    taskId: session.task_id,
+    taskId: session.task_id || '',
     task: session.tasks ? {
       id: session.tasks.id,
       name: session.tasks.name,
@@ -438,6 +438,7 @@ export function TaskColumn({
   // Group scheduled sessions by task
   const sessionsByTask = plannedSessions.reduce((acc, session) => {
     const taskId = session.task_id;
+    if (!taskId) return acc;
     if (!acc[taskId]) {
       acc[taskId] = [];
     }
@@ -448,6 +449,7 @@ export function TaskColumn({
   // Group unscheduled sessions by task
   const unscheduledByTask = unscheduledSessions.reduce((acc, session) => {
     const taskId = session.task_id;
+    if (!taskId) return acc;
     if (!acc[taskId]) {
       acc[taskId] = [];
     }

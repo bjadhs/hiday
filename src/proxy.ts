@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
 
 // Routes that require authentication
-const protectedRoutes = ['/track', '/analyze', '/settings', '/tasks', '/history', '/timeline', '/todos']
+const protectedRoutes = ['/track', '/analyze', '/settings', '/tasks', '/history', '/timeline', '/todos', '/kanban']
 
 // Routes that should not be accessed when logged in
 const authRoutes = ['/login', '/signup']

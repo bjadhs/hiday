@@ -21,9 +21,10 @@ export default function AnalyzePage() {
     0,
   );
 
-  // Find top task by duration
+  // Find top task by duration (skip sessions without a task)
   const taskDurations = todaySessions.reduce((acc, session) => {
     const taskId = session.task_id;
+    if (!taskId) return acc;
     acc[taskId] = (acc[taskId] || 0) + (session.duration || 0);
     return acc;
   }, {} as Record<string, number>);

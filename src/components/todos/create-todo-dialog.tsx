@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import type { Database } from '@/lib/supabase/database.types';
 import type { PlannedSession } from '@/lib/types';
+import { createPlannedSessionSchema, formatZodErrors } from '@/lib/validation';
 
 type DBTask = Database['public']['Tables']['tasks']['Row'];
 
@@ -97,6 +98,7 @@ export function CreateTodoDialog({
   const [duration, setDuration] = useState('01:00');
   const [note, setNote] = useState('');
   const [isScheduled, setIsScheduled] = useState(false); // Default to unscheduled
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   const isEditing = !!editingSession;
 
@@ -157,13 +159,25 @@ export function CreateTodoDialog({
       });
     } else {
       const plannedDate = selectedDate.toISOString().split('T')[0];
-      console.log('Creating todo with data:', {
+
+      const result = createPlannedSessionSchema.safeParse({
         taskId,
         plannedDate,
         plannedStartTime,
         plannedDuration,
-        isScheduled,
+        title: title || undefined,
+        note: note || undefined,
       });
+
+      if (!result.success) {
+        const fieldErrors = formatZodErrors(result.error);
+        setValidationError(
+          fieldErrors.taskId || fieldErrors.plannedDuration || Object.values(fieldErrors)[0] || 'Invalid todo'
+        );
+        return;
+      }
+      setValidationError(null);
+
       onCreate({
         taskId,
         plannedDate,
@@ -297,9 +311,9 @@ export function CreateTodoDialog({
             </div>
           </div>
 
-          {error && (
+          {(validationError || error) && (
             <div className="mb-4 p-3 rounded-md bg-destructive/10 border border-destructive text-destructive text-sm">
-              {error}
+              {validationError || error}
             </div>
           )}
 

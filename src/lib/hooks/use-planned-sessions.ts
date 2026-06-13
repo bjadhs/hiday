@@ -185,6 +185,8 @@ export function useStartPlannedSession() {
       })
       // Also invalidate active sessions
       queryClient.invalidateQueries({ queryKey: ['sessions', 'active'] })
+      // Remove started todo from Kanban board
+      queryClient.invalidateQueries({ queryKey: ['kanban'] })
     },
   })
 }

@@ -13,6 +13,7 @@ import {
   Clock,
   CalendarCheck,
   LogOut,
+  Kanban,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUser, useSupabase } from '@/lib/supabase';
@@ -37,6 +38,7 @@ const navItems: NavItem[] = [
   { label: 'Track', href: '/track', icon: Zap },
   { label: 'Timeline', href: '/timeline', icon: Clock },
   { label: 'Todos', href: '/todos', icon: CalendarCheck },
+  { label: 'Kanban', href: '/kanban', icon: Kanban },
   { label: 'History', href: '/history', icon: History },
   { label: 'Analyze', href: '/analyze', icon: BarChart3 },
   { label: 'Tasks', href: '/tasks', icon: ListTodo },
@@ -83,17 +85,17 @@ export function NavBar({}: NavBarProps) {
 
   return (
     <>
-      {/* Desktop Sidebar - 280px width per Design.md */}
-      <aside className='hidden lg:flex w-70 flex-col border-r-2 border-border-strong bg-surface h-screen sticky top-0'>
+      {/* Desktop Sidebar */}
+      <aside className='hidden lg:flex w-60 flex-col border-r-2 border-border-strong bg-surface h-screen sticky top-0'>
         {/* Logo Area */}
-        <div className='p-6 border-b-2 border-border-strong'>
+        <div className='p-4 border-b-2 border-border-strong'>
           <h1 className='text-2xl font-bold tracking-tight text-primary'>
             Hiday
           </h1>
           <div className='flex items-center gap-2 text-foreground-muted mt-2'>
             <Calendar className='w-4 h-4' />
             <span
-              className='text-sm font-medium'
+              className='text-xs font-medium'
               suppressHydrationWarning
             >
               {dateStr}
@@ -102,7 +104,7 @@ export function NavBar({}: NavBarProps) {
         </div>
 
         {/* Navigation */}
-        <nav className='flex-1 p-4 space-y-2 pt-6'>
+        <nav className='flex-1 p-3 space-y-1 pt-4'>
           {navItems.map((item) => {
             const isActive =
               pathname === item.href || pathname.startsWith(item.href + '/');
@@ -113,7 +115,7 @@ export function NavBar({}: NavBarProps) {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  'flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all duration-200',
+                  'flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-all duration-200',
                   'border-2',
                   isActive
                     ? 'bg-primary/10 text-primary border-transparent border-l-[3px] border-l-primary border-l-solid'
@@ -128,12 +130,12 @@ export function NavBar({}: NavBarProps) {
         </nav>
 
         {/* User Profile Section */}
-        <div className='p-4 border-t-2 border-border-strong'>
+        <div className='p-3 border-t-2 border-border-strong'>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <button className='w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-surface-elevated border-2 border-border-strong shadow-brutal-sm cursor-pointer hover:bg-surface-elevated/80 hover:bg-surface-elevated/80 transition-colors text-left'>
-                {/* Avatar - 40px (MD) per Design.md */}
-                <div className='w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-bold text-sm border-2 border-background shrink-0'>
+              <button className='w-full flex items-center gap-3 px-3 py-2.5 rounded-lg bg-surface-elevated border-2 border-border-strong shadow-brutal-sm cursor-pointer hover:bg-surface-elevated/80 hover:bg-surface-elevated/80 transition-colors text-left'>
+                {/* Avatar */}
+                <div className='w-9 h-9 rounded-full bg-primary flex items-center justify-center text-white font-bold text-sm border-2 border-background shrink-0'>
                   {initial}
                 </div>
                 <div className='flex-1 min-w-0'>

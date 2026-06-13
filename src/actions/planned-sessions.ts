@@ -2,14 +2,31 @@
 
 import { createClient } from '@/lib/supabase/server'
 import type { Database } from '@/lib/supabase/database.types'
+import {
+  createPlannedSessionSchema,
+  updatePlannedSessionSchema,
+  completePlannedSessionSchema,
+  createKanbanTodoSchema,
+  createInboxTodoSchema,
+  updateKanbanTodoSchema,
+  updateKanbanStatusSchema,
+  uuid,
+} from '@/lib/validation'
+import type {
+  UpdatePlannedSessionInput,
+  CreateKanbanTodoInput,
+  CreateInboxTodoInput,
+  UpdateKanbanTodoInput,
+} from '@/lib/validation'
 
 type Session = Database['public']['Tables']['sessions']['Row']
 type SessionInsert = Database['public']['Tables']['sessions']['Insert']
 type SessionUpdate = Database['public']['Tables']['sessions']['Update']
 type Task = Database['public']['Tables']['tasks']['Row']
+type Project = Database['public']['Tables']['projects']['Row']
 
-// Planned session with joined task data
-export type PlannedSessionWithTask = Session & { tasks: Task | null }
+// Planned session with joined task and project data
+export type PlannedSessionWithTask = Session & { tasks: Task | null; projects: Project | null }
 
 /**
  * Get all planned sessions for a specific date
@@ -75,18 +92,27 @@ export async function createPlannedSession(
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
+  const input = createPlannedSessionSchema.parse({
+    taskId,
+    plannedDate,
+    plannedStartTime,
+    plannedDuration,
+    title,
+    note,
+  })
+
   const now = Date.now()
 
   const sessionData: SessionInsert = {
     user_id: user.id,
-    task_id: taskId,
-    started_at: plannedStartTime ?? null, // Null for unscheduled, timestamp for scheduled
-    ended_at: plannedStartTime ? plannedStartTime + plannedDuration * 1000 : null, // Null for unscheduled
-    duration: plannedDuration,
-    title: title || null,
-    note: note || null,
+    task_id: input.taskId,
+    started_at: input.plannedStartTime ?? null, // Null for unscheduled, timestamp for scheduled
+    ended_at: input.plannedStartTime ? input.plannedStartTime + input.plannedDuration * 1000 : null, // Null for unscheduled
+    duration: input.plannedDuration,
+    title: input.title || null,
+    note: input.note || null,
     status: 'planned',
-    session_date: plannedDate,
+    session_date: input.plannedDate,
     source: 'manual',
     sync_status: 'pending',
     client_timestamp: now,
@@ -109,57 +135,54 @@ export async function createPlannedSession(
  */
 export async function updatePlannedSession(
   sessionId: string,
-  updates: {
-    plannedStartTime?: number | null;
-    plannedDuration?: number;
-    title?: string;
-    note?: string;
-    status?: 'planned' | 'active' | 'completed' | 'cancelled';
-  }
+  updates: UpdatePlannedSessionInput
 ) {
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
+  const id = uuid.parse(sessionId)
+  const v = updatePlannedSessionSchema.parse(updates)
+
   const updateData: SessionUpdate = {}
 
-  if (updates.plannedStartTime !== undefined) {
-    updateData.started_at = updates.plannedStartTime
+  if (v.plannedStartTime !== undefined) {
+    updateData.started_at = v.plannedStartTime
 
     // If unscheduling (setting to null), also clear ended_at
-    if (updates.plannedStartTime === null) {
+    if (v.plannedStartTime === null) {
       updateData.ended_at = null
     }
   }
 
-  if (updates.plannedDuration !== undefined) {
-    updateData.duration = updates.plannedDuration
+  if (v.plannedDuration !== undefined) {
+    updateData.duration = v.plannedDuration
     // Recalculate ended_at based on new duration (only if scheduled)
-    const startTime = updates.plannedStartTime !== undefined
-      ? updates.plannedStartTime
-      : (await getPlannedSessionById(sessionId))?.started_at
+    const startTime = v.plannedStartTime !== undefined
+      ? v.plannedStartTime
+      : (await getPlannedSessionById(id))?.started_at
     if (startTime) {
-      updateData.ended_at = startTime + updates.plannedDuration * 1000
+      updateData.ended_at = startTime + v.plannedDuration * 1000
     }
   }
 
-  if (updates.title !== undefined) {
-    updateData.title = updates.title
+  if (v.title !== undefined) {
+    updateData.title = v.title
   }
 
-  if (updates.note !== undefined) {
-    updateData.note = updates.note
+  if (v.note !== undefined) {
+    updateData.note = v.note
   }
 
-  if (updates.status !== undefined) {
-    updateData.status = updates.status
+  if (v.status !== undefined) {
+    updateData.status = v.status
   }
 
   const { data, error } = await supabase
     .from('sessions')
     .update(updateData)
-    .eq('id', sessionId)
+    .eq('id', id)
     .eq('user_id', user.id)
     .select('*, tasks(*)')
     .maybeSingle()
@@ -254,9 +277,15 @@ export async function completePlannedSession(
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
+  const id = uuid.parse(sessionId)
+  const { actualStartTime: start, actualEndTime: end } = completePlannedSessionSchema.parse({
+    actualStartTime,
+    actualEndTime,
+  })
+
   const now = Date.now()
-  const startTime = actualStartTime || now
-  const endTime = actualEndTime || now
+  const startTime = start || now
+  const endTime = end || now
   const duration = Math.floor((endTime - startTime) / 1000)
 
   const { data, error } = await supabase
@@ -269,7 +298,7 @@ export async function completePlannedSession(
       sync_status: 'pending',
       client_timestamp: now,
     })
-    .eq('id', sessionId)
+    .eq('id', id)
     .eq('user_id', user.id)
     .select('*, tasks(*)')
     .maybeSingle()
@@ -334,4 +363,236 @@ export async function getPlannedSessionsRange(startDate: string, endDate: string
 
   if (error) throw error
   return data as PlannedSessionWithTask[]
+}
+
+/**
+ * Get planned sessions for the Kanban board
+ * Active (started) sessions are intentionally excluded so tracking stays on the Track page.
+ * Optionally filtered by project_id. Passing null returns only unassigned sessions (the DEFAULT bucket).
+ */
+export async function getKanbanSessions(projectId?: string | null) {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  let query = supabase
+    .from('sessions')
+    .select('*, tasks(*), projects(*)')
+    .eq('user_id', user.id)
+    .eq('status', 'planned')
+    .not('kanban_status', 'eq', 'inbox')
+    .order('created_at', { ascending: true })
+
+  if (projectId === null) {
+    query = query.is('project_id', null)
+  } else if (projectId !== undefined) {
+    query = query.eq('project_id', projectId)
+  }
+
+  const { data, error } = await query
+
+  if (error) throw error
+  return data as PlannedSessionWithTask[]
+}
+
+/**
+ * Get all inbox todos for the current user
+ * Inbox items are not shown on the Kanban board columns
+ */
+export async function getInboxSessions() {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  const { data, error } = await supabase
+    .from('sessions')
+    .select('*, tasks(*), projects(*)')
+    .eq('user_id', user.id)
+    .eq('status', 'planned')
+    .eq('kanban_status', 'inbox')
+    .order('created_at', { ascending: true })
+
+  if (error) throw error
+  return data as PlannedSessionWithTask[]
+}
+export async function updateKanbanStatus(
+  sessionId: string,
+  kanbanStatus: 'next' | 'doing' | 'done' | 'revise'
+) {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  const id = uuid.parse(sessionId)
+  const status = updateKanbanStatusSchema.parse(kanbanStatus)
+
+  const now = Date.now()
+
+  const { data, error } = await supabase
+    .from('sessions')
+    .update({
+      kanban_status: status,
+      sync_status: 'pending',
+      client_timestamp: now,
+    })
+    .eq('id', id)
+    .eq('user_id', user.id)
+    .select('*, tasks(*), projects(*)')
+    .maybeSingle()
+
+  if (error) throw error
+  if (!data) throw new Error('Session not found')
+  return data as PlannedSessionWithTask
+}
+
+/**
+ * Create a planned session directly from the Kanban board
+ * Unscheduled (started_at is null) so it does not appear on the timeline
+ */
+export async function createKanbanTodo({
+  taskId,
+  projectId,
+  kanbanStatus,
+  duration,
+  title,
+  note,
+}: CreateKanbanTodoInput) {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  const input = createKanbanTodoSchema.parse({ taskId, projectId, kanbanStatus, duration, title, note })
+
+  const now = Date.now()
+  const sessionDate = new Date().toISOString().split('T')[0]
+
+  const sessionData: SessionInsert = {
+    user_id: user.id,
+    task_id: input.taskId ?? null,
+    project_id: input.projectId ?? null,
+    kanban_status: input.kanbanStatus,
+    started_at: null,
+    ended_at: null,
+    duration: input.duration,
+    title: input.title || null,
+    note: input.note || null,
+    status: 'planned',
+    session_date: sessionDate,
+    source: 'manual',
+    sync_status: 'pending',
+    client_timestamp: now,
+    created_at: now,
+  }
+
+  const { data, error } = await supabase
+    .from('sessions')
+    .insert(sessionData)
+    .select('*, tasks(*), projects(*)')
+    .single()
+
+  if (error) throw error
+  return data as PlannedSessionWithTask
+}
+
+/**
+ * Create a quick inbox todo from the project dropdown
+ * Task is optional; must be assigned before moving to a Kanban column
+ */
+export async function createInboxTodo({
+  projectId,
+  taskId,
+  title,
+}: CreateInboxTodoInput) {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  const input = createInboxTodoSchema.parse({ projectId, taskId, title })
+
+  const now = Date.now()
+  const sessionDate = new Date().toISOString().split('T')[0]
+
+  const sessionData: SessionInsert = {
+    user_id: user.id,
+    task_id: input.taskId ?? null,
+    project_id: input.projectId,
+    kanban_status: 'inbox',
+    started_at: null,
+    ended_at: null,
+    duration: 0,
+    title: input.title || null,
+    note: null,
+    status: 'planned',
+    session_date: sessionDate,
+    source: 'manual',
+    sync_status: 'pending',
+    client_timestamp: now,
+    created_at: now,
+  }
+
+  const { data, error } = await supabase
+    .from('sessions')
+    .insert(sessionData)
+    .select('*, tasks(*), projects(*)')
+    .single()
+
+  if (error) throw error
+  return data as PlannedSessionWithTask
+}
+
+/**
+ * Full update for a Kanban todo (used by the edit dialog and inline title edit)
+ */
+export async function updateKanbanTodo(
+  sessionId: string,
+  updates: UpdateKanbanTodoInput
+) {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  const id = uuid.parse(sessionId)
+  const v = updateKanbanTodoSchema.parse(updates)
+
+  const updateData: SessionUpdate = {
+    sync_status: 'pending',
+    client_timestamp: Date.now(),
+  }
+
+  if (v.taskId !== undefined) {
+    updateData.task_id = v.taskId || null
+  }
+  if (v.projectId !== undefined) {
+    updateData.project_id = v.projectId
+  }
+  if (v.kanbanStatus !== undefined) {
+    updateData.kanban_status = v.kanbanStatus
+  }
+  if (v.duration !== undefined) {
+    updateData.duration = v.duration
+  }
+  if (v.title !== undefined) {
+    updateData.title = v.title
+  }
+  if (v.note !== undefined) {
+    updateData.note = v.note
+  }
+
+  const { data, error } = await supabase
+    .from('sessions')
+    .update(updateData)
+    .eq('id', id)
+    .eq('user_id', user.id)
+    .select('*, tasks(*), projects(*)')
+    .maybeSingle()
+
+  if (error) throw error
+  if (!data) throw new Error('Session not found')
+  return data as PlannedSessionWithTask
 }

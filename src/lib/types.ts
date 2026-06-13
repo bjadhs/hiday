@@ -84,6 +84,25 @@ export type TimelinePlannedSession = PlannedSession & {
   width: number;    // Percentage width
 };
 
+// Kanban status values
+export type KanbanStatus = 'inbox' | 'next' | 'doing' | 'done' | 'revise';
+
+// Project for grouping Kanban todos
+export type Project = {
+  id: string;
+  userId: string;
+  name: string;
+  color: string;
+  sortOrder: number;
+};
+
+// Planned session with Kanban workflow and project info
+export type KanbanSession = PlannedSession & {
+  kanbanStatus: KanbanStatus;
+  projectId: string | null;
+  project: Project | null;
+};
+
 // Stats card props
 export type StatCardProps = {
   label: string;
