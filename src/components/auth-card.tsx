@@ -58,8 +58,8 @@ export function AuthCard({ mode }: AuthCardProps) {
         setIsLoading(false);
         return;
       }
-      if (password.length < 6) {
-        setError('Password must be at least 6 characters');
+      if (password.length < 8) {
+        setError('Password must be at least 8 characters');
         setIsLoading(false);
         return;
       }
@@ -211,7 +211,7 @@ export function AuthCard({ mode }: AuthCardProps) {
                 onChange={(e) => setPassword(e.target.value)}
                 className='pl-11 pr-11 h-11 border-2 border-border-strong bg-surface shadow-brutal-xs focus:shadow-brutal-sm focus:border-primary transition-all'
                 required
-                minLength={isSignup ? 6 : undefined}
+                minLength={isSignup ? 8 : undefined}
               />
               <button
                 type='button'

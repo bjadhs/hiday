@@ -141,7 +141,9 @@ export function useTrackPage() {
             await stopSessionMutation.mutateAsync(sessionId);
         } catch (error) {
             console.error('Failed to stop session:', error);
-            alert('Failed to stop session. Please try again.');
+            // Session already removed from local state; surface error via mutation state
+            // so the caller can display it in the UI without a blocking alert()
+            throw error;
         }
     }, [removeSession, stopSessionMutation]);
 

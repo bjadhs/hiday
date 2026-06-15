@@ -124,7 +124,7 @@ export async function reorderTasks(tasks: { id: string; name: string }[]) {
   if (!user) throw new Error('Not authenticated')
 
   const updates = tasks.map((task, index) => ({
-    id: task.id,
+    id: uuid.parse(task.id),
     name: task.name,
     user_id: user.id,
     sort_order: index,
