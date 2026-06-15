@@ -286,10 +286,7 @@ export function ActiveTimerCard({
         // 1. Update session with the note (only if note is not empty)
         const trimmedNote = note.trim();
         if (trimmedNote) {
-          console.log('Calling onUpdateSession with:', sessionId, { note: trimmedNote });
           await onUpdateSession(sessionId, { note: trimmedNote });
-        } else {
-          console.log('Note is empty, skipping update');
         }
         // 2. Save note to local state
         setSessionNote(sessionId, note);

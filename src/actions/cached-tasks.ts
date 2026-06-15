@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import type { Database } from '@/lib/supabase/database.types'
+import { uuid } from '@/lib/validation'
 
 type Task = Database['public']['Tables']['tasks']['Row']
 
@@ -44,10 +45,12 @@ export async function getCachedTaskById(id: string) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
+  const taskId = uuid.parse(id)
+
   const { data, error } = await supabase
     .from('tasks')
     .select('*')
-    .eq('id', id)
+    .eq('id', taskId)
     .eq('user_id', user.id)
     .maybeSingle()
 

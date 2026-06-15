@@ -116,13 +116,14 @@ export async function stopSession(sessionId: string) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
+  const id = uuid.parse(sessionId)
   const now = Date.now()
 
   // First get the session to calculate duration
   const { data: session, error: fetchError } = await supabase
     .from('sessions')
     .select('started_at, ended_at')
-    .eq('id', sessionId)
+    .eq('id', id)
     .eq('user_id', user.id)
     .maybeSingle()
 
@@ -148,7 +149,7 @@ export async function stopSession(sessionId: string) {
       duration,
       sync_status: 'synced',
     })
-    .eq('id', sessionId)
+    .eq('id', id)
     .eq('user_id', user.id)
     .select()
     .maybeSingle()

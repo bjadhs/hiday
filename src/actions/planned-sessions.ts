@@ -11,6 +11,7 @@ import {
   updateKanbanTodoSchema,
   updateKanbanStatusSchema,
   uuid,
+  dateString,
 } from '@/lib/validation'
 import type {
   UpdatePlannedSessionInput,
@@ -39,8 +40,10 @@ export async function getPlannedSessions(date: string) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
+  const validDate = dateString.parse(date)
+
   // Get start and end of the day in milliseconds
-  const dateObj = new Date(date)
+  const dateObj = new Date(validDate)
   const startOfDay = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate()).getTime()
   const endOfDay = startOfDay + 24 * 60 * 60 * 1000 - 1
 
@@ -50,7 +53,7 @@ export async function getPlannedSessions(date: string) {
     .select('*, tasks(*)')
     .eq('user_id', user.id)
     .eq('status', 'planned')
-    .eq('session_date', date)
+    .eq('session_date', validDate)
     .not('started_at', 'is', null)
     .gte('started_at', startOfDay)
     .lt('started_at', endOfDay)
@@ -64,7 +67,7 @@ export async function getPlannedSessions(date: string) {
     .select('*, tasks(*)')
     .eq('user_id', user.id)
     .eq('status', 'planned')
-    .eq('session_date', date)
+    .eq('session_date', validDate)
     .is('started_at', null)
     .order('created_at', { ascending: true })
 
@@ -221,10 +224,12 @@ export async function deletePlannedSession(sessionId: string) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
+  const id = uuid.parse(sessionId)
+
   const { error } = await supabase
     .from('sessions')
     .delete()
-    .eq('id', sessionId)
+    .eq('id', id)
     .eq('user_id', user.id)
 
   if (error) throw error
@@ -241,6 +246,7 @@ export async function startPlannedSession(sessionId: string) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
+  const id = uuid.parse(sessionId)
   const now = Date.now()
 
   const { data, error } = await supabase
@@ -252,7 +258,7 @@ export async function startPlannedSession(sessionId: string) {
       sync_status: 'pending',
       client_timestamp: now,
     })
-    .eq('id', sessionId)
+    .eq('id', id)
     .eq('user_id', user.id)
     .eq('status', 'planned') // Only update if it's still planned
     .select('*, tasks(*)')
@@ -318,6 +324,8 @@ export async function unschedulePlannedSession(sessionId: string) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
+  const id = uuid.parse(sessionId)
+
   const { data, error } = await supabase
     .from('sessions')
     .update({
@@ -326,7 +334,7 @@ export async function unschedulePlannedSession(sessionId: string) {
       sync_status: 'pending',
       client_timestamp: Date.now(),
     })
-    .eq('id', sessionId)
+    .eq('id', id)
     .eq('user_id', user.id)
     .eq('status', 'planned')
     .select('*, tasks(*)')
@@ -347,8 +355,11 @@ export async function getPlannedSessionsRange(startDate: string, endDate: string
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
-  const startObj = new Date(startDate)
-  const endObj = new Date(endDate)
+  const validStart = dateString.parse(startDate)
+  const validEnd = dateString.parse(endDate)
+
+  const startObj = new Date(validStart)
+  const endObj = new Date(validEnd)
   const startTime = new Date(startObj.getFullYear(), startObj.getMonth(), startObj.getDate()).getTime()
   const endTime = new Date(endObj.getFullYear(), endObj.getMonth(), endObj.getDate()).getTime() + 24 * 60 * 60 * 1000 - 1
 
