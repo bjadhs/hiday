@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import { Loader2 } from 'lucide-react';
+import { useKProjects } from '@/lib/hooks/use-kprojects';
 import { useProjects } from '@/lib/hooks/use-projects';
 import {
   useKanbanSessions,
@@ -11,46 +12,47 @@ import {
   useCreateInboxTodo,
   useUpdateKanbanTodo,
   useDeleteKanbanTodo,
+  useStartKanbanSession,
 } from '@/lib/hooks/use-kanban';
-import { useTasks } from '@/lib/hooks/use-tasks';
-import { useStartPlannedSession } from '@/lib/hooks/use-planned-sessions';
+import { useStopSession } from '@/lib/hooks/use-sessions';
 import { KanbanHeader } from '@/components/kanban/kanban-header';
-import { ProjectsPanel } from '@/components/kanban/projects-panel';
+import { KProjectsPanel } from '@/components/kanban/kprojects-panel';
 import { KanbanBoard } from '@/components/kanban/kanban-board';
 import { CreateKanbanTodoDialog } from '@/components/kanban/create-kanban-todo-dialog';
-import type { PlannedSessionWithTask } from '@/actions/planned-sessions';
+import type { KanbanSessionWithActiveState, PlannedSessionWithProject } from '@/actions/planned-sessions';
 import type { KanbanStatus } from '@/lib/types';
 
 export default function KanbanContent() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [expandedProjectIds, setExpandedProjectIds] = useState<Set<string>>(new Set());
+  const [expandedKProjectIds, setExpandedKProjectIds] = useState<Set<string>>(new Set());
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [dialogKey, setDialogKey] = useState(0);
   const [dialogDefaults, setDialogDefaults] = useState<{
-    projectId: string | null;
+    kprojectId: string | null;
     kanbanStatus: KanbanStatus;
   }>({
-    projectId: null,
+    kprojectId: null,
     kanbanStatus: 'next',
   });
   const [editingSession, setEditingSession] =
-    useState<PlannedSessionWithTask | null>(null);
+    useState<(PlannedSessionWithProject & { activeSessionStartedAt?: number | null }) | null>(null);
 
   const [pendingInbox, setPendingInbox] = useState<{
-    projectId: string | null;
+    kprojectId: string | null;
     title: string;
-    defaultTaskId?: string;
+    defaultProjectId?: string;
   } | null>(null);
 
-  const { data: projects = [], isLoading: isLoadingProjects } = useProjects();
+  const { data: kprojects = [], isLoading: isLoadingKProjects } = useKProjects();
   const { data: sessions = [], isLoading: isLoadingSessions } =
     useKanbanSessions(undefined);
   const { data: inboxSessions = [], isLoading: isLoadingInbox } =
     useInboxSessions();
-  const { data: tasks = [], isLoading: isLoadingTasks } = useTasks();
+  const { data: projects = [], isLoading: isLoadingProjects } = useProjects();
 
-  const startMutation = useStartPlannedSession();
+  const startKanbanMutation = useStartKanbanSession();
+  const stopSessionMutation = useStopSession();
   const createTodoMutation = useCreateKanbanTodo();
   const createInboxMutation = useCreateInboxTodo();
   const updateTodoMutation = useUpdateKanbanTodo();
@@ -58,7 +60,7 @@ export default function KanbanContent() {
   const updateStatusMutation = useUpdateKanbanStatus();
 
   const isLoading =
-    isLoadingProjects || isLoadingSessions || isLoadingInbox || isLoadingTasks;
+    isLoadingKProjects || isLoadingSessions || isLoadingInbox || isLoadingProjects;
 
   const sessionsByStatus = useMemo(() => {
     const grouped: Record<KanbanStatus, typeof sessions> = {
@@ -77,23 +79,23 @@ export default function KanbanContent() {
     return grouped;
   }, [sessions]);
 
-  const toggleProjectExpand = useCallback((projectId: string) => {
-    setExpandedProjectIds((prev) => {
+  const toggleKProjectExpand = useCallback((kprojectId: string) => {
+    setExpandedKProjectIds((prev) => {
       const next = new Set(prev);
-      if (next.has(projectId)) {
-        next.delete(projectId);
+      if (next.has(kprojectId)) {
+        next.delete(kprojectId);
       } else {
-        next.add(projectId);
+        next.add(kprojectId);
       }
       return next;
     });
   }, []);
 
   const openCreateDialog = useCallback(
-    (defaults: { projectId?: string | null; kanbanStatus?: KanbanStatus }) => {
+    (defaults: { kprojectId?: string | null; kanbanStatus?: KanbanStatus }) => {
       setEditingSession(null);
       setDialogDefaults({
-        projectId: defaults.projectId ?? null,
+        kprojectId: defaults.kprojectId ?? null,
         kanbanStatus: defaults.kanbanStatus ?? 'next',
       });
       setDialogKey((prev) => prev + 1);
@@ -104,7 +106,7 @@ export default function KanbanContent() {
 
   const openEditDialog = useCallback(
     (
-      session: PlannedSessionWithTask,
+      session: PlannedSessionWithProject | KanbanSessionWithActiveState,
       overrides?: { kanbanStatus?: KanbanStatus }
     ) => {
       setEditingSession({
@@ -115,7 +117,7 @@ export default function KanbanContent() {
           'next',
       });
       setDialogDefaults({
-        projectId: session.project_id,
+        kprojectId: session.kproject_id,
         kanbanStatus:
           overrides?.kanbanStatus ??
           (session.kanban_status as KanbanStatus) ??
@@ -134,18 +136,18 @@ export default function KanbanContent() {
 
   const handleCreateTodo = useCallback(
     (data: {
-      taskId: string;
-      projectId: string | null;
+      projectId: string;
+      kprojectId: string | null;
       kanbanStatus: KanbanStatus;
       duration: number;
       title?: string;
       note?: string;
     }) => {
-      const { taskId, projectId, kanbanStatus, duration, title, note } = data;
+      const { projectId, kprojectId, kanbanStatus, duration, title, note } = data;
       if (kanbanStatus === 'inbox') return;
 
       createTodoMutation.mutate(
-        { taskId, projectId, kanbanStatus, duration, title, note },
+        { projectId, kprojectId, kanbanStatus, duration, title, note },
         {
           onSuccess: () => {
             closeDialog();
@@ -160,10 +162,12 @@ export default function KanbanContent() {
     (
       sessionId: string,
       data: {
-        taskId?: string | null;
         projectId?: string | null;
+        kprojectId?: string | null;
         kanbanStatus?: KanbanStatus;
         duration?: number;
+        plannedStartTime?: number | null;
+        plannedEndTime?: number | null;
         title?: string | null;
         note?: string | null;
       }
@@ -196,18 +200,22 @@ export default function KanbanContent() {
       const session = sessions.find((s) => s.id === sessionId);
       if (!session) return;
 
-      startMutation.mutate({
-        sessionId,
-        plannedDate: session.session_date,
-      });
+      startKanbanMutation.mutate({ sessionId });
     },
-    [sessions, startMutation]
+    [sessions, startKanbanMutation]
+  );
+
+  const handleStopSession = useCallback(
+    async (activeSessionId: string) => {
+      await stopSessionMutation.mutateAsync(activeSessionId);
+    },
+    [stopSessionMutation]
   );
 
   const handleCreateInbox = useCallback(
-    (projectId: string | null, defaultTaskId?: string) => {
-      setPendingInbox({ projectId, title: '', defaultTaskId });
-      setExpandedProjectIds((prev) => new Set(prev).add(projectId ?? 'default'));
+    (kprojectId: string | null, defaultProjectId?: string) => {
+      setPendingInbox({ kprojectId, title: '', defaultProjectId });
+      setExpandedKProjectIds((prev) => new Set(prev).add(kprojectId ?? 'default'));
     },
     []
   );
@@ -217,7 +225,7 @@ export default function KanbanContent() {
   }, []);
 
   const handleSavePendingInbox = useCallback(
-    (projectId: string | null) => {
+    (kprojectId: string | null) => {
       const title = pendingInbox?.title.trim();
       if (!title) {
         setPendingInbox(null);
@@ -225,7 +233,7 @@ export default function KanbanContent() {
       }
 
       createInboxMutation.mutate(
-        { projectId, taskId: pendingInbox?.defaultTaskId, title },
+        { kprojectId, projectId: pendingInbox?.defaultProjectId, title },
         {
           onSuccess: () => {
             setPendingInbox(null);
@@ -245,7 +253,7 @@ export default function KanbanContent() {
       const session = inboxSessions.find((s) => s.id === sessionId);
       if (!session) return;
 
-      if (!session.task_id) {
+      if (!session.project_id) {
         openEditDialog(session, { kanbanStatus: columnId });
         return;
       }
@@ -278,30 +286,31 @@ export default function KanbanContent() {
       />
 
       <div className="flex flex-1 overflow-hidden">
-        <ProjectsPanel
-          projects={projects}
+        <KProjectsPanel
+          kprojects={kprojects}
           inboxSessions={inboxSessions}
           kanbanSessions={sessions}
-          expandedProjectIds={expandedProjectIds}
-          onToggleExpand={toggleProjectExpand}
+          expandedKProjectIds={expandedKProjectIds}
+          onToggleExpand={toggleKProjectExpand}
           onCreateInbox={handleCreateInbox}
           onEditSession={openEditDialog}
           pendingInbox={pendingInbox}
           onPendingTitleChange={handlePendingTitleChange}
           onSavePendingInbox={handleSavePendingInbox}
           onCancelPendingInbox={handleCancelPendingInbox}
-          tasks={tasks}
+          projects={projects}
         />
 
         <div className="flex-1 min-w-0 overflow-hidden">
           <KanbanBoard
             sessionsByStatus={sessionsByStatus}
             onStartSession={handleStartSession}
+            onStopSession={handleStopSession}
             onEditSession={openEditDialog}
             onAddTodo={openCreateDialog}
             onInboxDrop={handleInboxDrop}
             searchQuery={searchQuery}
-            projects={projects}
+            kprojects={kprojects}
           />
         </div>
       </div>
@@ -310,9 +319,9 @@ export default function KanbanContent() {
         key={dialogKey}
         isOpen={isDialogOpen}
         onClose={closeDialog}
-        tasks={tasks}
         projects={projects}
-        defaultProjectId={dialogDefaults.projectId}
+        kprojects={kprojects}
+        defaultKProjectId={dialogDefaults.kprojectId}
         defaultKanbanStatus={dialogDefaults.kanbanStatus}
         editingSession={editingSession}
         onCreate={handleCreateTodo}

@@ -21,22 +21,22 @@ export function HistoryStats({ sessions }: HistoryStatsProps) {
                 label='Total Time'
                 value={formatTotalDuration(sessions)}
                 icon={Clock}
-                color='text-success-dark dark:text-success'
-                bgColor='bg-success-bg dark:bg-success-bg-dark'
+                color='text-success'
+                bgColor='bg-success-bg'
             />
             <StatCard
-                label='Active Tasks'
-                value={new Set(sessions.map((s) => s.taskId)).size.toString()}
+                label='Active Projects'
+                value={new Set(sessions.map((s) => s.projectId)).size.toString()}
                 icon={Square}
-                color='text-info-dark dark:text-info'
-                bgColor='bg-blue-100 dark:bg-blue-900/30'
+                color='text-info'
+                bgColor='bg-info-bg'
             />
             <StatCard
                 label='Longest Session'
                 value={formatLongestSession(sessions)}
                 icon={MoreHorizontal}
-                color='text-warning-dark dark:text-warning'
-                bgColor='bg-warning-bg dark:bg-warning-bg-dark'
+                color='text-warning'
+                bgColor='bg-warning-bg'
             />
         </div>
     );

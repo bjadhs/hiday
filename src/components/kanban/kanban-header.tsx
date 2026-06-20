@@ -17,7 +17,7 @@ export function KanbanHeader({
     <header className="px-4 lg:px-8 py-4 lg:py-6 border-b-2 border-border-strong bg-surface">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white border-2 border-border-strong shadow-brutal-sm">
+          <div className="w-10 h-10 rounded-xl bg-primary-highlight flex items-center justify-center text-white border-2 border-border-strong shadow-brutal-sm">
             <Kanban className="w-5 h-5" />
           </div>
           <div>
@@ -44,7 +44,7 @@ export function KanbanHeader({
           <button
             type="button"
             onClick={onNewTodo}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-white text-sm font-bold shadow-brutal-sm btn-brutal whitespace-nowrap"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary-highlight text-white text-sm font-bold shadow-brutal-sm btn-brutal whitespace-nowrap"
           >
             <Plus className="w-4 h-4" />
             <span className="hidden sm:inline">New Todo</span>

@@ -67,8 +67,8 @@ export function useStartSession() {
   const queryClient = useQueryClient()
   
   return useMutation({
-    mutationFn: ({ taskId, title, startTime }: { taskId: string; title?: string; startTime?: number }) => 
-      startSession(taskId, title, startTime),
+    mutationFn: ({ projectId, title, startTime }: { projectId: string; title?: string; startTime?: number }) => 
+      startSession(projectId, title, startTime),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: sessionKeys.lists() })
       queryClient.invalidateQueries({ queryKey: sessionKeys.today() })
@@ -89,6 +89,8 @@ export function useStopSession() {
         queryClient.invalidateQueries({ queryKey: sessionKeys.lists() }),
         queryClient.invalidateQueries({ queryKey: sessionKeys.today() }),
         queryClient.invalidateQueries({ queryKey: sessionKeys.active() }),
+        // If the stopped session was linked to a Kanban card, refresh the board
+        queryClient.invalidateQueries({ queryKey: ['kanban'] }),
       ])
       // Force refetch today's sessions to show stopped session
       await queryClient.refetchQueries({ queryKey: sessionKeys.today() })

@@ -16,7 +16,7 @@ export function SettingsSection({
         </div>
         <h2 className='text-lg font-bold tracking-tight'>{title}</h2>
       </div>
-      <div className='p-4 lg:p-6 divide-y divide-border dark:divide-border-dark'>
+      <div className='p-4 lg:p-6 divide-y divide-border'>
         {children}
       </div>
     </div>

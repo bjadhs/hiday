@@ -7,250 +7,265 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.5"
+  }
   public: {
     Tables: {
-      tasks: {
-        Row: {
-          id: string
-          user_id: string
-          name: string
-          icon: string | null
-          color: string
-          goal_duration: number | null
-          goal_type: 'daily' | 'weekly' | 'hour' | 'count' | 'none' | null
-          goal_value: number | null
-          default_note: string | null
-          note_prompt: boolean
-          task_tags: string[] | null
-          archived: boolean
-          sort_order: number
-          created_at: number
-          updated_at: number
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          name: string
-          icon?: string | null
-          color: string
-          goal_duration?: number | null
-          goal_type?: 'daily' | 'weekly' | 'hour' | 'count' | 'none' | null
-          goal_value?: number | null
-          default_note?: string | null
-          note_prompt?: boolean
-          task_tags?: string[] | null
-          archived?: boolean
-          sort_order?: number
-          created_at?: number
-          updated_at?: number
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          name?: string
-          icon?: string | null
-          color?: string
-          goal_duration?: number | null
-          goal_type?: 'daily' | 'weekly' | 'hour' | 'count' | 'none' | null
-          goal_value?: number | null
-          default_note?: string | null
-          note_prompt?: boolean
-          task_tags?: string[] | null
-          archived?: boolean
-          sort_order?: number
-          created_at?: number
-          updated_at?: number
-        }
-        Relationships: []
-      }
-      sessions: {
-        Row: {
-          id: string
-          user_id: string
-          task_id: string | null
-          project_id: string | null
-          kanban_status: 'inbox' | 'next' | 'doing' | 'done' | 'revise'
-          title: string | null
-          started_at: number | null
-          ended_at: number | null
-          duration: number | null
-          note: string | null
-          tags: string[] | null
-          source: 'manual' | 'widget' | 'watch' | 'suggestion'
-          sync_status: string
-          client_timestamp: number
-          session_date: string
-          server_timestamp: number | null
-          status: 'planned' | 'active' | 'completed' | 'cancelled'
-          created_at: number
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          task_id?: string | null
-          project_id?: string | null
-          kanban_status?: 'inbox' | 'next' | 'doing' | 'done' | 'revise'
-          title?: string | null
-          started_at?: number | null
-          ended_at?: number | null
-          duration?: number | null
-          note?: string | null
-          tags?: string[] | null
-          source?: 'manual' | 'widget' | 'watch' | 'suggestion'
-          sync_status?: string
-          client_timestamp: number
-          session_date: string
-          server_timestamp?: number | null
-          status?: 'planned' | 'active' | 'completed' | 'cancelled'
-          created_at?: number
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          task_id?: string | null
-          project_id?: string | null
-          kanban_status?: 'inbox' | 'next' | 'doing' | 'done' | 'revise'
-          title?: string | null
-          started_at?: number | null
-          ended_at?: number | null
-          duration?: number | null
-          note?: string | null
-          tags?: string[] | null
-          source?: 'manual' | 'widget' | 'watch' | 'suggestion'
-          sync_status?: string
-          client_timestamp?: number
-          session_date?: string
-          server_timestamp?: number | null
-          status?: 'planned' | 'active' | 'completed' | 'cancelled'
-          created_at?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'sessions_task_id_fkey'
-            columns: ['task_id']
-            isOneToOne: false
-            referencedRelation: 'tasks'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'sessions_project_id_fkey'
-            columns: ['project_id']
-            isOneToOne: false
-            referencedRelation: 'projects'
-            referencedColumns: ['id']
-          },
-        ]
-      }
       goals: {
         Row: {
-          id: string
-          user_id: string
-          name: string
-          target_type: 'duration' | 'occurrence'
-          target_value: number
-          period: 'daily' | 'weekly'
-          task_id: string | null
           active: boolean
           created_at: number
+          id: string
+          name: string
+          period: string
+          project_id: string | null
+          target_type: string
+          target_value: number
           updated_at: number
+          user_id: string
         }
         Insert: {
-          id?: string
-          user_id: string
-          name: string
-          target_type: 'duration' | 'occurrence'
-          target_value: number
-          period: 'daily' | 'weekly'
-          task_id?: string | null
           active?: boolean
           created_at?: number
+          id?: string
+          name: string
+          period: string
+          project_id?: string | null
+          target_type: string
+          target_value: number
           updated_at?: number
+          user_id: string
         }
         Update: {
-          id?: string
-          user_id?: string
-          name?: string
-          target_type?: 'duration' | 'occurrence'
-          target_value?: number
-          period?: 'daily' | 'weekly'
-          task_id?: string | null
           active?: boolean
           created_at?: number
+          id?: string
+          name?: string
+          period?: string
+          project_id?: string | null
+          target_type?: string
+          target_value?: number
           updated_at?: number
+          user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: 'goals_task_id_fkey'
-            columns: ['task_id']
+            foreignKeyName: "goals_project_id_fkey"
+            columns: ["project_id"]
             isOneToOne: false
-            referencedRelation: 'tasks'
-            referencedColumns: ['id']
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
           },
         ]
       }
-      tags: {
+      kprojects: {
         Row: {
-          id: string
-          user_id: string
-          name: string
           color: string
-          type: 'basic' | 'numeric' | 'dropdown'
-          config: Json | null
-          sort_order: number
           created_at: number
+          id: string
+          name: string
+          sort_order: number
           updated_at: number
+          user_id: string
         }
         Insert: {
-          id?: string
-          user_id: string
-          name: string
-          color: string
-          type?: 'basic' | 'numeric' | 'dropdown'
-          config?: Json | null
-          sort_order?: number
+          color?: string
           created_at?: number
+          id?: string
+          name: string
+          sort_order?: number
           updated_at?: number
+          user_id: string
         }
         Update: {
-          id?: string
-          user_id?: string
-          name?: string
           color?: string
-          type?: 'basic' | 'numeric' | 'dropdown'
-          config?: Json | null
-          sort_order?: number
           created_at?: number
+          id?: string
+          name?: string
+          sort_order?: number
           updated_at?: number
+          user_id?: string
         }
         Relationships: []
       }
       projects: {
         Row: {
-          id: string
-          user_id: string
-          name: string
+          archived: boolean
           color: string
-          sort_order: number
           created_at: number
+          default_note: string | null
+          goal_duration: number | null
+          goal_type: 'daily' | 'weekly' | 'hour' | 'count' | 'none' | null
+          goal_value: number | null
+          icon: string | null
+          id: string
+          name: string
+          note_prompt: boolean
+          project_tags: string[] | null
+          sort_order: number
           updated_at: number
+          user_id: string
         }
         Insert: {
-          id?: string
-          user_id: string
-          name: string
+          archived?: boolean
           color?: string
-          sort_order?: number
           created_at?: number
+          default_note?: string | null
+          goal_duration?: number | null
+          goal_type?: 'daily' | 'weekly' | 'hour' | 'count' | 'none' | null
+          goal_value?: number | null
+          icon?: string | null
+          id?: string
+          name: string
+          note_prompt?: boolean
+          project_tags?: string[] | null
+          sort_order?: number
           updated_at?: number
+          user_id: string
         }
         Update: {
-          id?: string
-          user_id?: string
-          name?: string
+          archived?: boolean
           color?: string
-          sort_order?: number
           created_at?: number
+          default_note?: string | null
+          goal_duration?: number | null
+          goal_type?: 'daily' | 'weekly' | 'hour' | 'count' | 'none' | null
+          goal_value?: number | null
+          icon?: string | null
+          id?: string
+          name?: string
+          note_prompt?: boolean
+          project_tags?: string[] | null
+          sort_order?: number
           updated_at?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      sessions: {
+        Row: {
+          client_timestamp: number
+          created_at: number
+          duration: number | null
+          ended_at: number | null
+          id: string
+          kanban_status: Database["public"]["Enums"]["kanban_status"]
+          kproject_id: string | null
+          note: string | null
+          parent_session_id: string | null
+          project_id: string | null
+          server_timestamp: number | null
+          session_date: string
+          source: string
+          started_at: number | null
+          status: 'planned' | 'active' | 'completed' | 'cancelled'
+          sync_status: string
+          tags: string[] | null
+          title: string | null
+          user_id: string
+        }
+        Insert: {
+          client_timestamp: number
+          created_at?: number
+          duration?: number | null
+          ended_at?: number | null
+          id?: string
+          kanban_status?: Database["public"]["Enums"]["kanban_status"]
+          kproject_id?: string | null
+          note?: string | null
+          parent_session_id?: string | null
+          project_id?: string | null
+          server_timestamp?: number | null
+          session_date: string
+          source?: string
+          started_at?: number | null
+          status?: 'planned' | 'active' | 'completed' | 'cancelled'
+          sync_status?: string
+          tags?: string[] | null
+          title?: string | null
+          user_id: string
+        }
+        Update: {
+          client_timestamp?: number
+          created_at?: number
+          duration?: number | null
+          ended_at?: number | null
+          id?: string
+          kanban_status?: Database["public"]["Enums"]["kanban_status"]
+          kproject_id?: string | null
+          note?: string | null
+          parent_session_id?: string | null
+          project_id?: string | null
+          server_timestamp?: number | null
+          session_date?: string
+          source?: string
+          started_at?: number | null
+          status?: 'planned' | 'active' | 'completed' | 'cancelled'
+          sync_status?: string
+          tags?: string[] | null
+          title?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sessions_kproject_id_fkey"
+            columns: ["kproject_id"]
+            isOneToOne: false
+            referencedRelation: "kprojects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sessions_parent_session_id_fkey"
+            columns: ["parent_session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sessions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tags: {
+        Row: {
+          color: string
+          config: Json | null
+          created_at: number
+          id: string
+          name: string
+          sort_order: number
+          type: string
+          updated_at: number
+          user_id: string
+        }
+        Insert: {
+          color?: string
+          config?: Json | null
+          created_at?: number
+          id?: string
+          name: string
+          sort_order?: number
+          type?: string
+          updated_at?: number
+          user_id: string
+        }
+        Update: {
+          color?: string
+          config?: Json | null
+          created_at?: number
+          id?: string
+          name?: string
+          sort_order?: number
+          type?: string
+          updated_at?: number
+          user_id?: string
         }
         Relationships: []
       }
@@ -262,7 +277,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      kanban_status: 'inbox' | 'next' | 'doing' | 'done' | 'revise'
+      kanban_status: "next" | "doing" | "done" | "revise" | "inbox"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -270,99 +285,127 @@ export type Database = {
   }
 }
 
-type PublicSchema = Database[Extract<keyof Database, 'public'>]
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
-  PublicTableNameOrOptions extends
-  | keyof (PublicSchema['Tables'] & PublicSchema['Views'])
-  | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-  ? keyof (Database[PublicTableNameOrOptions['schema']]['Tables'] &
-    Database[PublicTableNameOrOptions['schema']]['Views'])
-  : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[PublicTableNameOrOptions['schema']]['Tables'] &
-    Database[PublicTableNameOrOptions['schema']]['Views'])[TableName] extends {
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
-  ? R
-  : never
-  : PublicTableNameOrOptions extends keyof (PublicSchema['Tables'] &
-    PublicSchema['Views'])
-  ? (PublicSchema['Tables'] &
-    PublicSchema['Views'])[PublicTableNameOrOptions] extends {
-      Row: infer R
-    }
-  ? R
-  : never
-  : never
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
 
 export type TablesInsert<
-  PublicTableNameOrOptions extends
-  | keyof PublicSchema['Tables']
-  | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-  ? keyof Database[PublicTableNameOrOptions['schema']]['Tables']
-  : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicTableNameOrOptions['schema']]['Tables'][TableName] extends {
-    Insert: infer I
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
   }
-  ? I
-  : never
-  : PublicTableNameOrOptions extends keyof PublicSchema['Tables']
-  ? PublicSchema['Tables'][PublicTableNameOrOptions] extends {
-    Insert: infer I
-  }
-  ? I
-  : never
-  : never
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
 
 export type TablesUpdate<
-  PublicTableNameOrOptions extends
-  | keyof PublicSchema['Tables']
-  | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-  ? keyof Database[PublicTableNameOrOptions['schema']]['Tables']
-  : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicTableNameOrOptions['schema']]['Tables'][TableName] extends {
-    Update: infer U
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
   }
-  ? U
-  : never
-  : PublicTableNameOrOptions extends keyof PublicSchema['Tables']
-  ? PublicSchema['Tables'][PublicTableNameOrOptions] extends {
-    Update: infer U
-  }
-  ? U
-  : never
-  : never
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
 
 export type Enums<
-  PublicEnumNameOrOptions extends
-  | keyof PublicSchema['Enums']
-  | { schema: keyof Database },
-  EnumName extends PublicEnumNameOrOptions extends { schema: keyof Database }
-  ? keyof Database[PublicEnumNameOrOptions['schema']]['Enums']
-  : never = never,
-> = PublicEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicEnumNameOrOptions['schema']]['Enums'][EnumName]
-  : PublicEnumNameOrOptions extends keyof PublicSchema['Enums']
-  ? PublicSchema['Enums'][PublicEnumNameOrOptions]
-  : never
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-  | keyof PublicSchema['CompositeTypes']
-  | { schema: keyof Database },
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-  ? keyof Database[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
-  : never = never,
-> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof PublicSchema['CompositeTypes']
-  ? PublicSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
-  : never
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {
+      kanban_status: ["next", "doing", "done", "revise", "inbox"],
+    },
+  },
+} as const

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback } from 'react';
 import { cn, formatDuration } from '@/lib/utils';
-import { Play, Clock, GripVertical } from 'lucide-react';
+import { Play, Pause, Square, Clock, Pencil, Trash2 } from 'lucide-react';
 import type { TimelinePlannedSession } from '@/lib/types';
 
 interface PlannedSessionBlockProps {
@@ -20,12 +20,20 @@ interface PlannedSessionBlockProps {
   onMouseLeave: () => void;
   onDragStart: (sessionId: string, type: 'move' | 'resize-top' | 'resize-bottom', startY: number) => void;
   onSessionUpdate?: (sessionId: string, updates: { plannedStartTime?: number; plannedEndTime?: number }) => void;
+  onStart?: () => void;
+  onPause?: () => void;
+  onStop?: () => void;
+  onDelete?: () => void;
+  /** Current time (ms) — used to show live end time / elapsed for a running block. */
+  now?: number;
   dayStart: number;
   dayEnd: number;
 }
 
 // Constants
-const RESIZE_HANDLE_HEIGHT = 6;
+const RESIZE_HANDLE_HEIGHT = 10;
+// Pixels the pointer must travel before a press counts as a drag (vs a click).
+const DRAG_THRESHOLD = 3;
 
 /**
  * Format time from timestamp (e.g., "9:00 AM")
@@ -61,13 +69,32 @@ export function PlannedSessionBlock({
   onMouseLeave,
   onDragStart,
   onSessionUpdate,
+  onStart,
+  onPause,
+  onStop,
+  onDelete,
+  now,
 }: PlannedSessionBlockProps) {
   const [isResizing, setIsResizing] = useState<'top' | 'bottom' | null>(null);
   const blockRef = useRef<HTMLDivElement>(null);
+  // True once the pointer has moved far enough that the press is a drag/resize
+  // rather than a click. Used to suppress the click (edit dialog) that the
+  // browser fires after a drag finishes.
+  const didDragRef = useRef(false);
 
-  const taskColor = session.task.color || '#6b7280';
-  const bgColorLight = hexToRgba(taskColor, 0.2);
-  const bgColorDark = hexToRgba(taskColor, 0.15);
+  const projectColor = session.project.color || '#6b7280';
+  // A running (active) session gets a focused look: stronger fill, an always-on
+  // emphasized border, and a RUNNING tag so a started todo stands out.
+  const isRunning = session.status === 'active';
+  const bgColorLight = hexToRgba(projectColor, isRunning ? 0.38 : 0.2);
+  const bgColorDark = hexToRgba(projectColor, isRunning ? 0.32 : 0.15);
+
+  // A running block shows a live end time (current time) and live elapsed
+  // duration; everything else uses the planned end/duration.
+  const displayEnd = isRunning && now ? now : session.plannedEndTime;
+  const displayDuration = isRunning && now && session.plannedStartTime
+    ? Math.max(0, Math.floor((now - session.plannedStartTime) / 1000))
+    : session.plannedDuration;
 
   // Handle mouse down for drag/resize
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -80,8 +107,13 @@ export function PlannedSessionBlock({
     if (!rect) return;
 
     const relativeY = e.clientY - rect.top;
+    const startY = e.clientY;
+    didDragRef.current = false;
 
-    // Determine action based on click position
+    // Determine action based on click position:
+    // - near the top edge  -> resize-top    (moves ONLY the start time)
+    // - near the bottom edge -> resize-bottom (moves ONLY the end time)
+    // - anywhere in the middle -> move        (shifts start AND end together)
     let action: 'move' | 'resize-top' | 'resize-bottom';
     if (relativeY <= RESIZE_HANDLE_HEIGHT) {
       action = 'resize-top';
@@ -95,12 +127,29 @@ export function PlannedSessionBlock({
 
     onDragStart(session.id, action, e.clientY);
 
+    const handleMove = (ev: MouseEvent) => {
+      if (Math.abs(ev.clientY - startY) > DRAG_THRESHOLD) {
+        didDragRef.current = true;
+      }
+    };
     const handleMouseUp = () => {
       setIsResizing(null);
+      document.removeEventListener('mousemove', handleMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
+    document.addEventListener('mousemove', handleMove);
     document.addEventListener('mouseup', handleMouseUp);
   }, [onSessionUpdate, session.id, onDragStart]);
+
+  // Suppress the click that follows a drag/resize so moving a block doesn't
+  // also open the edit dialog. A genuine click (no movement) still edits.
+  const handleClick = useCallback(() => {
+    if (didDragRef.current) {
+      didDragRef.current = false;
+      return;
+    }
+    onClick();
+  }, [onClick]);
 
   // Determine cursor style
   let cursorStyle = 'pointer';
@@ -130,21 +179,24 @@ export function PlannedSessionBlock({
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       onMouseDown={handleMouseDown}
-      onClick={onClick}
+      onClick={handleClick}
       onDoubleClick={onDoubleClick}
     >
       <div
         className={cn(
-          'h-full rounded-xl border-2 overflow-hidden transition-all relative',
+          'h-full rounded-xl overflow-hidden transition-[border-color,box-shadow] relative',
           isSelected
-            ? 'ring-2 ring-primary shadow-brutal scale-[1.02] z-10'
-            : isHovered
-            ? 'ring-2 ring-primary/50 shadow-brutal-sm scale-[1.02] z-10'
+            ? 'shadow-brutal z-10'
+            : isHovered || isRunning
+            ? 'shadow-brutal-sm z-10'
             : 'shadow-sm'
         )}
         style={{
-          borderColor: taskColor,
-          borderStyle: session.isCrossDayStart || session.isCrossDayEnd ? 'solid' : 'dashed',
+          // Light thin border at rest; darker, thicker border on hover/select
+          // and while running; dotted border while moving or resizing.
+          borderColor: isRunning || isHovered || isSelected ? projectColor : hexToRgba(projectColor, 0.4),
+          borderStyle: isDragging || isResizing ? 'dotted' : 'solid',
+          borderWidth: isRunning || isHovered || isSelected ? 2 : 1,
         }}
       >
         {/* Light mode background */}
@@ -158,23 +210,35 @@ export function PlannedSessionBlock({
           style={{ backgroundColor: bgColorDark }}
         />
 
-        {/* Top resize handle */}
+        {/* Top resize handle (drag to change ONLY the start time) */}
         {onSessionUpdate && (
           <div
-            className="absolute top-0 left-0 right-0 cursor-ns-resize z-20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity"
+            className={cn(
+              'absolute top-0 left-0 right-0 cursor-ns-resize z-20 flex items-center justify-center transition-opacity',
+              isHovered || isResizing === 'top' ? 'opacity-100' : 'opacity-0'
+            )}
             style={{ height: RESIZE_HANDLE_HEIGHT }}
           >
-            <div className="w-8 h-1 rounded-full bg-white/50" />
+            <div
+              className="w-10 h-1.5 rounded-full shadow-sm"
+              style={{ backgroundColor: projectColor }}
+            />
           </div>
         )}
 
-        {/* Bottom resize handle */}
+        {/* Bottom resize handle (drag to change ONLY the end time) */}
         {onSessionUpdate && (
           <div
-            className="absolute bottom-0 left-0 right-0 cursor-ns-resize z-20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity"
+            className={cn(
+              'absolute bottom-0 left-0 right-0 cursor-ns-resize z-20 flex items-center justify-center transition-opacity',
+              isHovered || isResizing === 'bottom' ? 'opacity-100' : 'opacity-0'
+            )}
             style={{ height: RESIZE_HANDLE_HEIGHT }}
           >
-            <div className="w-8 h-1 rounded-full bg-white/50" />
+            <div
+              className="w-10 h-1.5 rounded-full shadow-sm"
+              style={{ backgroundColor: projectColor }}
+            />
           </div>
         )}
 
@@ -187,21 +251,21 @@ export function PlannedSessionBlock({
         )}
 
         <div className="relative p-2 h-full flex flex-col gap-1 overflow-hidden">
-          {/* Top: Icon and Task Name */}
+          {/* Top: Icon and Project Name */}
           <div className="flex items-center gap-2 min-w-0">
             <span
               className="w-6 h-6 rounded-lg flex items-center justify-center text-sm shrink-0 border border-black/10 dark:border-white/25 shadow-sm"
-              style={{ backgroundColor: taskColor }}
+              style={{ backgroundColor: projectColor }}
             >
               <span className="filter drop-shadow-sm">
-                {session.task.icon}
+                {session.project.icon}
               </span>
             </span>
             <span
               className="text-xs font-bold truncate"
-              style={{ color: taskColor }}
+              style={{ color: projectColor }}
             >
-              {session.task.name}
+              {session.project.name}
             </span>
           </div>
 
@@ -214,44 +278,107 @@ export function PlannedSessionBlock({
             </div>
           )}
 
-          {/* Bottom: Time and Duration */}
+          {/* Bottom: Start–End time · RUNNING · Duration */}
           <div className="mt-auto flex items-center justify-between gap-1 pt-1 border-t border-border">
-            <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-              <Clock className="w-3 h-3" />
-              <span>{session.plannedStartTime ? formatTime(session.plannedStartTime) : '--:--'}</span>
+            <div className="flex items-center gap-1 text-[10px] text-muted-foreground min-w-0">
+              <Clock className="w-3 h-3 shrink-0" />
+              <span className="truncate">
+                {session.plannedStartTime ? formatTime(session.plannedStartTime) : '--:--'}
+                {' – '}
+                {displayEnd ? formatTime(displayEnd) : '--:--'}
+              </span>
               {session.isCrossDayEnd && (
                 <span className="text-[8px] opacity-70">+</span>
               )}
             </div>
+
+            {/* RUNNING tag — centered between time and duration */}
+            {isRunning && (
+              <span
+                className="shrink-0 flex items-center gap-1 text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full text-white"
+                style={{ backgroundColor: projectColor }}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                Running
+              </span>
+            )}
+
             <span
-              className="text-[10px] font-bold px-1.5 py-0.5 rounded border border-border bg-white bg-surface-elevated text-black text-foreground"
+              className="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded border border-border bg-transparent text-foreground"
             >
-              {formatDuration(session.plannedDuration)}
+              {formatDuration(displayDuration)}
             </span>
           </div>
 
-          {/* Hover actions overlay */}
+          {/* Hover action toolbar */}
           {isHovered && !isDragging && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/10 dark:bg-black/20 rounded-xl backdrop-blur-[1px]">
-              <div className="flex items-center gap-2">
+            <div
+              className="absolute top-1 right-1 z-30 flex items-center gap-1"
+              onMouseDown={(e) => e.stopPropagation()}
+            >
+              {onStart && !isRunning && (
                 <button
-                  className="p-2 rounded-full bg-primary text-white shadow-brutal-xs hover:scale-110 transition-transform"
+                  className="p-2 rounded-md bg-primary-highlight text-white shadow-brutal-xs hover:brightness-110 transition"
                   onClick={(e) => {
                     e.stopPropagation();
-                    // Start session - this will be handled by parent
+                    onStart();
                   }}
                   title="Start session"
+                  aria-label="Start session"
                 >
                   <Play className="w-4 h-4" />
                 </button>
-              </div>
-            </div>
-          )}
-
-          {/* Drag hint */}
-          {isHovered && !isDragging && onSessionUpdate && (
-            <div className="absolute top-1 right-1">
-              <GripVertical className="w-3 h-3 text-white/70" />
+              )}
+              {onPause && isRunning && (
+                <button
+                  className="p-2 rounded-md bg-surface-elevated/90 border border-border text-foreground shadow-sm hover:bg-surface-elevated transition"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onPause();
+                  }}
+                  title="Pause session"
+                  aria-label="Pause session"
+                >
+                  <Pause className="w-4 h-4" />
+                </button>
+              )}
+              {onStop && isRunning && (
+                <button
+                  className="p-2 rounded-md bg-destructive text-white shadow-brutal-xs hover:brightness-110 transition"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onStop();
+                  }}
+                  title="Stop session"
+                  aria-label="Stop session"
+                >
+                  <Square className="w-4 h-4" />
+                </button>
+              )}
+              <button
+                className="p-2 rounded-md bg-surface-elevated/90 border border-border text-foreground shadow-sm hover:bg-surface-elevated transition"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onClick();
+                }}
+                title="Edit"
+                aria-label="Edit"
+              >
+                <Pencil className="w-4 h-4" />
+              </button>
+              {onDelete && (
+                <button
+                  className="p-2 rounded-md bg-surface-elevated/90 border border-border text-muted-foreground shadow-sm hover:bg-destructive/10 hover:text-destructive transition"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete();
+                  }}
+                  title="Delete"
+                  aria-label="Delete"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
             </div>
           )}
         </div>

@@ -1,27 +1,48 @@
 'use client';
 
+import { useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Play, Clock, Pencil } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import type { PlannedSessionWithTask } from '@/actions/planned-sessions';
-import type { Project } from '@/lib/types';
+import { Play, Clock, Pencil, Pause, Loader2 } from 'lucide-react';
+import { cn, formatDuration, getKProjectColor } from '@/lib/utils';
+import { useNow } from '@/lib/hooks/use-now';
+import type { KanbanSessionWithActiveState } from '@/actions/planned-sessions'
+import type { KProject } from '@/lib/types';
+
+/**
+ * Live elapsed-time readout. Kept as its own leaf so the per-second `useNow`
+ * tick only re-renders this span — not the draggable card root, which would
+ * otherwise interrupt an in-progress dnd-kit drag of a running ("Doing") card.
+ */
+function LiveDuration({ startedAt }: { startedAt: number }) {
+  const now = useNow(1000);
+  const elapsedSeconds = Math.max(0, Math.floor((now - startedAt) / 1000));
+  return <span>{formatDuration(elapsedSeconds)}</span>;
+}
 
 interface KanbanCardProps {
-  session: PlannedSessionWithTask;
+  session: KanbanSessionWithActiveState;
   isOverlay?: boolean;
   onStartSession: (sessionId: string) => void;
-  onEditSession: (session: PlannedSessionWithTask) => void;
-  projects: Project[];
+  onStopSession: (sessionId: string) => Promise<void>;
+  onEditSession: (session: KanbanSessionWithActiveState) => void;
+  kprojects: KProject[];
 }
 
 export function KanbanCard({
   session,
   isOverlay,
   onStartSession,
+  onStopSession,
   onEditSession,
-  projects,
+  kprojects,
 }: KanbanCardProps) {
+  const [isStopping, setIsStopping] = useState(false);
+  // The active session id we optimistically stopped. Derived comparison below
+  // means a server refresh (id cleared) or a restart (new id) clears it
+  // automatically, with no setState-in-effect.
+  const [stoppedSessionId, setStoppedSessionId] = useState<string | null>(null);
+
   const {
     attributes,
     listeners,
@@ -43,8 +64,13 @@ export function KanbanCard({
     zIndex: isDragging || isOverlay ? 50 : undefined,
   };
 
-  const project = projects.find((p) => p.id === session.project_id);
-  const isActive = session.status === 'active';
+  const kproject = kprojects.find((p) => p.id === session.kproject_id);
+  const hasActiveSession = session.hasActiveSession ?? false;
+  const activeSessionId = session.activeSessionIds[0] ?? null;
+  const effectiveHasActiveSession =
+    hasActiveSession && activeSessionId !== stoppedSessionId;
+
+  const isRunning = effectiveHasActiveSession && session.activeSessionStartedAt !== null;
 
   return (
     <div
@@ -59,39 +85,50 @@ export function KanbanCard({
         isOverlay && 'cursor-grabbing'
       )}
     >
-      {/* Title + project */}
+      {/* Title + kproject */}
       <div className="flex items-start gap-2 min-w-0">
         <p className="font-semibold text-sm truncate flex-1 min-w-0">
           {session.title || 'Untitled todo'}
         </p>
-        {project && (
-          <span
-            className="shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide border"
-            style={{
-              backgroundColor: '#A78BFA20',
-              color: '#A78BFA',
-              borderColor: '#A78BFA40',
-            }}
-          >
+        {kproject && (() => {
+          const indicator = getKProjectColor(kproject.id);
+          return (
             <span
-              className="w-1 h-1 rounded-full"
-              style={{ backgroundColor: '#A78BFA' }}
-            />
-            {project.name}
-          </span>
-        )}
+              className="shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide border"
+              style={{
+                backgroundColor: `color-mix(in srgb, ${indicator} 12%, transparent)`,
+                color: indicator,
+                borderColor: `color-mix(in srgb, ${indicator} 25%, transparent)`,
+              }}
+            >
+              <span
+                className="w-1 h-1 rounded-full"
+                style={{ backgroundColor: indicator }}
+              />
+              {kproject.name}
+            </span>
+          );
+        })()}
       </div>
 
       {/* Footer */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+        <div className={cn(
+          'flex items-center gap-1 text-[10px]',
+          isRunning ? 'text-success font-medium' : 'text-muted-foreground'
+        )}>
           <Clock className="w-3 h-3" />
-          <span>{Math.round((session.duration ?? 0) / 60)} min</span>
+          {isRunning && session.activeSessionStartedAt != null ? (
+            <LiveDuration startedAt={session.activeSessionStartedAt} />
+          ) : (
+            <span>{`${Math.round((session.duration ?? 0) / 60)} min`}</span>
+          )}
         </div>
 
         <div className="flex items-center">
           <button
             type="button"
+            onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => {
               e.stopPropagation();
               onEditSession(session);
@@ -102,22 +139,52 @@ export function KanbanCard({
             <Pencil className="w-3 h-3" />
           </button>
 
-          {!isActive ? (
+          {!effectiveHasActiveSession ? (
             <button
               type="button"
+              onPointerDown={(e) => e.stopPropagation()}
               onClick={(e) => {
                 e.stopPropagation();
+                setStoppedSessionId(null);
                 onStartSession(session.id);
               }}
-              className="p-1 rounded-md bg-primary text-white shadow-brutal-xs btn-brutal opacity-0 group-hover:opacity-100 transition-opacity"
+              className="p-1 rounded-md bg-primary-highlight text-white shadow-brutal-xs btn-brutal opacity-0 group-hover:opacity-100 transition-opacity"
               title="Start session"
             >
               <Play className="w-3 h-3" />
             </button>
           ) : (
-            <span className="text-[9px] font-bold text-warning px-1.5 py-0.5 rounded bg-warning/10 border border-warning/20">
-              Active
-            </span>
+            <button
+              type="button"
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={async (e) => {
+                e.stopPropagation();
+                if (!activeSessionId || isStopping) return;
+                setIsStopping(true);
+                setStoppedSessionId(activeSessionId);
+                try {
+                  await onStopSession(activeSessionId);
+                } catch (error) {
+                  const message = error instanceof Error ? error.message : String(error);
+                  if (!message.includes('already stopped')) {
+                    console.error('Failed to stop session:', error);
+                  }
+                  // Revert optimistic state on any error
+                  setStoppedSessionId(null);
+                } finally {
+                  setIsStopping(false);
+                }
+              }}
+              disabled={isStopping}
+              className="p-1 rounded-md bg-warning text-white shadow-brutal-xs btn-brutal opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-70"
+              title="Pause session"
+            >
+              {isStopping ? (
+                <Loader2 className="w-3 h-3 animate-spin" />
+              ) : (
+                <Pause className="w-3 h-3 fill-current" />
+              )}
+            </button>
           )}
         </div>
       </div>

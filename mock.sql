@@ -32,26 +32,26 @@ INSERT INTO auth.users (
 ) ON CONFLICT (id) DO NOTHING;
 
 -- ============================================================
--- 2. Tasks
+-- 2. Projects
 -- ============================================================
-INSERT INTO tasks (id, user_id, name, icon, color, goal_duration, goal_type, archived, sort_order) VALUES
-  -- Work tasks
-  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Inbox & Quick Tasks', '📥', '#6B7280', NULL, 'none', false, 0),
+INSERT INTO projects (id, user_id, name, icon, color, goal_duration, goal_type, archived, sort_order) VALUES
+  -- Work projects
+  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Inbox & Quick Projects', '📥', '#6B7280', NULL, 'none', false, 0),
   ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Hiday App Development', '💻', '#8B5CF6', 300, 'daily', false, 1),
   ('cccccccc-cccc-cccc-cccc-cccccccccccc', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Meetings & Calls', '🗣️', '#F59E0B', NULL, 'none', false, 2),
   ('dddddddd-dddd-dddd-dddd-dddddddddddd', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'UI/UX Design', '🎨', '#EC4899', 120, 'daily', false, 3),
   ('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Planning & Review', '📝', '#6366F1', NULL, 'none', false, 4),
 
-  -- Health tasks
+  -- Health projects
   ('ffffffff-ffff-ffff-ffff-ffffffffffff', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Gym Workout', '💪', '#22C55E', 60, 'daily', false, 5),
   ('00000000-0000-0000-0000-000000000001', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Meditation', '🧘', '#14B8A6', 20, 'daily', false, 6),
   ('00000000-0000-0000-0000-000000000002', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Morning Walk', '🚶', '#84CC16', 30, 'daily', false, 7),
 
-  -- Learning tasks
+  -- Learning projects
   ('00000000-0000-0000-0000-000000000003', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Reading', '📖', '#3B82F6', 30, 'daily', false, 8),
   ('00000000-0000-0000-0000-000000000004', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Online Courses', '🎓', '#8B5CF6', 60, 'daily', false, 9),
 
-  -- Personal tasks
+  -- Personal projects
   ('00000000-0000-0000-0000-000000000005', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Cooking & Meals', '🍳', '#F97316', NULL, 'none', false, 10),
   ('00000000-0000-0000-0000-000000000006', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Break & Rest', '☕', '#EF4444', NULL, 'none', false, 11),
   ('00000000-0000-0000-0000-000000000007', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Household Chores', '🏠', '#6B7280', NULL, 'none', false, 12);
@@ -74,7 +74,7 @@ INSERT INTO tags (id, user_id, name, color, type, sort_order) VALUES
 -- 5. Sessions (today's realistic tracking)
 -- NOTE: session_date is DATE NOT NULL (no default) — must be explicit
 -- ============================================================
-INSERT INTO sessions (id, user_id, task_id, title, started_at, ended_at, duration, note, tags, source, sync_status, client_timestamp, session_date) VALUES
+INSERT INTO sessions (id, user_id, project_id, title, started_at, ended_at, duration, note, tags, source, sync_status, client_timestamp, session_date) VALUES
   -- Morning routine
   ('a1111111-1111-1111-1111-111111111111', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', '00000000-0000-0000-0000-000000000002', 'Morning Walk',
    EXTRACT(EPOCH FROM DATE_TRUNC('day', NOW()) + INTERVAL '6 hours') * 1000,
@@ -127,7 +127,7 @@ INSERT INTO sessions (id, user_id, task_id, title, started_at, ended_at, duratio
    EXTRACT(EPOCH FROM DATE_TRUNC('day', NOW()) + INTERVAL '17 hours 30 minutes') * 1000,
    5400, 'UI components with neo-brutalist style - cards, buttons, shadows', ARRAY['c8888888-8888-8888-8888-888888888888'], 'manual', 'synced', EXTRACT(EPOCH FROM NOW()) * 1000, CURRENT_DATE),
 
-  -- Quick tasks
+  -- Quick projects
   ('b0000000-0000-0000-0000-000000000001', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Email & Messages',
    EXTRACT(EPOCH FROM DATE_TRUNC('day', NOW()) + INTERVAL '17 hours 30 minutes') * 1000,
    EXTRACT(EPOCH FROM DATE_TRUNC('day', NOW()) + INTERVAL '17 hours 50 minutes') * 1000,
@@ -136,7 +136,7 @@ INSERT INTO sessions (id, user_id, task_id, title, started_at, ended_at, duratio
 -- ============================================================
 -- 6. Goals
 -- ============================================================
-INSERT INTO goals (id, user_id, name, target_type, target_value, period, task_id, active) VALUES
+INSERT INTO goals (id, user_id, name, target_type, target_value, period, project_id, active) VALUES
   -- Daily work goals
   ('a0111111-1111-1111-1111-111111111111', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Hiday Development - 5 hours daily', 'duration', 300, 'daily', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', true),
   ('a0222222-2222-2222-2222-222222222222', 'c8059141-fc14-4b98-8125-a6f8d1b24a7f', 'Design Work - 2 hours daily', 'duration', 120, 'daily', 'dddddddd-dddd-dddd-dddd-dddddddddddd', true),

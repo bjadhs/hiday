@@ -9,7 +9,7 @@ import {
 
 /** Validates the arguments to `startSession`. */
 export const startSessionSchema = z.object({
-  taskId: uuid,
+  projectId: uuid,
   title: z.string().trim().max(200, 'Title is too long').optional(),
   startTime: timestamp.optional(),
 });
@@ -25,8 +25,8 @@ export const sessionUpdateSchema = z
   .object({
     title: z.string().trim().max(200, 'Title is too long').nullable().optional(),
     note: z.string().max(2000, 'Note is too long').nullable().optional(),
-    task_id: uuid.nullable().optional(),
     project_id: uuid.nullable().optional(),
+    kproject_id: uuid.nullable().optional(),
     kanban_status: kanbanStatusSchema.optional(),
     started_at: timestamp.nullable().optional(),
     ended_at: timestamp.nullable().optional(),
@@ -34,6 +34,7 @@ export const sessionUpdateSchema = z
     status: sessionStatusSchema.optional(),
     sync_status: z.string().optional(),
     client_timestamp: timestamp.optional(),
+    parent_session_id: uuid.nullable().optional(),
   })
   .refine(
     (s) => s.started_at == null || s.ended_at == null || s.ended_at > s.started_at,

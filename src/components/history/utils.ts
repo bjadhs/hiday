@@ -1,4 +1,4 @@
-import { HistorySession, Task } from '@/lib/types';
+import { HistorySession, Project } from '@/lib/types';
 
 export function isToday(date: Date): boolean {
     const today = new Date();
@@ -73,13 +73,13 @@ export function calculateBlockPosition(
     return { left: Math.max(0, left), width: Math.max(0, width) };
 }
 
-export function getUniqueTasks(sessions: HistorySession[]): Task[] {
+export function getUniqueProjects(sessions: HistorySession[]): Project[] {
     const seen = new Set<string>();
     return sessions
-        .map((s) => s.task)
-        .filter((task) => {
-            if (seen.has(task.id)) return false;
-            seen.add(task.id);
+        .map((s) => s.project)
+        .filter((project) => {
+            if (seen.has(project.id)) return false;
+            seen.add(project.id);
             return true;
         });
 }

@@ -236,7 +236,7 @@ export function TimelineGrid({
                         <div className="flex items-center">
                             <div className="w-2 h-2 rounded-full bg-primary shrink-0" />
                             <div className="flex-1 h-0.5 bg-primary" />
-                            <div className="px-2 py-1 bg-primary text-primary-foreground text-xs rounded shadow whitespace-nowrap">
+                            <div className="px-2 py-1 bg-primary-highlight text-primary-foreground text-xs rounded shadow whitespace-nowrap">
                                 {new Date(dragPreview.startTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })} - {new Date(dragPreview.endTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
                             </div>
                         </div>

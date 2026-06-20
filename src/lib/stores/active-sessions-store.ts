@@ -1,12 +1,12 @@
 'use client';
 
 import { create } from 'zustand';
-import { Task } from '@/lib/types';
+import { Project } from '@/lib/types';
 
 // Single active session state
 export interface ActiveSessionState {
   id: string;
-  task: Task;
+  project: Project;
   title: string;
   note: string;
   startTime: number;
@@ -59,7 +59,7 @@ interface ActiveSessionsState {
   // Hydration from DB
   syncFromDatabase: (dbSessions: Array<{
     id: string;
-    task: Task | null;
+    project: Project | null;
     title: string;
     note: string;
     started_at: number | null;
@@ -78,14 +78,14 @@ export const useActiveSessionsStore = create<ActiveSessionsState>((set, get) => 
   sessionNotes: {},
 
   // Add a new session - prepend to maintain newest-first order
-  // Removes any optimistic sessions for the same task to prevent duplicates
+  // Removes any optimistic sessions for the same project to prevent duplicates
   addSession: (session) => {
     set((state) => {
-      // Filter out optimistic sessions for the same task
+      // Filter out optimistic sessions for the same project
       const filteredSessions = state.activeSessions.filter((s) => {
-        // Keep if it's not an optimistic session for this task
-        const isOptimisticForThisTask = s.id.startsWith('optimistic-') && s.task.id === session.task.id;
-        return !isOptimisticForThisTask;
+        // Keep if it's not an optimistic session for this project
+        const isOptimisticForThisProject = s.id.startsWith('optimistic-') && s.project.id === session.project.id;
+        return !isOptimisticForThisProject;
       });
 
       return {
@@ -254,13 +254,13 @@ export const useActiveSessionsStore = create<ActiveSessionsState>((set, get) => 
       const newSessions: ActiveSessionState[] = [];
 
       dbSessions.forEach((dbSession) => {
-        // A running timer always has a task; skip task-less rows (e.g. inbox /
+        // A running timer always has a project; skip project-less rows (e.g. inbox /
         // unscheduled todos) that should never appear as active sessions.
-        if (!dbSession.task) return;
+        if (!dbSession.project) return;
         if (!localSessionIds.has(dbSession.id) && !state.syncedSessionIds.has(dbSession.id)) {
           newSessions.push({
             id: dbSession.id,
-            task: dbSession.task,
+            project: dbSession.project,
             title: dbSession.title || '',
             note: dbSession.note || '',
             startTime: dbSession.started_at || Date.now(),
@@ -276,15 +276,15 @@ export const useActiveSessionsStore = create<ActiveSessionsState>((set, get) => 
       const newNotes: Record<string, string> = { ...state.sessionNotes };
       const now = Date.now();
 
-      // Remove optimistic sessions for the same tasks to prevent duplicates
-      const dbTaskIds = new Set(
-        dbSessions.map((s) => s.task?.id).filter((id): id is string => id != null),
+      // Remove optimistic sessions for the same projects to prevent duplicates
+      const dbProjectIds = new Set(
+        dbSessions.map((s) => s.project?.id).filter((id): id is string => id != null),
       );
       const filteredSessions = state.activeSessions.filter((s) => {
-        // Keep non-optimistic sessions or optimistic sessions for different tasks
+        // Keep non-optimistic sessions or optimistic sessions for different projects
         const isOptimistic = s.id.startsWith('optimistic-');
-        const isSameTask = dbTaskIds.has(s.task.id);
-        if (isOptimistic && isSameTask) {
+        const isSameProject = dbProjectIds.has(s.project.id);
+        if (isOptimistic && isSameProject) {
           // Clean up elapsed time and notes for removed optimistic session
           delete newElapsedTimes[s.id];
           delete newNotes[s.id];

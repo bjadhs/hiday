@@ -3,7 +3,7 @@ import { dateString, sessionStatusSchema, timestamp, uuid } from './primitives';
 
 /** Validates the arguments to `createPlannedSession`. */
 export const createPlannedSessionSchema = z.object({
-  taskId: uuid,
+  projectId: uuid,
   plannedDate: dateString,
   plannedStartTime: timestamp.nullable(), // null = unscheduled
   plannedDuration: z.number().int().positive('Duration must be greater than zero'),

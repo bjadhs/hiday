@@ -4,12 +4,26 @@ import { Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
 import { cn } from "@/lib/utils"
 import { useMounted } from "@/lib/hooks/use-mounted"
+import { useSettingsStore, themeDefinitions } from "@/lib/stores"
 
 export function ThemeToggle() {
-  const { theme, setTheme } = useTheme()
+  const { setTheme: setNextTheme } = useTheme()
+  const { theme: currentPreset, setTheme: setPreset, lastLightPreset, lastDarkPreset } = useSettingsStore()
   const mounted = useMounted()
 
-  // Show neutral state during SSR to avoid hydration mismatch
+  const definition = themeDefinitions[currentPreset]
+  const isDark = definition?.isDark ?? false
+
+  const handleLight = () => {
+    setNextTheme("light")
+    setPreset(lastLightPreset)
+  }
+
+  const handleDark = () => {
+    setNextTheme("dark")
+    setPreset(lastDarkPreset)
+  }
+
   if (!mounted) {
     return (
       <div className="flex items-center gap-1 p-1 bg-surface-elevated rounded-lg border-2 border-border-strong shadow-brutal-xs">
@@ -34,11 +48,11 @@ export function ThemeToggle() {
   return (
     <div className="flex items-center gap-1 p-1 bg-surface-elevated rounded-lg border-2 border-border-strong shadow-brutal-xs">
       <button
-        onClick={() => setTheme("light")}
+        onClick={handleLight}
         className={cn(
           "flex items-center justify-center size-8 rounded-md transition-all duration-200",
-          theme === "light"
-            ? "bg-primary text-white shadow-brutal-xs"
+          !isDark
+            ? "bg-primary-highlight text-white shadow-brutal-xs"
             : "text-muted-foreground hover:text-foreground"
         )}
         aria-label="Light mode"
@@ -46,11 +60,11 @@ export function ThemeToggle() {
         <Sun className="size-4" />
       </button>
       <button
-        onClick={() => setTheme("dark")}
+        onClick={handleDark}
         className={cn(
           "flex items-center justify-center size-8 rounded-md transition-all duration-200",
-          theme === "dark"
-            ? "bg-primary text-white shadow-brutal-xs"
+          isDark
+            ? "bg-primary-highlight text-white shadow-brutal-xs"
             : "text-muted-foreground hover:text-foreground"
         )}
         aria-label="Dark mode"

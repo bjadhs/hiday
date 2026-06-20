@@ -8,6 +8,7 @@ import {
   updatePlannedSession,
   deletePlannedSession,
   startPlannedSession,
+  pausePlannedSession,
   completePlannedSession,
   unschedulePlannedSession,
 } from '@/actions/planned-sessions'
@@ -50,14 +51,14 @@ export function useCreatePlannedSession() {
 
   return useMutation({
     mutationFn: async ({
-      taskId,
+      projectId,
       plannedDate,
       plannedStartTime,
       plannedDuration,
       title,
       note,
     }: {
-      taskId: string
+      projectId: string
       plannedDate: string
       plannedStartTime: number | null  // Null for unscheduled
       plannedDuration: number
@@ -65,7 +66,7 @@ export function useCreatePlannedSession() {
       note?: string
     }) => {
       return createPlannedSession(
-        taskId,
+        projectId,
         plannedDate,
         plannedStartTime,
         plannedDuration,
@@ -187,6 +188,31 @@ export function useStartPlannedSession() {
       queryClient.invalidateQueries({ queryKey: ['sessions', 'active'] })
       // Remove started todo from Kanban board
       queryClient.invalidateQueries({ queryKey: ['kanban'] })
+    },
+  })
+}
+
+/**
+ * Hook to pause a running session (freeze elapsed, return to planned list)
+ */
+export function usePausePlannedSession() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      sessionId,
+    }: {
+      sessionId: string
+      plannedDate: string
+    }) => {
+      return pausePlannedSession(sessionId)
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: plannedSessionKeys.list(variables.plannedDate),
+      })
+      // The row leaves the active list — refresh running sessions too.
+      queryClient.invalidateQueries({ queryKey: ['sessions', 'active'] })
     },
   })
 }

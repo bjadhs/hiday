@@ -2,7 +2,7 @@
 
 import { Loader2 } from 'lucide-react';
 import { useTodaySessions } from '@/lib/hooks/use-sessions';
-import { useTasks } from '@/lib/hooks/use-tasks';
+import { useProjects } from '@/lib/hooks/use-projects';
 import { QuickStats, ComingSoonPlaceholder } from '@/components/analyze';
 
 /**
@@ -13,7 +13,7 @@ import { QuickStats, ComingSoonPlaceholder } from '@/components/analyze';
  */
 export default function AnalyzePage() {
   const { data: todaySessions = [], isLoading: isLoadingSessions } = useTodaySessions();
-  const { data: tasks = [], isLoading: isLoadingTasks } = useTasks();
+  const { data: projects = [], isLoading: isLoadingProjects } = useProjects();
 
   // Calculate total tracked time
   const totalTrackedToday = todaySessions.reduce(
@@ -21,21 +21,21 @@ export default function AnalyzePage() {
     0,
   );
 
-  // Find top task by duration (skip sessions without a task)
-  const taskDurations = todaySessions.reduce((acc, session) => {
-    const taskId = session.task_id;
-    if (!taskId) return acc;
-    acc[taskId] = (acc[taskId] || 0) + (session.duration || 0);
+  // Find top project by duration (skip sessions without a project)
+  const projectDurations = todaySessions.reduce((acc, session) => {
+    const projectId = session.project_id;
+    if (!projectId) return acc;
+    acc[projectId] = (acc[projectId] || 0) + (session.duration || 0);
     return acc;
   }, {} as Record<string, number>);
 
-  const topTaskId = Object.entries(taskDurations)
+  const topProjectId = Object.entries(projectDurations)
     .sort(([, a], [, b]) => b - a)[0]?.[0];
   
-  const topTask = tasks.find(t => t.id === topTaskId);
+  const topProject = projects.find(t => t.id === topProjectId);
 
   // Loading state
-  if (isLoadingSessions || isLoadingTasks) {
+  if (isLoadingSessions || isLoadingProjects) {
     return (
       <main className='flex-1 flex flex-col pb-20 lg:pb-0'>
         <div className='flex-1 p-4 lg:p-8 flex items-center justify-center'>
@@ -55,7 +55,7 @@ export default function AnalyzePage() {
         <QuickStats
           totalTrackedToday={totalTrackedToday}
           sessionsCount={todaySessions.length}
-          topTaskName={topTask?.name || 'None'}
+          topProjectName={topProject?.name || 'None'}
         />
 
         {/* Coming Soon */}

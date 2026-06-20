@@ -1,3 +1,3 @@
 // Re-export all actions
-export * from './tasks'
+export * from './projects'
 export * from './sessions'

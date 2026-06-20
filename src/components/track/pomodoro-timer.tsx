@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { cn } from '@/lib/utils';
-import { Task } from '@/lib/types';
-import { useTasks } from '@/lib/hooks/use-tasks';
+import { Project } from '@/lib/types';
+import { useProjects } from '@/lib/hooks/use-projects';
 import {
   Play,
   Square,
@@ -66,7 +66,7 @@ function CircularProgress({
           fill="none"
           stroke="currentColor"
           strokeWidth={strokeWidth}
-          className="text-border dark:text-border-dark"
+          className="text-border"
         />
         <circle
           cx={size / 2}
@@ -90,7 +90,7 @@ function CircularProgress({
 
 // Pomodoro Session type for callbacks
 export type PomodoroSession = {
-  task: Task;
+  project: Project;
   title: string;
   duration: number; // planned duration in seconds
   elapsed: number;  // actual elapsed in seconds
@@ -99,31 +99,31 @@ export type PomodoroSession = {
 export type PomodoroTimerProps = {
   onComplete?: (session: PomodoroSession) => void;
   onStop?: (session: PomodoroSession) => void;
-  defaultTask?: Task;
+  defaultProject?: Project;
   defaultDuration?: number;
   className?: string;
-  tasks?: Task[];
+  projects?: Project[];
 };
 
 export function PomodoroTimer({
   onComplete,
   onStop,
-  defaultTask,
+  defaultProject,
   defaultDuration = 25,
   className,
-  tasks: propTasks,
+  projects: propProjects,
 }: PomodoroTimerProps) {
-  // Fetch tasks if not provided as prop
-  const { data: fetchedTasks = [] } = useTasks();
-  const tasks = propTasks || fetchedTasks;
-  const firstTask = useMemo(
-    () => tasks[0] || { id: 'default', name: 'Task', color: '#8B5CF6', icon: '📝' },
-    [tasks]
+  // Fetch projects if not provided as prop
+  const { data: fetchedProjects = [] } = useProjects();
+  const projects = propProjects || fetchedProjects;
+  const firstProject = useMemo(
+    () => projects[0] || { id: 'default', name: 'Project', color: '#8B5CF6', icon: '📝' },
+    [projects]
   );
 
   const [duration, setDuration] = useState(defaultDuration);
-  const [selectedTask, setSelectedTask] = useState<Task>(defaultTask || firstTask);
-  const [sessionTitle, setSessionTitle] = useState(selectedTask.name);
+  const [selectedProject, setSelectedProject] = useState<Project>(defaultProject || firstProject);
+  const [sessionTitle, setSessionTitle] = useState(selectedProject.name);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editTitle, setEditTitle] = useState('');
   const [timeLeft, setTimeLeft] = useState(defaultDuration * 60);
@@ -134,7 +134,7 @@ export function PomodoroTimer({
   // Refs for timer to avoid effect re-runs
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const callbacksRef = useRef({ onComplete, onStop });
-  const sessionDataRef = useRef({ selectedTask, sessionTitle, duration });
+  const sessionDataRef = useRef({ selectedProject, sessionTitle, duration });
   const resetPendingRef = useRef(false);
 
   // Keep refs in sync
@@ -143,8 +143,8 @@ export function PomodoroTimer({
   }, [onComplete, onStop]);
 
   useEffect(() => {
-    sessionDataRef.current = { selectedTask, sessionTitle, duration };
-  }, [selectedTask, sessionTitle, duration]);
+    sessionDataRef.current = { selectedProject, sessionTitle, duration };
+  }, [selectedProject, sessionTitle, duration]);
 
   // Cleanup timer on unmount
   useEffect(() => {
@@ -159,11 +159,11 @@ export function PomodoroTimer({
     setIsRunning(false);
     setIsPaused(false);
     setTimeLeft(duration * 60);
-    const defaultTaskValue = defaultTask || firstTask;
-    setSelectedTask(defaultTaskValue);
-    setSessionTitle(defaultTaskValue.name);
+    const defaultProjectValue = defaultProject || firstProject;
+    setSelectedProject(defaultProjectValue);
+    setSessionTitle(defaultProjectValue.name);
     setNeedsReset(false);
-  }, [duration, defaultTask, firstTask]);
+  }, [duration, defaultProject, firstProject]);
 
   // Process pending reset from completion callback
   useEffect(() => {
@@ -195,9 +195,9 @@ export function PomodoroTimer({
           setIsRunning(false);
 
           // Call completion callback using ref
-          const { selectedTask, sessionTitle, duration } = sessionDataRef.current;
+          const { selectedProject, sessionTitle, duration } = sessionDataRef.current;
           callbacksRef.current.onComplete?.({
-            task: selectedTask,
+            project: selectedProject,
             title: sessionTitle,
             duration: duration * 60,
             elapsed: duration * 60,
@@ -229,13 +229,13 @@ export function PomodoroTimer({
   const handleManualStop = useCallback(() => {
     const elapsed = duration * 60 - timeLeft;
     callbacksRef.current.onStop?.({
-      task: selectedTask,
+      project: selectedProject,
       title: sessionTitle,
       duration: duration * 60,
       elapsed,
     });
     resetInternal();
-  }, [duration, timeLeft, selectedTask, sessionTitle, resetInternal]);
+  }, [duration, timeLeft, selectedProject, sessionTitle, resetInternal]);
 
   const start = useCallback(() => {
     if (timeLeft === 0) {
@@ -269,12 +269,12 @@ export function PomodoroTimer({
     setIsPaused(false);
   }, []);
 
-  const handleTaskChange = useCallback((task: Task) => {
-    setSelectedTask(task);
-    if (sessionTitle === selectedTask.name) {
-      setSessionTitle(task.name);
+  const handleProjectChange = useCallback((project: Project) => {
+    setSelectedProject(project);
+    if (sessionTitle === selectedProject.name) {
+      setSessionTitle(project.name);
     }
-  }, [sessionTitle, selectedTask.name]);
+  }, [sessionTitle, selectedProject.name]);
 
   const startEditingTitle = () => {
     setEditTitle(sessionTitle);
@@ -282,7 +282,7 @@ export function PomodoroTimer({
   };
 
   const saveTitle = () => {
-    setSessionTitle(editTitle.trim() || selectedTask.name);
+    setSessionTitle(editTitle.trim() || selectedProject.name);
     setIsEditingTitle(false);
   };
 
@@ -303,16 +303,16 @@ export function PomodoroTimer({
         : 'idle';
 
   const cardStyles = {
-    completed: 'bg-success-bg dark:bg-success-bg-dark border-success',
-    running: 'bg-orange-50 dark:bg-orange-950/20 border-orange-400',
-    paused: 'bg-yellow-50 dark:bg-yellow-950/20 border-yellow-400',
+    completed: 'bg-success-bg border-success',
+    running: 'bg-state-running-bg border-state-running-border',
+    paused: 'bg-state-paused-bg border-state-paused-border',
     idle: 'bg-surface border-border-strong',
   };
 
   const timeColors = {
     completed: 'text-success',
-    running: 'text-orange-600 dark:text-orange-400',
-    paused: 'text-yellow-600 dark:text-yellow-400',
+    running: 'text-state-running',
+    paused: 'text-state-paused',
     idle: 'text-foreground',
   };
 
@@ -324,7 +324,7 @@ export function PomodoroTimer({
         className
       )}
     >
-      {/* Header - Edit + Session Title + Clickable Task Badge + POMODORO */}
+      {/* Header - Edit + Session Title + Clickable Project Badge + POMODORO */}
       <div className="w-full mb-3">
         {isEditingTitle ? (
           <div className="flex items-center gap-2">
@@ -336,13 +336,13 @@ export function PomodoroTimer({
                 if (e.key === 'Enter') saveTitle();
                 if (e.key === 'Escape') cancelEditTitle();
               }}
-              placeholder={selectedTask.name}
+              placeholder={selectedProject.name}
               className="flex-1 min-w-0 px-2 py-1 text-sm font-bold bg-surface border-2 border-primary rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50"
               autoFocus
             />
             <button
               onClick={saveTitle}
-              className="p-1 rounded-md bg-success text-white hover:bg-success-dark transition-colors"
+              className="p-1 rounded-md bg-success text-white hover:bg-success/90 transition-colors"
             >
               <Check className="w-3 h-3" />
             </button>
@@ -367,17 +367,17 @@ export function PomodoroTimer({
             <h3 className="text-sm font-bold truncate shrink min-w-0">
               {sessionTitle}
             </h3>
-            {/* Task Badge - Clickable Dropdown */}
+            {/* Project Badge - Clickable Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
                   className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full shrink-0 hover:opacity-80 transition-opacity cursor-pointer"
                   style={{
-                    backgroundColor: `${selectedTask.color}20`,
-                    color: selectedTask.color,
+                    backgroundColor: `${selectedProject.color}20`,
+                    color: selectedProject.color,
                   }}
                 >
-                  {selectedTask.icon} {selectedTask.name}
+                  {selectedProject.icon} {selectedProject.name}
                   <ChevronDown className="w-3 h-3 ml-0.5" />
                 </button>
               </DropdownMenuTrigger>
@@ -385,23 +385,23 @@ export function PomodoroTimer({
                 align="end"
                 className="border-2 border-border-strong shadow-brutal w-44 bg-surface/95 bg-surface/95 backdrop-blur-sm"
               >
-                {tasks.map((task) => (
+                {projects.map((project) => (
                   <DropdownMenuItem
-                    key={task.id}
-                    onClick={() => handleTaskChange(task)}
+                    key={project.id}
+                    onClick={() => handleProjectChange(project)}
                     className={cn(
                       'cursor-pointer flex items-center gap-2 text-sm py-1.5',
-                      selectedTask.id === task.id && 'bg-primary/10 font-medium'
+                      selectedProject.id === project.id && 'bg-primary/10 font-medium'
                     )}
                   >
                     <span
                       className="w-5 h-5 rounded flex items-center justify-center text-xs shrink-0"
-                      style={{ backgroundColor: task.color }}
+                      style={{ backgroundColor: project.color }}
                     >
-                      {task.icon}
+                      {project.icon}
                     </span>
-                    <span className="truncate">{task.name}</span>
-                    {selectedTask.id === task.id && (
+                    <span className="truncate">{project.name}</span>
+                    {selectedProject.id === project.id && (
                       <CheckCircle2 className="w-3.5 h-3.5 ml-auto text-primary shrink-0" />
                     )}
                   </DropdownMenuItem>
@@ -478,7 +478,7 @@ export function PomodoroTimer({
         {!isRunning ? (
           <button
             onClick={start}
-            className="h-8 px-3 rounded-lg bg-primary text-white text-xs font-semibold border-2 border-border-strong dark:border-white/20 shadow-brutal-xs btn-brutal flex items-center justify-center gap-1"
+            className="h-8 px-3 rounded-lg bg-primary-highlight text-white text-xs font-semibold border-2 border-border-strong dark:border-white/20 shadow-brutal-xs btn-brutal flex items-center justify-center gap-1"
           >
             <Play className="w-3 h-3 fill-current" />
             Start
@@ -489,7 +489,7 @@ export function PomodoroTimer({
             {isPaused ? (
               <button
                 onClick={resume}
-                className="h-8 px-3 rounded-lg bg-primary text-white border-2 border-border-strong dark:border-white/20 shadow-brutal-xs btn-brutal flex items-center justify-center gap-1"
+                className="h-8 px-3 rounded-lg bg-primary-highlight text-white border-2 border-border-strong dark:border-white/20 shadow-brutal-xs btn-brutal flex items-center justify-center gap-1"
               >
                 <Play className="w-3 h-3 fill-current" />
                 <span className="text-xs font-semibold">Resume</span>

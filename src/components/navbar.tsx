@@ -25,7 +25,15 @@ export function Navbar({
           </Link>
 
           {/* Actions */}
-          <div className='flex items-center gap-4'>
+          <div className='flex items-center gap-2 sm:gap-4'>
+            <Link href='/dashboard'>
+              <Button
+                variant='outline'
+                className='border-2 border-border-strong bg-background-elevated shadow-brutal-sm btn-brutal font-semibold'
+              >
+                Dashboard
+              </Button>
+            </Link>
             <ThemeToggle />
             {showGetStarted && (
               <Link href='/signup'>

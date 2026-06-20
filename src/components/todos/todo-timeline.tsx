@@ -1,24 +1,34 @@
 'use client';
 
-import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
+import { useState, useMemo, useRef, useCallback } from 'react';
 import { HOURS, HOUR_HEIGHT, MIN_CONTENT_WIDTH } from '@/components/timeline/constants';
 import { PlannedSessionBlock } from './planned-session-block';
 import type { Database } from '@/lib/supabase/database.types';
 import type { PlannedSession, TimelinePlannedSession } from '@/lib/types';
 import { useNow } from '@/lib/hooks/use-now';
+import { useScrollToNow } from '@/lib/hooks/use-scroll-to-now';
 
-type DBSession = Database['public']['Tables']['sessions']['Row'] & { tasks: Database['public']['Tables']['tasks']['Row'] | null };
+type DBSession = Database['public']['Tables']['sessions']['Row'] & { projects: Database['public']['Tables']['projects']['Row'] | null };
 
 interface TodoTimelineProps {
   plannedSessions: DBSession[];
   selectedDate: Date;
   onSessionClick: (session: PlannedSession) => void;
-  onTimeSlotClick: (timestamp: number) => void;
+  onTimeSlotClick: (timestamp: number, durationMs?: number) => void;
   onSessionUpdate?: (sessionId: string, updates: { plannedStartTime?: number; plannedEndTime?: number }) => void;
-  onTaskDrop?: (taskId: string, startTime: number, sessionId?: string) => void;
+  onProjectDrop?: (projectId: string, startTime: number, sessionId?: string) => void;
   onSessionUnschedule?: (sessionId: string) => void;
+  onSessionStart?: (sessionId: string) => void;
+  onSessionPause?: (sessionId: string) => void;
+  onSessionStop?: (sessionId: string) => void;
+  onSessionDelete?: (sessionId: string) => void;
   showTimeLabels?: boolean;
   showHeader?: boolean;
+  /** Shared scroll container (used for drag coordinate math when embedded). */
+  scrollContainerRef?: React.RefObject<HTMLDivElement | null>;
+  /** When true, renders only the grid column (no own scroll container / now-line)
+   *  so it can live inside a shared scroll container alongside another timeline. */
+  embedded?: boolean;
 }
 
 // Constants for interaction
@@ -69,15 +79,15 @@ function calculatePlannedSessionsLayout(
 
     return {
       id: s.id,
-      taskId: s.task_id || '',
-      task: s.tasks ? {
-        id: s.tasks.id,
-        name: s.tasks.name,
-        color: s.tasks.color,
-        icon: s.tasks.icon,
-        goal_duration: s.tasks.goal_duration,
-        goal_value: s.tasks.goal_value,
-        goal_type: s.tasks.goal_type,
+      projectId: s.project_id || '',
+      project: s.projects ? {
+        id: s.projects.id,
+        name: s.projects.name,
+        color: s.projects.color,
+        icon: s.projects.icon,
+        goal_duration: s.projects.goal_duration,
+        goal_value: s.projects.goal_value,
+        goal_type: s.projects.goal_type,
       } : { id: '', name: 'Unknown', color: '#gray', icon: null },
       plannedStartTime: startedAt,
       plannedEndTime: endedAt,
@@ -180,11 +190,18 @@ export function TodoTimeline({
   onSessionClick,
   onTimeSlotClick,
   onSessionUpdate,
-  onTaskDrop,
+  onProjectDrop,
+  onSessionStart,
+  onSessionPause,
+  onSessionStop,
+  onSessionDelete,
   showTimeLabels = true,
   showHeader = false,
+  scrollContainerRef: scrollContainerRefProp,
+  embedded = false,
 }: TodoTimelineProps) {
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const internalScrollRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = scrollContainerRefProp ?? internalScrollRef;
   const timelineRef = useRef<HTMLDivElement>(null);
   const now = useNow(60000);
 
@@ -208,7 +225,7 @@ export function TodoTimeline({
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [hoveredSessionId, setHoveredSessionId] = useState<string | null>(null);
 
-  // Drag over state for external drops (from task column)
+  // Drag over state for external drops (from project column)
   const [dragOver, setDragOver] = useState(false);
 
   const totalHeight = HOURS.length * HOUR_HEIGHT;
@@ -231,20 +248,9 @@ export function TodoTimeline({
   // Check if selected date is today
   const isToday = selectedDate.toDateString() === new Date().toDateString();
 
-  // Scroll to 8 AM on mount
-  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => {
-    scrollTimeoutRef.current = setTimeout(() => {
-      if (!scrollContainerRef.current) return;
-      const scrollPosition = timestampToPixel(startOfDay + 8 * 60 * 60 * 1000, startOfDay) - 100;
-      scrollContainerRef.current.scrollTop = Math.max(0, scrollPosition);
-    }, 0);
-    return () => {
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-      }
-    };
-  }, [startOfDay]);
+  // Center the timeline on the current time when viewing today.
+  // Skipped when embedded — the parent owns the shared scroll container.
+  useScrollToNow(scrollContainerRef, startOfDay, isToday && !embedded);
 
   // Handle drag start from session block
   const handleDragStart = useCallback((sessionId: string, type: 'move' | 'resize-top' | 'resize-bottom', startY: number) => {
@@ -267,9 +273,11 @@ export function TodoTimeline({
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (!timelineRef.current) return;
 
+    // getBoundingClientRect().top already reflects the scroll offset (it goes
+    // negative as the grid scrolls up), so clientY - rect.top is already the
+    // content-relative pixel. Do NOT add scrollTop — that double-counts it.
     const rect = timelineRef.current.getBoundingClientRect();
-    const scrollTop = scrollContainerRef.current?.scrollTop || 0;
-    const y = e.clientY - rect.top + scrollTop;
+    const y = e.clientY - rect.top;
 
     // Handle active drag (move or resize)
     if (activeDrag) {
@@ -332,7 +340,10 @@ export function TodoTimeline({
     // Complete new session drag
     if (isDragging && dragStart && dragEnd) {
       const startTime = Math.min(dragStart.timestamp, dragEnd);
-      onTimeSlotClick(startTime);
+      const durationMs = Math.abs(dragEnd - dragStart.timestamp);
+      // A near-zero drag is treated as a plain click (no duration) so the
+      // caller applies its default duration.
+      onTimeSlotClick(startTime, durationMs > 60 * 1000 ? durationMs : undefined);
     }
 
     setActiveDrag(null);
@@ -345,9 +356,9 @@ export function TodoTimeline({
   const handleMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (activeDrag) return;
 
+    // rect.top already reflects scroll position; do not add scrollTop.
     const rect = e.currentTarget.getBoundingClientRect();
-    const scrollTop = scrollContainerRef.current?.scrollTop || 0;
-    const y = e.clientY - rect.top + scrollTop;
+    const y = e.clientY - rect.top;
     const timestamp = pixelToTimestamp(y, startOfDay);
 
     setIsDragging(true);
@@ -373,27 +384,37 @@ export function TodoTimeline({
     const rect = timelineRef.current?.getBoundingClientRect();
     if (!rect) return;
 
-    const scrollTop = scrollContainerRef.current?.scrollTop || 0;
-    const y = e.clientY - rect.top + scrollTop;
-    const timestamp = pixelToTimestamp(y, startOfDay);
+    // rect.top already reflects scroll position; do not add scrollTop.
+    const y = e.clientY - rect.top;
+    // Clamp into the visible day so a drop near the boundary can't push the
+    // session outside the rendered day window (which would hide it).
+    const rawTimestamp = pixelToTimestamp(y, startOfDay);
+    const timestamp = Math.min(Math.max(rawTimestamp, startOfDay), endOfDay - 60 * 1000);
 
     // Check if dropping a session (unscheduled -> scheduled)
     const sessionId = e.dataTransfer.getData('sessionId');
-    if (sessionId && onTaskDrop) {
-      // Find the task ID from the session
+    // projectId is written by the project column for both project drags and
+    // unscheduled-session drags, so prefer it over a separate lookup (the
+    // dropped session may not be present in the scheduled-only `plannedSessions` prop).
+    const projectId = e.dataTransfer.getData('projectId');
+    if (sessionId && onProjectDrop && projectId) {
+      onProjectDrop(projectId, timestamp, sessionId);
+      return;
+    }
+    if (sessionId && onProjectDrop) {
+      // Fallback: resolve project from the rendered sessions
       const session = plannedSessions.find(s => s.id === sessionId);
-      if (session && session.task_id) {
-        onTaskDrop(session.task_id, timestamp, sessionId);
+      if (session && session.project_id) {
+        onProjectDrop(session.project_id, timestamp, sessionId);
       }
       return;
     }
 
-    // Check if dropping a task
-    const taskId = e.dataTransfer.getData('taskId');
-    if (taskId && onTaskDrop) {
-      onTaskDrop(taskId, timestamp);
+    // Check if dropping a project
+    if (projectId && onProjectDrop) {
+      onProjectDrop(projectId, timestamp);
     }
-  }, [onTaskDrop, startOfDay, plannedSessions]);
+  }, [onProjectDrop, startOfDay, endOfDay, plannedSessions]);
 
   // Calculate drag selection box
   const dragSelection = useMemo(() => {
@@ -439,55 +460,23 @@ export function TodoTimeline({
     return lines;
   }, [startOfDay, endOfDay]);
 
-  return (
-    <div className="flex flex-col h-full">
-      {/* Optional Header */}
-      {showHeader && (
-        <div className="flex items-center justify-between p-4 border-b-2 border-border-strong">
-          <h2 className="font-semibold text-lg">Timeline</h2>
-          <p className="text-sm text-muted-foreground">
-            Click and drag to create • Drag sessions to move • Resize edges • Drop tasks here
-          </p>
-        </div>
+  const grid = (
+    <div
+      ref={timelineRef}
+      className={cn(
+        "relative flex-1 select-none",
+        embedded && "min-w-0",
+        dragOver && "bg-primary/5"
       )}
-
-      {/* Timeline Content */}
-      <div
-        ref={scrollContainerRef}
-        className="flex-1 overflow-auto relative"
-      >
-        <div className="flex" style={{ minHeight: totalHeight }}>
-          {/* Time Labels Column - Optional */}
-          {showTimeLabels && (
-            <div className="shrink-0 border-r-2 border-border-strong bg-surface-elevated/30">
-              {HOURS.map((hour) => (
-                <div
-                  key={hour}
-                  className="flex items-start justify-end px-3 text-sm font-medium text-muted-foreground border-b border-border/30 border-border/30"
-                  style={{ height: HOUR_HEIGHT, paddingTop: 8 }}
-                >
-                  {hour === 0 || hour === 24 ? '12 AM' : hour === 12 ? '12 PM' : hour < 12 ? `${hour} AM` : `${hour - 12} PM`}
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Timeline Grid */}
-          <div
-            ref={timelineRef}
-            className={cn(
-              "relative flex-1 select-none",
-              dragOver && "bg-primary/5"
-            )}
-            style={{ minWidth: MIN_CONTENT_WIDTH, height: totalHeight }}
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-          >
+      style={{ minWidth: embedded ? undefined : MIN_CONTENT_WIDTH, height: totalHeight }}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseUp}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
             {/* Hour grid lines */}
             <div className="absolute inset-0">
               {HOURS.map((hour) => (
@@ -513,8 +502,8 @@ export function TodoTimeline({
               ))}
             </div>
 
-            {/* Current time indicator */}
-            {isToday && (
+            {/* Current time indicator (parent renders a shared one when embedded) */}
+            {!embedded && isToday && (
               <CurrentTimeIndicator
                 now={now}
                 startOfDay={startOfDay}
@@ -536,7 +525,7 @@ export function TodoTimeline({
               {dragOver && (
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <div className="bg-primary/20 border-2 border-dashed border-primary rounded-lg p-4">
-                    <p className="text-primary font-medium">Drop task here</p>
+                    <p className="text-primary font-medium">Drop project here</p>
                   </div>
                 </div>
               )}
@@ -558,6 +547,11 @@ export function TodoTimeline({
                   onMouseLeave={() => setHoveredSessionId(null)}
                   onDragStart={handleDragStart}
                   onSessionUpdate={onSessionUpdate}
+                  onStart={onSessionStart ? () => onSessionStart(session.id) : undefined}
+                  onPause={onSessionPause ? () => onSessionPause(session.id) : undefined}
+                  onStop={onSessionStop ? () => onSessionStop(session.id) : undefined}
+                  onDelete={onSessionDelete ? () => onSessionDelete(session.id) : undefined}
+                  now={now}
                   dayStart={startOfDay}
                   dayEnd={endOfDay}
                 />
@@ -587,14 +581,50 @@ export function TodoTimeline({
                   <div className="flex items-center">
                     <div className="w-2 h-2 rounded-full bg-primary shrink-0" />
                     <div className="flex-1 h-0.5 bg-primary" />
-                    <div className="px-2 py-1 bg-primary text-primary-foreground text-xs rounded shadow whitespace-nowrap">
+                    <div className="px-2 py-1 bg-primary-highlight text-primary-foreground text-xs rounded shadow whitespace-nowrap">
                       {new Date(dragPreview.startTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })} - {new Date(dragPreview.endTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
                     </div>
                   </div>
                 </div>
               )}
             </div>
-          </div>
+    </div>
+  );
+
+  // Embedded: just the grid column, to be placed in a shared scroll container.
+  if (embedded) return grid;
+
+  return (
+    <div className="flex flex-col h-full">
+      {/* Optional Header */}
+      {showHeader && (
+        <div className="flex items-center justify-between p-4 border-b-2 border-border-strong">
+          <h2 className="font-semibold text-lg">Timeline</h2>
+          <p className="text-sm text-muted-foreground">
+            Click and drag to create • Drag sessions to move • Resize edges • Drop projects here
+          </p>
+        </div>
+      )}
+
+      {/* Timeline Content */}
+      <div ref={scrollContainerRef} className="flex-1 overflow-auto relative">
+        <div className="flex" style={{ minHeight: totalHeight }}>
+          {/* Time Labels Column - Optional */}
+          {showTimeLabels && (
+            <div className="shrink-0 border-r-2 border-border-strong bg-surface-elevated/30">
+              {HOURS.map((hour) => (
+                <div
+                  key={hour}
+                  className="flex items-start justify-end px-3 text-sm font-medium text-muted-foreground border-b border-border/30 border-border/30"
+                  style={{ height: HOUR_HEIGHT, paddingTop: 8 }}
+                >
+                  {hour === 0 || hour === 24 ? '12 AM' : hour === 12 ? '12 PM' : hour < 12 ? `${hour} AM` : `${hour - 12} PM`}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {grid}
         </div>
       </div>
     </div>

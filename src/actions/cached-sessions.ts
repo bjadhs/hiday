@@ -4,8 +4,8 @@ import { createClient } from '@/lib/supabase/server'
 import type { Database } from '@/lib/supabase/database.types'
 
 type Session = Database['public']['Tables']['sessions']['Row']
-type Task = Database['public']['Tables']['tasks']['Row']
-type SessionWithTask = Session & { tasks: Task | null }
+type Project = Database['public']['Tables']['projects']['Row']
+type SessionWithProject = Session & { projects: Project | null }
 
 /**
  * Get sessions with optional date filtering
@@ -23,7 +23,7 @@ export async function getCachedSessions(startDate?: number, endDate?: number) {
 
   let query = supabase
     .from('sessions')
-    .select('*, tasks(*)')
+    .select('*, projects(*)')
     .eq('user_id', user.id)
 
   if (startDate && endDate) {
@@ -40,7 +40,7 @@ export async function getCachedSessions(startDate?: number, endDate?: number) {
   if (error) throw error
 
   return {
-    sessions: data as SessionWithTask[],
+    sessions: data as SessionWithProject[],
     userId: user.id,
     dateRange: { startDate, endDate }
   }
@@ -65,7 +65,7 @@ export async function getCachedTodaySessions() {
 
   const { data, error } = await supabase
     .from('sessions')
-    .select('*, tasks(*)')
+    .select('*, projects(*)')
     .eq('user_id', user.id)
     .gte('started_at', startOfDay)
     .lte('started_at', endOfDay)
@@ -74,7 +74,7 @@ export async function getCachedTodaySessions() {
   if (error) throw error
 
   return {
-    sessions: data as SessionWithTask[],
+    sessions: data as SessionWithProject[],
     userId: user.id,
     date: startOfDay
   }
@@ -94,7 +94,7 @@ export async function getCachedActiveSessions() {
 
   const { data, error } = await supabase
     .from('sessions')
-    .select('*, tasks(*)')
+    .select('*, projects(*)')
     .eq('user_id', user.id)
     .is('ended_at', null)
     .order('started_at', { ascending: false })
@@ -102,7 +102,7 @@ export async function getCachedActiveSessions() {
   if (error) throw error
 
   return {
-    sessions: data as SessionWithTask[],
+    sessions: data as SessionWithProject[],
     userId: user.id
   }
 }
@@ -123,7 +123,7 @@ export async function getCachedSessionStats(days: number = 7) {
 
   const { data, error } = await supabase
     .from('sessions')
-    .select('*, tasks(*)')
+    .select('*, projects(*)')
     .eq('user_id', user.id)
     .gte('started_at', cutoffDate)
     .not('ended_at', 'is', null)
@@ -131,7 +131,7 @@ export async function getCachedSessionStats(days: number = 7) {
   if (error) throw error
 
   // Calculate stats
-  const sessions = data as SessionWithTask[]
+  const sessions = data as SessionWithProject[]
   const totalDuration = sessions.reduce((sum, s) => {
     return sum + ((s.ended_at || 0) - (s.started_at || 0))
   }, 0)

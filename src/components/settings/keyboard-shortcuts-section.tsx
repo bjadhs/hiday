@@ -4,9 +4,9 @@ import { Keyboard } from 'lucide-react';
 import { SettingsSection } from './settings-section';
 
 const shortcuts = [
-  { keys: ['Space'], description: 'Start or stop the most recent task from the Track page' },
+  { keys: ['Space'], description: 'Start or stop the most recent project from the Track page' },
   { keys: ['S'], description: 'Stop the first active session' },
-  { keys: ['N'], description: 'Focus the new task input on the Tasks page' },
+  { keys: ['N'], description: 'Focus the new project input on the Projects page' },
   { keys: ['?'], description: 'Open or close this keyboard shortcuts reference' },
   { keys: ['Esc'], description: 'Close dialogs and clear selection' },
   { keys: ['Cmd', 'K'], description: 'Open quick navigation (reserved)' },

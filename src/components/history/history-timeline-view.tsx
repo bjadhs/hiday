@@ -1,6 +1,6 @@
 import { HistorySession } from '@/lib/types';
 import { HistoryTimelineRow } from './history-timeline-row';
-import { getSessionsForHour, getUniqueTasks } from './utils';
+import { getSessionsForHour, getUniqueProjects } from './utils';
 
 interface HistoryTimelineViewProps {
     sessions: HistorySession[];
@@ -53,16 +53,16 @@ export function HistoryTimelineView({
 
                     {/* Legend */}
                     <div className='mt-6 pt-4 border-t-2 border-border'>
-                        <p className='text-sm font-semibold mb-3'>Tasks</p>
+                        <p className='text-sm font-semibold mb-3'>Projects</p>
                         <div className='flex flex-wrap gap-3'>
-                            {getUniqueTasks(sessions).map((task) => (
-                                <div key={task.id} className='flex items-center gap-2'>
+                            {getUniqueProjects(sessions).map((project) => (
+                                <div key={project.id} className='flex items-center gap-2'>
                                     <div
                                         className='w-4 h-4 rounded border-2 border-black/10 dark:border-white/25 shadow-brutal-xs'
-                                        style={{ backgroundColor: task.color }}
+                                        style={{ backgroundColor: project.color }}
                                     />
-                                    <span className='text-sm'>{task.icon}</span>
-                                    <span className='text-sm text-muted-foreground'>{task.name}</span>
+                                    <span className='text-sm'>{project.icon}</span>
+                                    <span className='text-sm text-muted-foreground'>{project.name}</span>
                                 </div>
                             ))}
                         </div>
@@ -87,8 +87,8 @@ function CurrentTimeIndicator() {
             className='absolute left-16 right-0 flex items-center pointer-events-none z-20'
             style={{ top: `${topPosition}px` }}
         >
-            <div className='w-2 h-2 rounded-full bg-danger-dark dark:bg-danger -ml-1' />
-            <div className='flex-1 h-0.5 bg-danger-dark/50 dark:bg-danger/50' />
+            <div className='w-2 h-2 rounded-full bg-danger -ml-1' />
+            <div className='flex-1 h-0.5 bg-danger/50' />
         </div>
     );
 }

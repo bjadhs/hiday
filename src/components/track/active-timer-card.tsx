@@ -3,7 +3,7 @@
 import { useEffect, useCallback, useState, useMemo, useTransition, useOptimistic } from 'react';
 import { Play, Loader2 } from 'lucide-react';
 import { cn, formatDuration } from '@/lib/utils';
-import { Task } from '@/lib/types';
+import { Project } from '@/lib/types';
 import { useNow } from '@/lib/hooks/use-now';
 import { useActiveSessionsStore, ActiveSessionState } from '@/lib/stores/active-sessions-store';
 import { ExpandedSessionView } from './expanded-session-view';
@@ -11,19 +11,19 @@ import { NotePromptInline } from './note-prompt-inline';
 import type { Database } from '@/lib/supabase/database.types';
 
 type SessionRow = Database['public']['Tables']['sessions']['Row'];
-type TaskRow = Database['public']['Tables']['tasks']['Row'];
-type SessionWithTask = SessionRow & { tasks: TaskRow | null };
+type ProjectRow = Database['public']['Tables']['projects']['Row'];
+type SessionWithProject = SessionRow & { projects: ProjectRow | null };
 
 interface ActiveTimerCardProps {
-  firstTask: Task;
-  recentTasks: Task[];
-  todaySessions: SessionWithTask[];
-  onStartTask: (task: Task, startTime?: number) => Promise<void>;
+  firstProject: Project;
+  recentProjects: Project[];
+  todaySessions: SessionWithProject[];
+  onStartProject: (project: Project, startTime?: number) => Promise<void>;
   onStopSession: (sessionId: string) => Promise<void>;
-  onUpdateSession: (sessionId: string, updates: { title?: string; note?: string; taskId?: string; started_at?: number }) => Promise<void>;
+  onUpdateSession: (sessionId: string, updates: { title?: string; note?: string; projectId?: string; started_at?: number }) => Promise<void>;
   isStarting?: boolean;
   isStopping?: boolean;
-  tasks?: Task[];
+  projects?: Project[];
 }
 
 /**
@@ -38,13 +38,13 @@ interface ActiveTimerCardProps {
  * - Server Actions ready architecture
  */
 export function ActiveTimerCard({
-  firstTask,
-  recentTasks,
+  firstProject,
+  recentProjects,
   todaySessions,
-  onStartTask,
+  onStartProject,
   onStopSession,
   onUpdateSession,
-  tasks = [],
+  projects = [],
 }: ActiveTimerCardProps) {
   // React 19 Transitions for async operations
   const [, startTransition] = useTransition();
@@ -61,14 +61,14 @@ export function ActiveTimerCard({
   const storeSessions = useActiveSessionsStore((state) => state.activeSessions);
   
   // Optimistic UI state - prepend to match store behavior
-  // Filters out duplicate optimistic sessions for the same task
+  // Filters out duplicate optimistic sessions for the same project
   const [optimisticSessions, addOptimisticSession] = useOptimistic(
     storeSessions,
-    (state: ActiveSessionState[], newSession: { id: string; task: Task; title: string; startTime: number; isOptimistic?: boolean }) => {
-      // Remove any existing optimistic sessions for the same task to prevent duplicates
+    (state: ActiveSessionState[], newSession: { id: string; project: Project; title: string; startTime: number; isOptimistic?: boolean }) => {
+      // Remove any existing optimistic sessions for the same project to prevent duplicates
       const filteredState = state.filter((s) => {
-        const isOptimisticForThisTask = s.id.startsWith('optimistic-') && s.task.id === newSession.task.id;
-        return !isOptimisticForThisTask;
+        const isOptimisticForThisProject = s.id.startsWith('optimistic-') && s.project.id === newSession.project.id;
+        return !isOptimisticForThisProject;
       });
       return [{ ...newSession, note: '' }, ...filteredState];
     }
@@ -106,35 +106,35 @@ export function ActiveTimerCard({
 
   const hasActiveSessions = activeSessions.length > 0;
 
-  // Get unique recent tasks
-  const uniqueRecentTasks = useMemo(() => {
+  // Get unique recent projects
+  const uniqueRecentProjects = useMemo(() => {
     const seen = new Set<string>();
-    const result: Task[] = [];
+    const result: Project[] = [];
     
     const sortedSessions = [...todaySessions].sort((a, b) => (b.started_at || 0) - (a.started_at || 0));
     for (const session of sortedSessions) {
-      if (session.tasks && !seen.has(session.tasks.id)) {
-        seen.add(session.tasks.id);
+      if (session.projects && !seen.has(session.projects.id)) {
+        seen.add(session.projects.id);
         result.push({
-          id: session.tasks.id,
-          name: session.tasks.name,
-          color: session.tasks.color,
-          icon: session.tasks.icon,
-        } as Task);
+          id: session.projects.id,
+          name: session.projects.name,
+          color: session.projects.color,
+          icon: session.projects.icon,
+        } as Project);
       }
       if (result.length >= 4) break;
     }
     
-    for (const task of recentTasks) {
-      if (!seen.has(task.id)) {
-        seen.add(task.id);
-        result.push(task);
+    for (const project of recentProjects) {
+      if (!seen.has(project.id)) {
+        seen.add(project.id);
+        result.push(project);
       }
       if (result.length >= 4) break;
     }
     
-    return result.length > 0 ? result : [firstTask];
-  }, [recentTasks, todaySessions, firstTask]);
+    return result.length > 0 ? result : [firstProject];
+  }, [recentProjects, todaySessions, firstProject]);
 
   // Calculate last session end time
   const now = useNow(1000);
@@ -149,7 +149,7 @@ export function ActiveTimerCard({
     const lastEndTime = lastSession.ended_at || 0;
     const gapDuration = Math.floor((now - lastEndTime) / 1000);
 
-    return { lastEndTime, gapDuration, taskName: lastSession.tasks?.name || 'Unknown' };
+    return { lastEndTime, gapDuration, projectName: lastSession.projects?.name || 'Unknown' };
   }, [todaySessions, now]);
 
   // Handlers with proper error handling and transitions
@@ -167,7 +167,7 @@ export function ActiveTimerCard({
     }
 
     const trimmedTitle = editTitle.trim();
-    const newTitle = trimmedTitle || session.task.name || '';
+    const newTitle = trimmedTitle || session.project.name || '';
     saveTitle(sessionId, newTitle);
     onUpdateSession(sessionId, { title: newTitle }).catch(console.error);
   }, [editTitle, activeSessions, saveTitle, onUpdateSession]);
@@ -184,8 +184,8 @@ export function ActiveTimerCard({
   }, [sessionNotes, onUpdateSession]);
 
   // Start session with optimistic UI
-  const handleStartSession = useCallback((task: Task, offsetMinutes: number = 0) => {
-    const operationId = `start-${task.id}-${offsetMinutes}`;
+  const handleStartSession = useCallback((project: Project, offsetMinutes: number = 0) => {
+    const operationId = `start-${project.id}-${offsetMinutes}`;
     
     startTransition(async () => {
       setActiveOperation({ type: 'start', id: operationId });
@@ -196,21 +196,21 @@ export function ActiveTimerCard({
           : Date.now();
         
         // Optimistic update - use a unique ID that won't conflict with real sessions
-        const optimisticId = `optimistic-${task.id}-${Date.now()}`;
+        const optimisticId = `optimistic-${project.id}-${Date.now()}`;
         addOptimisticSession({
           id: optimisticId,
-          task,
-          title: task.name,
+          project,
+          title: project.name,
           startTime,
           isOptimistic: true,
         });
         
-        await onStartTask(task, startTime);
+        await onStartProject(project, startTime);
       } finally {
         setActiveOperation(null);
       }
     });
-  }, [onStartTask, addOptimisticSession, startTransition]);
+  }, [onStartProject, addOptimisticSession, startTransition]);
 
   // Adjust time with transition
   const handleAdjustTime = useCallback((sessionId: string, offsetMinutes: number) => {
@@ -246,8 +246,8 @@ export function ActiveTimerCard({
 
     const session = activeSessions.find((s: { id: string }) => s.id === sessionId);
 
-    // Check if this session's task requires a note prompt
-    if (session?.task.note_prompt) {
+    // Check if this session's project requires a note prompt
+    if (session?.project.note_prompt) {
       // Show inline note prompt instead of modal
       useActiveSessionsStore.getState().startPromptingNote(sessionId);
       // Also expand the session if not already expanded
@@ -388,14 +388,14 @@ export function ActiveTimerCard({
               onClose={closeExpand}
               onStop={() => handleStopSession(expandedSessionId)}
               isStopping={isOperationLoading('stop', expandedSessionId)}
-              tasks={tasks}
-              onTaskChange={(task) => {
+              projects={projects}
+              onProjectChange={(project) => {
                 // Skip optimistic sessions that haven't been saved to database yet
                 if (expandedSessionId?.startsWith('optimistic-')) {
-                  console.warn('Cannot change task for optimistic session - waiting for server confirmation');
+                  console.warn('Cannot change project for optimistic session - waiting for server confirmation');
                   return;
                 }
-                onUpdateSession(expandedSessionId, { taskId: task.id });
+                onUpdateSession(expandedSessionId, { projectId: project.id });
               }}
             />
           )
@@ -409,8 +409,8 @@ export function ActiveTimerCard({
             >
               {/* Start Now */}
               <StartButton
-                onClick={() => handleStartSession(firstTask, 0)}
-                isLoading={isOperationLoading('start', `start-${firstTask.id}-0`)}
+                onClick={() => handleStartSession(firstProject, 0)}
+                isLoading={isOperationLoading('start', `start-${firstProject.id}-0`)}
                 label="Start now"
                 icon={<Play className="w-3 h-3 fill-current" />}
                 text="Now"
@@ -419,8 +419,8 @@ export function ActiveTimerCard({
 
               {/* 5m ago */}
               <StartButton
-                onClick={() => handleStartSession(firstTask, 5)}
-                isLoading={isOperationLoading('start', `start-${firstTask.id}-5`)}
+                onClick={() => handleStartSession(firstProject, 5)}
+                isLoading={isOperationLoading('start', `start-${firstProject.id}-5`)}
                 label="Start from 5 minutes ago"
                 text="5m"
                 variant="secondary"
@@ -428,8 +428,8 @@ export function ActiveTimerCard({
 
               {/* 15m ago */}
               <StartButton
-                onClick={() => handleStartSession(firstTask, 15)}
-                isLoading={isOperationLoading('start', `start-${firstTask.id}-15`)}
+                onClick={() => handleStartSession(firstProject, 15)}
+                isLoading={isOperationLoading('start', `start-${firstProject.id}-15`)}
                 label="Start from 15 minutes ago"
                 text="15m"
                 variant="secondary"
@@ -437,8 +437,8 @@ export function ActiveTimerCard({
 
               {/* 30m ago */}
               <StartButton
-                onClick={() => handleStartSession(firstTask, 30)}
-                isLoading={isOperationLoading('start', `start-${firstTask.id}-30`)}
+                onClick={() => handleStartSession(firstProject, 30)}
+                isLoading={isOperationLoading('start', `start-${firstProject.id}-30`)}
                 label="Start from 30 minutes ago"
                 text="30m"
                 variant="secondary"
@@ -446,8 +446,8 @@ export function ActiveTimerCard({
 
               {/* Fill Gap */}
               <StartButton
-                onClick={() => lastSessionInfo && handleStartSession(firstTask, Math.floor(lastSessionInfo.gapDuration / 60))}
-                isLoading={isOperationLoading('start', `start-${firstTask.id}-${Math.floor(lastSessionInfo?.gapDuration || 0 / 60)}`)}
+                onClick={() => lastSessionInfo && handleStartSession(firstProject, Math.floor(lastSessionInfo.gapDuration / 60))}
+                isLoading={isOperationLoading('start', `start-${firstProject.id}-${Math.floor(lastSessionInfo?.gapDuration || 0 / 60)}`)}
                 label={lastSessionInfo ? `Fill gap from last session (${Math.floor(lastSessionInfo.gapDuration / 60)}m)` : 'No previous session'}
                 text={lastSessionInfo ? `${Math.floor(lastSessionInfo.gapDuration / 60)}m` : '--'}
                 variant="gap"
@@ -458,19 +458,19 @@ export function ActiveTimerCard({
             {/* === SCROLLABLE CONTENT === */}
             <div className="flex-1 overflow-y-auto min-h-0 -mx-1 px-1">
               <div className="space-y-2 flex flex-col h-full">
-                {/* Recent Tasks Row - Grid layout for equal width */}
+                {/* Recent Projects Row - Grid layout for equal width */}
                 <div 
                   className="grid gap-1.5"
-                  style={{ gridTemplateColumns: `repeat(${uniqueRecentTasks.length}, 1fr)` }}
+                  style={{ gridTemplateColumns: `repeat(${uniqueRecentProjects.length}, 1fr)` }}
                   role="group"
-                  aria-label="Recent tasks"
+                  aria-label="Recent projects"
                 >
-                  {uniqueRecentTasks.map((task) => (
-                    <TaskButton
-                      key={task.id}
-                      task={task}
-                      onClick={() => handleStartSession(task, 0)}
-                      isLoading={isOperationLoading('start', `start-${task.id}-0`)}
+                  {uniqueRecentProjects.map((project) => (
+                    <ProjectButton
+                      key={project.id}
+                      project={project}
+                      onClick={() => handleStartSession(project, 0)}
+                      isLoading={isOperationLoading('start', `start-${project.id}-0`)}
                     />
                   ))}
                 </div>
@@ -482,7 +482,7 @@ export function ActiveTimerCard({
                     role="list"
                     aria-label="Active sessions"
                   >
-                    {activeSessions.map((session: { id: string; task: Task; title: string }) => (
+                    {activeSessions.map((session: { id: string; project: Project; title: string }) => (
                       <CompactSessionItem
                         key={session.id}
                         session={session}
@@ -606,7 +606,7 @@ function StartButton({ onClick, isLoading, label, icon, text, variant, disabled 
   const baseClasses = "flex items-center justify-center px-1.5 py-1.5 rounded-md border-2 text-xs font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2";
   
   const variantClasses = {
-    primary: "bg-primary text-white border-border-strong dark:border-white/20 shadow-brutal-xs hover:opacity-90",
+    primary: "bg-primary-highlight text-white border-border-strong dark:border-white/20 shadow-brutal-xs hover:opacity-90",
     secondary: "bg-surface-elevated text-primary border-border hover:border-primary/50 hover:bg-primary/5",
     gap: "bg-primary/10 dark:bg-primary/20 text-primary border-primary hover:bg-primary/20"
   };
@@ -633,27 +633,27 @@ function StartButton({ onClick, isLoading, label, icon, text, variant, disabled 
   );
 }
 
-// Accessible Task Button Component
-interface TaskButtonProps {
-  task: Task;
+// Accessible Project Button Component
+interface ProjectButtonProps {
+  project: Project;
   onClick: () => void;
   isLoading: boolean;
 }
 
-function TaskButton({ task, onClick, isLoading }: TaskButtonProps) {
+function ProjectButton({ project, onClick, isLoading }: ProjectButtonProps) {
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={isLoading}
-      aria-label={`Start ${task.name} session`}
+      aria-label={`Start ${project.name} session`}
       aria-busy={isLoading}
-      title={`Start ${task.name}`}
+      title={`Start ${project.name}`}
       className="flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-md bg-surface-elevated border-2 border-border hover:border-primary hover:bg-primary/5 transition-all disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 w-full min-w-0"
-      style={{ borderColor: isLoading ? undefined : `${task.color}40` }}
+      style={{ borderColor: isLoading ? undefined : `${project.color}40` }}
     >
-      <span className="text-sm" aria-hidden="true">{task.icon}</span>
-      <span className="text-xs font-semibold truncate">{task.name}</span>
+      <span className="text-sm" aria-hidden="true">{project.icon}</span>
+      <span className="text-xs font-semibold truncate">{project.name}</span>
       {isLoading ? (
         <Loader2 className="w-3 h-3 animate-spin text-primary shrink-0" aria-hidden="true" />
       ) : (
@@ -666,7 +666,7 @@ function TaskButton({ task, onClick, isLoading }: TaskButtonProps) {
 // Accessible Compact Session Item
 interface SessionItem {
   id: string;
-  task: Task;
+  project: Project;
   title: string;
 }
 
@@ -699,22 +699,22 @@ function CompactSessionItem({
       className="w-full flex items-center gap-1 p-1.5 rounded-lg bg-surface border-2 border-border-strong shadow-brutal-sm"
       role="listitem"
     >
-      {/* Task info - clickable to expand */}
+      {/* Project info - clickable to expand */}
       <button
         type="button"
         onClick={onExpand}
         className="flex-1 flex items-center gap-2 min-w-0 text-left hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 rounded"
-        aria-label={`${session.title || session.task.name}, duration ${formatDuration(elapsedTime)}. Click to expand`}
+        aria-label={`${session.title || session.project.name}, duration ${formatDuration(elapsedTime)}. Click to expand`}
       >
         <div
           className="w-7 h-7 rounded-md flex items-center justify-center text-sm border-2 border-black/10 dark:border-white/25 shadow-brutal-xs shrink-0"
-          style={{ backgroundColor: session.task.color }}
+          style={{ backgroundColor: session.project.color }}
           aria-hidden="true"
         >
-          {session.task.icon}
+          {session.project.icon}
         </div>
         <span className="flex-1 min-w-0 text-xs font-semibold truncate">
-          {session.title || session.task.name}
+          {session.title || session.project.name}
         </span>
       </button>
 
@@ -760,10 +760,10 @@ function CompactSessionItem({
         type="button"
         onClick={onStop}
         disabled={isStopping}
-        aria-label={`Stop ${session.title || session.task.name} session`}
+        aria-label={`Stop ${session.title || session.project.name} session`}
         aria-busy={isStopping}
         title="Stop session"
-        className="w-7 h-7 rounded-md bg-danger dark:bg-danger-dark text-white border-2 border-border-strong dark:border-white/20 shadow-brutal-xs btn-brutal flex items-center justify-center disabled:opacity-50 shrink-0 focus:outline-none focus:ring-2 focus:ring-danger focus:ring-offset-1"
+        className="w-7 h-7 rounded-md bg-danger text-white border-2 border-border-strong dark:border-white/20 shadow-brutal-xs btn-brutal flex items-center justify-center disabled:opacity-50 shrink-0 focus:outline-none focus:ring-2 focus:ring-danger focus:ring-offset-1"
       >
         {isStopping ? (
           <Loader2 className="w-3 h-3 animate-spin" aria-hidden="true" />
@@ -793,7 +793,7 @@ function AdjustButton({ onClick, isLoading, disabled, label, text }: AdjustButto
       aria-label={label}
       aria-busy={isLoading}
       title={label}
-      className="px-1.5 py-1 rounded bg-muted dark:bg-muted-dark text-foreground-muted hover:text-foreground border border-border flex items-center justify-center disabled:opacity-50 text-[10px] font-bold min-w-[28px] focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1"
+      className="px-1.5 py-1 rounded bg-muted text-foreground-muted hover:text-foreground border border-border flex items-center justify-center disabled:opacity-50 text-[10px] font-bold min-w-[28px] focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1"
     >
       {isLoading ? (
         <Loader2 className="w-2.5 h-2.5 animate-spin" aria-hidden="true" />

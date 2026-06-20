@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import { Task, HistorySession } from '@/lib/types';
-import { useTasks } from '@/lib/hooks/use-tasks';
+import { Project, HistorySession } from '@/lib/types';
+import { useProjects } from '@/lib/hooks/use-projects';
 import {
     useTodaySessions,
     useActiveSessions,
@@ -10,8 +10,8 @@ import {
 } from '@/lib/hooks/use-sessions';
 import { useActiveSessionsStore } from '@/lib/stores/active-sessions-store';
 
-// Default task when no tasks exist
-const defaultTask: Task = {
+// Default project when no projects exist
+const defaultProject: Project = {
     id: 'inbox',
     name: 'Inbox',
     color: '#6B7280',
@@ -32,10 +32,10 @@ export function useTrackPage() {
 
     // Fetch data using React Query
     const {
-        data: tasks = [],
-        isLoading: isLoadingTasks,
-        error: tasksError,
-    } = useTasks();
+        data: projects = [],
+        isLoading: isLoadingProjects,
+        error: projectsError,
+    } = useProjects();
 
     const {
         data: todaySessions = [],
@@ -52,35 +52,35 @@ export function useTrackPage() {
     const updateSessionMutation = useUpdateSession();
 
 
-    // Calculate recent tasks (unique tasks from today sessions, max 4)
-    const recentTasks = useMemo(() => {
-        const taskMap = new Map<string, Task>();
+    // Calculate recent projects (unique projects from today sessions, max 4)
+    const recentProjects = useMemo(() => {
+        const projectMap = new Map<string, Project>();
         
-        // Iterate through today's sessions to find unique tasks
+        // Iterate through today's sessions to find unique projects
         for (const session of todaySessions) {
-            if (session.tasks && !taskMap.has(session.tasks.id)) {
-                taskMap.set(session.tasks.id, {
-                    id: session.tasks.id,
-                    name: session.tasks.name,
-                    color: session.tasks.color,
-                    icon: session.tasks.icon,
+            if (session.projects && !projectMap.has(session.projects.id)) {
+                projectMap.set(session.projects.id, {
+                    id: session.projects.id,
+                    name: session.projects.name,
+                    color: session.projects.color,
+                    icon: session.projects.icon,
                 });
             }
-            if (taskMap.size >= 4) break;
+            if (projectMap.size >= 4) break;
         }
         
-        // If we don't have 4 tasks from today, add from all tasks
-        if (taskMap.size < 4) {
-            for (const task of tasks) {
-                if (!taskMap.has(task.id)) {
-                    taskMap.set(task.id, task);
+        // If we don't have 4 projects from today, add from all projects
+        if (projectMap.size < 4) {
+            for (const project of projects) {
+                if (!projectMap.has(project.id)) {
+                    projectMap.set(project.id, project);
                 }
-                if (taskMap.size >= 4) break;
+                if (projectMap.size >= 4) break;
             }
         }
         
-        return Array.from(taskMap.values());
-    }, [todaySessions, tasks]);
+        return Array.from(projectMap.values());
+    }, [todaySessions, projects]);
 
     // Track if we're in the middle of adding a session to prevent sync conflicts
     const isAddingSessionRef = useRef(false);
@@ -95,7 +95,7 @@ export function useTrackPage() {
         // Convert DB sessions to the format expected by the store
         const sessionsForSync = activeDbSessions.map((dbSession) => ({
             id: dbSession.id,
-            task: dbSession.tasks,
+            project: dbSession.projects,
             title: dbSession.title || '',
             note: dbSession.note || '',
             started_at: dbSession.started_at,
@@ -104,21 +104,21 @@ export function useTrackPage() {
         syncFromDatabase(sessionsForSync);
     }, [activeDbSessions, isLoadingActiveSessions, syncFromDatabase]);
 
-    const startTask = useCallback(async (task: Task, startTime?: number) => {
+    const startProject = useCallback(async (project: Project, startTime?: number) => {
         try {
             isAddingSessionRef.current = true; // Mark that we're adding
 
             const newSession = await startSessionMutation.mutateAsync({
-                taskId: task.id,
-                title: task.name,
+                projectId: project.id,
+                title: project.name,
                 startTime,
             });
 
             // Add to Zustand store with the correct start time (prepend to maintain order)
             useActiveSessionsStore.getState().addSession({
                 id: newSession.id,
-                task,
-                title: task.name,
+                project,
+                title: project.name,
                 note: '',
                 startTime: startTime || Date.now(),
             });
@@ -147,13 +147,13 @@ export function useTrackPage() {
 
 
 
-    const updateSession = useCallback(async (sessionId: string, updates: { title?: string; note?: string; taskId?: string; started_at?: number }) => {
+    const updateSession = useCallback(async (sessionId: string, updates: { title?: string; note?: string; projectId?: string; started_at?: number }) => {
         try {
             // Convert camelCase to snake_case for the database
-            const dbUpdates: { title?: string; note?: string; task_id?: string; started_at?: number } = {};
+            const dbUpdates: { title?: string; note?: string; project_id?: string; started_at?: number } = {};
             if (updates.title !== undefined) dbUpdates.title = updates.title;
             if (updates.note !== undefined) dbUpdates.note = updates.note;
-            if (updates.taskId !== undefined) dbUpdates.task_id = updates.taskId;
+            if (updates.projectId !== undefined) dbUpdates.project_id = updates.projectId;
             if (updates.started_at !== undefined) dbUpdates.started_at = updates.started_at;
 
             await updateSessionMutation.mutateAsync({
@@ -161,23 +161,23 @@ export function useTrackPage() {
                 updates: dbUpdates,
             });
 
-            // If task changed, update the local store
-            if (updates.taskId) {
-                const newTask = tasks.find(t => t.id === updates.taskId);
-                if (newTask) {
+            // If project changed, update the local store
+            if (updates.projectId) {
+                const newProject = projects.find(t => t.id === updates.projectId);
+                if (newProject) {
                     const { activeSessions } = useActiveSessionsStore.getState();
                     const session = activeSessions.find(s => s.id === sessionId);
                     if (session) {
-                        // Update the session in the store with the new task
+                        // Update the session in the store with the new project
                         // The title will be updated separately when user saves in edit mode
-                        useActiveSessionsStore.getState().updateSession(sessionId, { task: newTask });
+                        useActiveSessionsStore.getState().updateSession(sessionId, { project: newProject });
                     }
                 }
             }
         } catch (error) {
             console.error('Failed to update session:', error);
         }
-    }, [updateSessionMutation, tasks]);
+    }, [updateSessionMutation, projects]);
 
     const handleEditSession = useCallback((session: HistorySession) => {
         setEditingSession(session);
@@ -189,36 +189,36 @@ export function useTrackPage() {
         setEditingSession(null);
     }, []);
 
-    // Get first task as default or use fallback
-    const firstTask = tasks[0] || defaultTask;
+    // Get first project as default or use fallback
+    const firstProject = projects[0] || defaultProject;
 
     // Listen for global shortcut to start a default session
     useEffect(() => {
         function handleStartDefaultSession() {
-            startTask(firstTask);
+            startProject(firstProject);
         }
         window.addEventListener('hiday:start-default-session', handleStartDefaultSession);
         return () => window.removeEventListener('hiday:start-default-session', handleStartDefaultSession);
-    }, [firstTask, startTask]);
+    }, [firstProject, startProject]);
 
     return {
         activeSessions,
         editingSession,
         isEditDialogOpen,
-        tasks,
+        projects,
         todaySessions,
-        isLoadingTasks,
+        isLoadingProjects,
         isLoadingSessions,
-        tasksError,
+        projectsError,
         startSessionMutation,
         stopSessionMutation,
-        recentTasks,
-        startTask,
+        recentProjects,
+        startProject,
         stopSession,
         updateSession,
         handleEditSession,
         handleCloseEditDialog,
         refetchTodaySessions,
-        firstTask,
+        firstProject,
     };
 }

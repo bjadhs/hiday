@@ -1,7 +1,7 @@
 // App constants
 
-// Available icons for tasks (emoji-based)
-export const TASK_ICONS = [
+// Available icons for projects (emoji-based)
+export const PROJECT_ICONS = [
   // Work & Productivity
   '💻', '📧', '📞', '📊', '📁', '📝', '✍️', '📋', '📌', '📅',
   // Learning & Reading
@@ -20,8 +20,8 @@ export const TASK_ICONS = [
   '⏰', '🎯', '🔧', '💼', '🏢', '🌙', '☀️', '🔥', '⭐', '💎',
 ];
 
-// Available colors for tasks (hex codes)
-export const TASK_COLORS = [
+// Available colors for projects (hex codes)
+export const PROJECT_COLORS = [
   // Purple (Primary)
   '#8B5CF6', '#7C3AED', '#A78BFA', '#6D28D9',
   // Blue

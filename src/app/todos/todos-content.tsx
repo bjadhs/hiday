@@ -2,17 +2,20 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import { Loader2, CheckSquare, CalendarDays } from 'lucide-react';
-import { useTasks } from '@/lib/hooks/use-tasks';
+import { useProjects } from '@/lib/hooks/use-projects';
 import {
   usePlannedSessions,
   useCreatePlannedSession,
   useUpdatePlannedSession,
   useDeletePlannedSession,
   useStartPlannedSession,
+  usePausePlannedSession,
+  useCompletePlannedSession,
   useUnschedulePlannedSession,
 } from '@/lib/hooks/use-planned-sessions';
+import { useActiveSessions } from '@/lib/hooks/use-sessions';
 import { TodoHeader } from '@/components/todos/todo-header';
-import { TaskColumn } from '@/components/todos/task-column';
+import { ProjectColumn } from '@/components/todos/project-column';
 import { TodoTimeline } from '@/components/todos/todo-timeline';
 import { CreateTodoDialog } from '@/components/todos/create-todo-dialog';
 import type { PlannedSession } from '@/lib/types';
@@ -28,20 +31,30 @@ export default function TodosPage() {
 
   // Dialog state
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [preselectedTaskId, setPreselectedTaskId] = useState<string | null>(null);
+  const [preselectedProjectId, setPreselectedProjectId] = useState<string | null>(null);
   const [preselectedTime, setPreselectedTime] = useState<number | null>(null);
   const [editingSession, setEditingSession] = useState<PlannedSession | null>(null);
 
+  // Most-recently-used project id — used as the default when creating a todo
+  // directly from the timeline without picking a project.
+  const [lastUsedProjectId, setLastUsedProjectId] = useState<string | null>(null);
+
   // Fetch data
   const formattedDate = selectedDate.toISOString().split('T')[0];
-  const { data: tasks = [], isLoading: isLoadingTasks } = useTasks();
+  const { data: projects = [], isLoading: isLoadingProjects } = useProjects();
   const { data: plannedSessions = [], isLoading: isLoadingSessions } = usePlannedSessions(formattedDate);
+  // Running (active) sessions — a started todo flips to status='active' and so
+  // drops out of the planned list; we re-add the ones on this day so they stay
+  // visible on the timeline with a RUNNING tag.
+  const { data: activeSessions = [] } = useActiveSessions();
 
   // Mutations
   const createMutation = useCreatePlannedSession();
   const updateMutation = useUpdatePlannedSession();
   const deleteMutation = useDeletePlannedSession();
   const startMutation = useStartPlannedSession();
+  const pauseMutation = usePausePlannedSession();
+  const completeMutation = useCompletePlannedSession();
   const unscheduleMutation = useUnschedulePlannedSession();
 
   const isSubmitting = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending || startMutation.isPending;
@@ -71,31 +84,79 @@ export default function TodosPage() {
     setSelectedDate(new Date());
   }, []);
 
+  // Active projects, sorted by sort_order (excludes archived). Used as the
+  // fallback default project when creating a todo directly from the timeline.
+  const activeProjects = useMemo(
+    () =>
+      projects
+        .filter((p) => !p.archived)
+        .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0)),
+    [projects]
+  );
+
+  // Resolve the default project for direct-create: MRU id if still active,
+  // otherwise the first active project.
+  const resolveDefaultProjectId = useCallback(() => {
+    if (lastUsedProjectId && activeProjects.some((p) => p.id === lastUsedProjectId)) {
+      return lastUsedProjectId;
+    }
+    return activeProjects[0]?.id ?? null;
+  }, [lastUsedProjectId, activeProjects]);
+
   // Create todo handlers
-  const handleTimeSlotClick = useCallback((timestamp: number) => {
-    setPreselectedTaskId(null);
-    setPreselectedTime(timestamp);
-    setEditingSession(null);
-    setIsDialogOpen(true);
-  }, []);
+  const handleTimeSlotClick = useCallback((timestamp: number, durationMs?: number) => {
+    const defaultProjectId = resolveDefaultProjectId();
+
+    // No projects available — fall back to the dialog so the user can pick one.
+    if (!defaultProjectId) {
+      setPreselectedProjectId(null);
+      setPreselectedTime(timestamp);
+      setEditingSession(null);
+      setIsDialogOpen(true);
+      return;
+    }
+
+    const plannedDuration = durationMs ? Math.round(durationMs / 1000) : 60 * 60;
+    createMutation.mutate(
+      {
+        projectId: defaultProjectId,
+        plannedDate: selectedDate.toISOString().split('T')[0],
+        plannedStartTime: timestamp,
+        plannedDuration,
+      },
+      {
+        onSuccess: () => setLastUsedProjectId(defaultProjectId),
+        onError: (error) => console.error('Direct create failed:', error),
+      }
+    );
+  }, [resolveDefaultProjectId, createMutation, selectedDate]);
 
   const handleEditSession = useCallback((session: PlannedSession) => {
-    setPreselectedTaskId(null);
+    setPreselectedProjectId(null);
     setPreselectedTime(null);
     setEditingSession(session);
     setIsDialogOpen(true);
   }, []);
 
+  // Add a todo for a specific project (opens dialog with project preselected,
+  // no time set so it lands as an unscheduled todo).
+  const handleAddTodoForProject = useCallback((projectId: string) => {
+    setPreselectedProjectId(projectId);
+    setPreselectedTime(null);
+    setEditingSession(null);
+    setIsDialogOpen(true);
+  }, []);
+
   const handleCloseDialog = useCallback(() => {
     setIsDialogOpen(false);
-    setPreselectedTaskId(null);
+    setPreselectedProjectId(null);
     setPreselectedTime(null);
     setEditingSession(null);
   }, []);
 
   // Form submission handlers
   const handleCreateSubmit = useCallback((data: {
-    taskId: string;
+    projectId: string;
     plannedDate: string;
     plannedStartTime: number | null;
     plannedDuration: number;
@@ -106,6 +167,7 @@ export default function TodosPage() {
     createMutation.mutate(data, {
       onSuccess: () => {
         console.log('Create mutation succeeded');
+        setLastUsedProjectId(data.projectId);
         handleCloseDialog();
       },
       onError: (error) => {
@@ -191,8 +253,24 @@ export default function TodosPage() {
     startMutation.mutate({ sessionId, plannedDate: formattedDate });
   }, [startMutation, formattedDate]);
 
-  // Handle task drop from task column to timeline
-  const handleTaskDrop = useCallback((taskId: string, startTime: number, sessionId?: string) => {
+  // Pause a running session: freezes elapsed and returns it to the planned list.
+  const handlePauseSession = useCallback((sessionId: string) => {
+    pauseMutation.mutate({ sessionId, plannedDate: formattedDate });
+  }, [pauseMutation, formattedDate]);
+
+  // Stop a running session: completes it (start = actual started_at, end = now).
+  const handleStopSession = useCallback((sessionId: string) => {
+    const running = activeSessions.find((s) => s.id === sessionId);
+    completeMutation.mutate({
+      sessionId,
+      plannedDate: formattedDate,
+      actualStartTime: running?.started_at ?? undefined,
+      actualEndTime: Date.now(),
+    });
+  }, [completeMutation, formattedDate, activeSessions]);
+
+  // Handle project drop from project column to timeline
+  const handleProjectDrop = useCallback((projectId: string, startTime: number, sessionId?: string) => {
     const plannedDate = selectedDate.toISOString().split('T')[0];
     const plannedDuration = 60 * 60; // 1 hour in seconds
 
@@ -207,9 +285,9 @@ export default function TodosPage() {
         },
       });
     } else {
-      // Dropping a task to create a new scheduled session
+      // Dropping a project to create a new scheduled session
       createMutation.mutate({
-        taskId,
+        projectId,
         plannedDate,
         plannedStartTime: startTime,
         plannedDuration,
@@ -217,7 +295,7 @@ export default function TodosPage() {
     }
   }, [createMutation, updateMutation, selectedDate]);
 
-  // Handle unscheduling a session (drag from timeline to task column)
+  // Handle unscheduling a session (drag from timeline to project column)
   const handleUnscheduleSession = useCallback((sessionId: string) => {
     unscheduleMutation.mutate({
       sessionId,
@@ -250,7 +328,36 @@ export default function TodosPage() {
     };
   }, [plannedSessions]);
 
-  const isLoading = isLoadingTasks || isLoadingSessions;
+  // Count of scheduled todos per project — shown as an "on timeline" hint in
+  // the (otherwise backlog-only) project column.
+  const scheduledCountByProject = useMemo(() => {
+    return scheduledSessions.reduce((acc, session) => {
+      if (session.project_id) {
+        acc[session.project_id] = (acc[session.project_id] || 0) + 1;
+      }
+      return acc;
+    }, {} as Record<string, number>);
+  }, [scheduledSessions]);
+
+  // Running sessions that fall on the selected day, normalized to the shape the
+  // timeline expects (status forced to 'active' so the block shows as running).
+  const runningSessions = useMemo(() => {
+    const dayStart = new Date(selectedDate);
+    dayStart.setHours(0, 0, 0, 0);
+    const start = dayStart.getTime();
+    const end = start + 24 * 60 * 60 * 1000;
+    return activeSessions
+      .filter((s) => s.started_at !== null && s.started_at >= start && s.started_at < end)
+      .map((s) => ({ ...s, status: 'active' as const }));
+  }, [activeSessions, selectedDate]);
+
+  // Scheduled todos plus running sessions — both rendered on the timeline.
+  const timelineSessions = useMemo(
+    () => [...scheduledSessions, ...runningSessions],
+    [scheduledSessions, runningSessions]
+  );
+
+  const isLoading = isLoadingProjects || isLoadingSessions;
 
   if (isLoading) {
     return (
@@ -264,7 +371,7 @@ export default function TodosPage() {
   }
 
   return (
-    <main className="flex-1 flex flex-col overflow-hidden pb-20 lg:pb-0">
+    <main className="flex-1 h-screen flex flex-col overflow-hidden pb-20 lg:pb-0">
       {/* Header */}
       <TodoHeader
         selectedDate={selectedDate}
@@ -273,7 +380,7 @@ export default function TodosPage() {
         onNext={goToNextDay}
         onToday={goToToday}
         onCreateTodo={() => {
-          setPreselectedTaskId(null);
+          setPreselectedProjectId(null);
           setPreselectedTime(null);
           setEditingSession(null);
           setIsDialogOpen(true);
@@ -282,22 +389,22 @@ export default function TodosPage() {
 
       {/* Main Content - Split View */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Left Column - Task List */}
+        {/* Left Column - Project List */}
         <div className="w-80 flex-shrink-0 border-r-2 border-border-strong flex flex-col">
-          {/* Task List Header */}
-          <div className="flex items-center gap-2 p-3 border-b-2 border-border-strong bg-primary/5 dark:bg-primary/10">
-            <CheckSquare className="w-4 h-4 text-primary" />
-            <span className="font-semibold text-sm">Tasks</span>
+          {/* Project List Header */}
+          <div className="flex items-center gap-2.5 p-4 border-b-2 border-border-strong bg-primary/5 dark:bg-primary/10">
+            <CheckSquare className="w-5 h-5 text-primary" />
+            <span className="font-bold text-base">Projects</span>
           </div>
           <div className="flex-1 overflow-auto">
-            <TaskColumn
-              tasks={tasks}
-              plannedSessions={scheduledSessions}
+            <ProjectColumn
+              projects={projects}
               unscheduledSessions={unscheduledSessions}
+              scheduledCountByProject={scheduledCountByProject}
               onEditSession={handleEditSession}
               onDeleteSession={handleDeleteSession}
-              onStartSession={handleStartSession}
               onSessionUnschedule={handleUnscheduleSession}
+              onAddTodo={handleAddTodoForProject}
             />
           </div>
         </div>
@@ -309,18 +416,22 @@ export default function TodosPage() {
             <CalendarDays className="w-4 h-4 text-muted-foreground" />
             <span className="font-semibold text-sm">Todo Timeline (12am - 12am)</span>
             <span className="text-xs text-muted-foreground ml-auto">
-              Click and drag to create • Drag sessions to move • Resize edges
+              Click or drag to add a todo • Drag sessions to move • Resize edges
             </span>
           </div>
           <div className="flex-1 overflow-hidden">
             <TodoTimeline
-              plannedSessions={scheduledSessions}
+              plannedSessions={timelineSessions}
               selectedDate={selectedDate}
               onSessionClick={handleEditSession}
               onTimeSlotClick={handleTimeSlotClick}
               onSessionUpdate={handleSessionUpdate}
-              onTaskDrop={handleTaskDrop}
+              onProjectDrop={handleProjectDrop}
               onSessionUnschedule={handleUnscheduleSession}
+              onSessionStart={handleStartSession}
+              onSessionPause={handlePauseSession}
+              onSessionStop={handleStopSession}
+              onSessionDelete={handleDeleteSession}
               showTimeLabels={true}
               showHeader={false}
             />
@@ -332,8 +443,8 @@ export default function TodosPage() {
       <CreateTodoDialog
         isOpen={isDialogOpen}
         onClose={handleCloseDialog}
-        tasks={tasks}
-        preselectedTaskId={preselectedTaskId}
+        projects={projects}
+        preselectedProjectId={preselectedProjectId}
         preselectedTime={preselectedTime}
         selectedDate={selectedDate}
         editingSession={editingSession}

@@ -45,18 +45,18 @@ export function NotePromptInline({
     <div className="flex flex-col h-full">
       {/* Header row with icon, title, and cancel button */}
       <div className="flex items-center gap-3 mb-3 shrink-0">
-        {/* Task icon */}
+        {/* Project icon */}
         <div
           className="w-10 h-10 rounded-lg flex items-center justify-center text-lg border-2 border-black/10 dark:border-white/25 shadow-brutal-xs shrink-0"
-          style={{ backgroundColor: session.task.color }}
+          style={{ backgroundColor: session.project.color }}
         >
-          {session.task.icon}
+          {session.project.icon}
         </div>
 
-        {/* Title and task info */}
+        {/* Title and project info */}
         <div className="flex-1 min-w-0">
           <h3 className="text-sm font-bold truncate text-foreground">
-            {session.title || session.task.name}
+            {session.title || session.project.name}
           </h3>
           <span className="text-[10px] text-muted-foreground">
             Add a note before stopping
@@ -67,7 +67,7 @@ export function NotePromptInline({
         <button
           onClick={onCancel}
           disabled={isStopping}
-          className="w-8 h-8 rounded-md bg-muted dark:bg-muted-dark text-foreground-muted border-2 border-border-strong dark:border-white/20 shadow-brutal-xs btn-brutal flex items-center justify-center hover:bg-surface-elevated transition-colors disabled:opacity-50"
+          className="w-8 h-8 rounded-md bg-muted text-foreground-muted border-2 border-border-strong dark:border-white/20 shadow-brutal-xs btn-brutal flex items-center justify-center hover:bg-surface-elevated transition-colors disabled:opacity-50"
           title="Cancel"
         >
           <X className="w-3.5 h-3.5" />
@@ -90,7 +90,7 @@ export function NotePromptInline({
           disabled={isStopping}
           autoFocus
           className={cn(
-            'flex-1 w-full px-3 py-2.5 text-sm bg-transparent resize-none focus:outline-hidden focus:bg-surface-elevated/50 dark:focus:bg-surface-elevated-dark/50 transition-colors',
+            'flex-1 w-full px-3 py-2.5 text-sm bg-transparent resize-none focus:outline-hidden focus:bg-surface-elevated/50 transition-colors',
             'placeholder:text-muted-foreground/50 text-foreground'
           )}
         />
@@ -117,7 +117,7 @@ export function NotePromptInline({
           size="sm"
           onClick={() => onSave(note)}
           disabled={isStopping}
-          className="bg-primary text-white border-2 border-border-strong dark:border-white/20 shadow-brutal-xs btn-brutal disabled:opacity-50 hover:bg-primary-dark"
+          className="bg-primary-highlight text-white border-2 border-border-strong dark:border-white/20 shadow-brutal-xs btn-brutal disabled:opacity-50 hover:bg-primary-highlight/90"
         >
           {isStopping ? (
             <Loader2 className="w-4 h-4 animate-spin mr-1" />

@@ -1,9 +1,9 @@
-import { Task } from '@/lib/types';
+import { Project } from '@/lib/types';
 import { TimelineSession, LayoutItem } from './types';
 import { HOUR_HEIGHT, MIN_SESSION_HEIGHT_PX } from './constants';
 
 export function calculateTimelineLayout(
-    sessions: { id: string; started_at: number | null; ended_at: number | null; duration: number | null; title: string | null; note: string | null; tasks: Task | null }[],
+    sessions: { id: string; started_at: number | null; ended_at: number | null; duration: number | null; title: string | null; note: string | null; projects: Project | null }[],
     dayStart: number,
     now: number
 ): TimelineSession[] {
@@ -22,7 +22,7 @@ export function calculateTimelineLayout(
 
         return {
             id: s.id,
-            task: s.tasks || { id: 'unknown', name: 'Unknown', color: '#999', icon: '❓' },
+            project: s.projects || { id: 'unknown', name: 'Unknown', color: '#999', icon: '❓' },
             startedAt,
             endedAt,
             duration: s.duration || 0,

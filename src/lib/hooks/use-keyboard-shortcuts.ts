@@ -32,7 +32,7 @@ function isModifier(event: KeyboardEvent) {
  * Supported shortcuts (when not typing in an input):
  * - Cmd/Ctrl+K: Toggle quick navigation command palette
  * - Cmd/Ctrl+/: Open keyboard shortcuts reference
- * - Cmd/Ctrl+Enter: Start or stop the first active session / recent task
+ * - Cmd/Ctrl+Enter: Start or stop the first active session / recent project
  * - Cmd/Ctrl+S: Stop the first active session
  * - Cmd/Ctrl+N: Start a new default session
  * - Cmd/Ctrl+P: Start the pomodoro timer
@@ -59,8 +59,8 @@ export function useKeyboardShortcuts() {
     }
   }, [activeSessions, stopSessionMutation, removeSession]);
 
-  const startMostRecentTask = useCallback(() => {
-    window.dispatchEvent(new CustomEvent('hiday:start-recent-task'));
+  const startMostRecentProject = useCallback(() => {
+    window.dispatchEvent(new CustomEvent('hiday:start-recent-project'));
   }, []);
 
   useEffect(() => {
@@ -97,7 +97,7 @@ export function useKeyboardShortcuts() {
         return;
       }
 
-      // Cmd/Ctrl+Enter: Toggle first active session or start recent task
+      // Cmd/Ctrl+Enter: Toggle first active session or start recent project
       if (event.key === 'Enter') {
         event.preventDefault();
         event.stopPropagation();
@@ -105,7 +105,7 @@ export function useKeyboardShortcuts() {
         if (first) {
           stopFirstSession();
         } else if (pathname === '/track') {
-          startMostRecentTask();
+          startMostRecentProject();
         }
         return;
       }
@@ -142,7 +142,7 @@ export function useKeyboardShortcuts() {
     pathname,
     router,
     stopFirstSession,
-    startMostRecentTask,
+    startMostRecentProject,
     closeExpand,
     cancelEditTitle,
     cancelPromptNote,

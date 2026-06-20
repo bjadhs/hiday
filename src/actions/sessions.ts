@@ -8,10 +8,10 @@ import { startSessionSchema, sessionUpdateSchema, uuid } from '@/lib/validation'
 
 type Session = Database['public']['Tables']['sessions']['Row']
 type SessionUpdate = Database['public']['Tables']['sessions']['Update']
-type Task = Database['public']['Tables']['tasks']['Row']
+type Project = Database['public']['Tables']['projects']['Row']
 
-// Session with joined task data
-type SessionWithTask = Session & { tasks: Task | null }
+// Session with joined project data
+type SessionWithProject = Session & { projects: Project | null }
 
 export async function getSessions(startDate?: number, endDate?: number) {
   const supabase = await createClient()
@@ -21,7 +21,7 @@ export async function getSessions(startDate?: number, endDate?: number) {
 
   let query = supabase
     .from('sessions')
-    .select('*, tasks(*)')
+    .select('*, projects(*)')
     .eq('user_id', user.id)
 
   if (startDate && endDate) {
@@ -38,7 +38,7 @@ export async function getSessions(startDate?: number, endDate?: number) {
   const { data, error } = await query.order('started_at', { ascending: false })
 
   if (error) throw error
-  return data as SessionWithTask[]
+  return data as SessionWithProject[]
 }
 
 export async function getActiveSession() {
@@ -49,7 +49,7 @@ export async function getActiveSession() {
 
   const { data, error } = await supabase
     .from('sessions')
-    .select('*, tasks(*)')
+    .select('*, projects(*)')
     .eq('user_id', user.id)
     .eq('status', 'active')
     .is('ended_at', null)
@@ -58,7 +58,7 @@ export async function getActiveSession() {
     .single()
 
   if (error && error.code !== 'PGRST116') throw error // PGRST116 = no rows returned
-  return data as SessionWithTask | null
+  return data as SessionWithProject | null
 }
 
 // Get ALL active sessions for concurrent tracking support
@@ -70,30 +70,30 @@ export async function getActiveSessions() {
 
   const { data, error } = await supabase
     .from('sessions')
-    .select('*, tasks(*)')
+    .select('*, projects(*)')
     .eq('user_id', user.id)
     .eq('status', 'active')
     .is('ended_at', null)
     .order('started_at', { ascending: false })
 
   if (error) throw error
-  return data as SessionWithTask[]
+  return data as SessionWithProject[]
 }
 
-export async function startSession(taskId: string, title?: string, startTime?: number) {
+export async function startSession(projectId: string, title?: string, startTime?: number) {
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
-  const input = startSessionSchema.parse({ taskId, title, startTime })
+  const input = startSessionSchema.parse({ projectId, title, startTime })
 
   const now = Date.now()
   const sessionStartTime = input.startTime || now
   const { data, error } = await supabase
     .from('sessions')
     .insert({
-      task_id: input.taskId,
+      project_id: input.projectId,
       user_id: user.id,
       title: input.title || null,
       started_at: sessionStartTime,
@@ -135,8 +135,11 @@ export async function stopSession(sessionId: string) {
     throw new Error('Session not found - it may have been deleted')
   }
 
+  // Idempotent: if the session is already stopped, just return it.
+  // This prevents race-condition errors when the user stops the same
+  // session from multiple UI surfaces (e.g. Kanban + Track).
   if (session.ended_at) {
-    throw new Error('Session is already stopped')
+    return session as Session
   }
 
   const duration = Math.floor((now - session.started_at) / 1000)

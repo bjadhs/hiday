@@ -9,22 +9,41 @@ import {
   createInboxTodo,
   updateKanbanTodo,
   deletePlannedSession,
+  startKanbanSession,
 } from '@/actions/planned-sessions'
+import type { KanbanSessionWithActiveState } from '@/actions/planned-sessions'
 import { plannedSessionKeys } from './use-planned-sessions'
+import { sessionKeys } from './use-sessions'
 
 // Query keys
 export const kanbanKeys = {
   all: ['kanban'] as const,
   lists: () => [...kanbanKeys.all, 'list'] as const,
-  list: (projectId: string | null | undefined) =>
-    [...kanbanKeys.lists(), projectId ?? 'all'] as const,
+  list: (kprojectId: string | null | undefined) =>
+    [...kanbanKeys.lists(), kprojectId ?? 'all'] as const,
   inbox: () => [...kanbanKeys.all, 'inbox'] as const,
 }
 
-export function useKanbanSessions(projectId?: string | null) {
-  return useQuery({
-    queryKey: kanbanKeys.list(projectId),
-    queryFn: () => getKanbanSessions(projectId),
+export function useKanbanSessions(kprojectId?: string | null) {
+  return useQuery<KanbanSessionWithActiveState[]>({
+    queryKey: kanbanKeys.list(kprojectId),
+    queryFn: () => getKanbanSessions(kprojectId),
+  })
+}
+
+export function useStartKanbanSession() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ sessionId }: { sessionId: string }) =>
+      startKanbanSession(sessionId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: kanbanKeys.lists() })
+      queryClient.invalidateQueries({ queryKey: kanbanKeys.inbox() })
+      queryClient.invalidateQueries({ queryKey: plannedSessionKeys.all })
+      queryClient.invalidateQueries({ queryKey: sessionKeys.active() })
+      queryClient.invalidateQueries({ queryKey: sessionKeys.today() })
+    },
   })
 }
 
@@ -59,23 +78,23 @@ export function useCreateKanbanTodo() {
 
   return useMutation({
     mutationFn: ({
-      taskId,
       projectId,
+      kprojectId,
       kanbanStatus,
       duration,
       title,
       note,
     }: {
-      taskId: string
-      projectId: string | null
+      projectId: string
+      kprojectId: string | null
       kanbanStatus: 'next' | 'doing' | 'done' | 'revise'
       duration: number
       title?: string
       note?: string
     }) =>
       createKanbanTodo({
-        taskId,
         projectId,
+        kprojectId,
         kanbanStatus,
         duration,
         title,
@@ -94,14 +113,14 @@ export function useCreateInboxTodo() {
 
   return useMutation({
     mutationFn: ({
+      kprojectId,
       projectId,
-      taskId,
       title,
     }: {
-      projectId: string | null
-      taskId?: string
+      kprojectId: string | null
+      projectId?: string
       title?: string
-    }) => createInboxTodo({ projectId, taskId, title }),
+    }) => createInboxTodo({ kprojectId, projectId, title }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: kanbanKeys.lists() })
       queryClient.invalidateQueries({ queryKey: kanbanKeys.inbox() })

@@ -16,18 +16,18 @@ import type { Database } from '@/lib/supabase/database.types';
 import type { PlannedSession } from '@/lib/types';
 import { createPlannedSessionSchema, formatZodErrors } from '@/lib/validation';
 
-type DBTask = Database['public']['Tables']['tasks']['Row'];
+type DBProject = Database['public']['Tables']['projects']['Row'];
 
 interface CreateTodoDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  tasks: DBTask[];
-  preselectedTaskId: string | null;
+  projects: DBProject[];
+  preselectedProjectId: string | null;
   preselectedTime: number | null;
   selectedDate: Date;
   editingSession: PlannedSession | null;
   onCreate: (data: {
-    taskId: string;
+    projectId: string;
     plannedDate: string;
     plannedStartTime: number | null;  // Null for unscheduled
     plannedDuration: number;
@@ -63,27 +63,39 @@ function parseTimeFromInput(timeStr: string, baseDate: Date): number {
 }
 
 /**
- * Format duration for display (HH:MM)
+ * Current local time as "HH:MM", rounded to the nearest 15 minutes so it lines
+ * up with the timeline's snapping grid.
  */
-function formatDurationForInput(seconds: number): string {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+function nowTimeForInput(): string {
+  const date = new Date();
+  const snapped = Math.round(date.getMinutes() / 15) * 15;
+  date.setMinutes(snapped, 0, 0);
+  return date.toTimeString().slice(0, 5);
 }
 
 /**
- * Parse duration from input (HH:MM) to seconds
+ * Convert a "HH:MM" time string to minutes-since-midnight.
  */
-function parseDurationFromInput(durationStr: string): number {
-  const [hours, minutes] = durationStr.split(':').map(Number);
-  return hours * 3600 + minutes * 60;
+function timeToMinutes(time: string): number {
+  const [hours, minutes] = time.split(':').map(Number);
+  return hours * 60 + minutes;
+}
+
+/**
+ * Convert minutes-since-midnight to a "HH:MM" string, wrapping past midnight.
+ */
+function minutesToTime(totalMinutes: number): string {
+  const wrapped = ((totalMinutes % 1440) + 1440) % 1440;
+  const hours = Math.floor(wrapped / 60);
+  const minutes = wrapped % 60;
+  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
 }
 
 export function CreateTodoDialog({
   isOpen,
   onClose,
-  tasks,
-  preselectedTaskId,
+  projects,
+  preselectedProjectId,
   preselectedTime,
   selectedDate,
   editingSession,
@@ -92,10 +104,12 @@ export function CreateTodoDialog({
   isSubmitting,
   error,
 }: CreateTodoDialogProps) {
-  const [taskId, setTaskId] = useState('');
+  const [projectId, setProjectId] = useState('');
   const [title, setTitle] = useState('');
   const [startTime, setStartTime] = useState('09:00');
-  const [duration, setDuration] = useState('01:00');
+  const [endTime, setEndTime] = useState('10:00');
+  const [durationHours, setDurationHours] = useState(1);
+  const [durationMinutes, setDurationMinutes] = useState(0);
   const [note, setNote] = useState('');
   const [isScheduled, setIsScheduled] = useState(false); // Default to unscheduled
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -106,36 +120,47 @@ export function CreateTodoDialog({
   const getDefaultValues = useCallback(() => {
     if (editingSession) {
       const hasTime = editingSession.plannedStartTime !== null;
+      const durationSeconds = editingSession.plannedDuration;
+      const dHours = Math.floor(durationSeconds / 3600);
+      const dMinutes = Math.floor((durationSeconds % 3600) / 60);
+      const start = hasTime ? formatTimeForInput(editingSession.plannedStartTime!) : nowTimeForInput();
       return {
-        taskId: editingSession.taskId,
+        projectId: editingSession.projectId,
         title: editingSession.title || '',
         isScheduled: hasTime,
-        startTime: hasTime ? formatTimeForInput(editingSession.plannedStartTime!) : '09:00',
-        duration: formatDurationForInput(editingSession.plannedDuration),
+        startTime: start,
+        endTime: minutesToTime(timeToMinutes(start) + dHours * 60 + dMinutes),
+        durationHours: dHours,
+        durationMinutes: dMinutes,
         note: editingSession.note || '',
       };
     }
     const defaultScheduled = !!preselectedTime;
+    const start = preselectedTime ? formatTimeForInput(preselectedTime) : nowTimeForInput();
     return {
-      taskId: preselectedTaskId || '',
+      projectId: preselectedProjectId || '',
       title: '',
       isScheduled: defaultScheduled,
-      startTime: preselectedTime ? formatTimeForInput(preselectedTime) : '09:00',
-      duration: '01:00',
+      startTime: start,
+      endTime: minutesToTime(timeToMinutes(start) + 60),
+      durationHours: 1,
+      durationMinutes: 0,
       note: '',
     };
-  }, [editingSession, preselectedTaskId, preselectedTime]);
+  }, [editingSession, preselectedProjectId, preselectedTime]);
 
   // Reset form when dialog opens or session changes
   useEffect(() => {
     if (!isOpen) return;
     const defaults = getDefaultValues();
     requestAnimationFrame(() => {
-      setTaskId(defaults.taskId);
+      setProjectId(defaults.projectId);
       setTitle(defaults.title);
       setIsScheduled(defaults.isScheduled);
       setStartTime(defaults.startTime);
-      setDuration(defaults.duration);
+      setEndTime(defaults.endTime);
+      setDurationHours(defaults.durationHours);
+      setDurationMinutes(defaults.durationMinutes);
       setNote(defaults.note);
     });
   }, [isOpen, getDefaultValues]);
@@ -144,9 +169,9 @@ export function CreateTodoDialog({
     e.preventDefault();
     e.stopPropagation();
 
-    console.log('Form submitted', { taskId, isEditing, isScheduled });
+    console.log('Form submitted', { projectId, isEditing, isScheduled });
 
-    const plannedDuration = parseDurationFromInput(duration);
+    const plannedDuration = durationHours * 3600 + durationMinutes * 60;
     // Only set start time if scheduled, otherwise null (unscheduled)
     const plannedStartTime = isScheduled ? parseTimeFromInput(startTime, selectedDate) : null;
 
@@ -161,7 +186,7 @@ export function CreateTodoDialog({
       const plannedDate = selectedDate.toISOString().split('T')[0];
 
       const result = createPlannedSessionSchema.safeParse({
-        taskId,
+        projectId,
         plannedDate,
         plannedStartTime,
         plannedDuration,
@@ -172,14 +197,14 @@ export function CreateTodoDialog({
       if (!result.success) {
         const fieldErrors = formatZodErrors(result.error);
         setValidationError(
-          fieldErrors.taskId || fieldErrors.plannedDuration || Object.values(fieldErrors)[0] || 'Invalid todo'
+          fieldErrors.projectId || fieldErrors.plannedDuration || Object.values(fieldErrors)[0] || 'Invalid todo'
         );
         return;
       }
       setValidationError(null);
 
       onCreate({
-        taskId,
+        projectId,
         plannedDate,
         plannedStartTime,
         plannedDuration,
@@ -189,8 +214,33 @@ export function CreateTodoDialog({
     }
   };
 
-  const activeTasks = tasks
-    .filter((task) => !task.archived)
+  // Keep start / end / duration in sync.
+  // Editing start keeps the duration and shifts the end.
+  const handleStartChange = (value: string) => {
+    setStartTime(value);
+    setEndTime(minutesToTime(timeToMinutes(value) + durationHours * 60 + durationMinutes));
+  };
+
+  // Editing end recomputes the duration (end - start), wrapping past midnight.
+  const handleEndChange = (value: string) => {
+    setEndTime(value);
+    let diff = timeToMinutes(value) - timeToMinutes(startTime);
+    if (diff <= 0) diff += 1440;
+    setDurationHours(Math.floor(diff / 60));
+    setDurationMinutes(diff % 60);
+  };
+
+  // Editing duration reflects onto the end time (start stays put).
+  const handleDurationChange = (hours: number, minutes: number) => {
+    const h = Number.isNaN(hours) ? 0 : Math.max(0, Math.min(23, hours));
+    const m = Number.isNaN(minutes) ? 0 : Math.max(0, Math.min(59, minutes));
+    setDurationHours(h);
+    setDurationMinutes(m);
+    setEndTime(minutesToTime(timeToMinutes(startTime) + h * 60 + m));
+  };
+
+  const activeProjects = projects
+    .filter((project) => !project.archived)
     .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
 
   return (
@@ -206,47 +256,52 @@ export function CreateTodoDialog({
             <DialogTitle>
               {isEditing ? 'Edit Todo' : 'Create New Todo'}
             </DialogTitle>
-            <DialogDescription>
-              {isEditing
-                ? 'Update your planned session details'
-                : 'Plan a session for your task'}
-            </DialogDescription>
+            {isEditing && (
+              <DialogDescription>
+                Update your planned session details
+              </DialogDescription>
+            )}
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
-            {/* Task Selection */}
-            <div className="grid gap-2">
-              <Label htmlFor="task">Task</Label>
-              <select
-                id="task"
-                value={taskId}
-                onChange={(e) => setTaskId(e.target.value)}
-                className="flex h-9 w-full rounded-md border border-input bg-surface px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 text-foreground"
-                required
-                disabled={isEditing} // Can't change task when editing
-              >
-                <option value="" className="bg-surface">Select a task</option>
-                {activeTasks.map((task) => (
-                  <option key={task.id} value={task.id} className="bg-surface">
-                    {task.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {(() => {
+              const projectField = (
+                <div className="grid gap-2" key="project">
+                  <Label htmlFor="project">Project</Label>
+                  <select
+                    id="project"
+                    value={projectId}
+                    onChange={(e) => setProjectId(e.target.value)}
+                    className="flex h-9 w-full rounded-md border border-input bg-surface px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 text-foreground"
+                    required
+                    disabled={isEditing} // Can't change project when editing
+                  >
+                    <option value="" className="bg-surface">Select a project</option>
+                    {activeProjects.map((project) => (
+                      <option key={project.id} value={project.id} className="bg-surface">
+                        {project.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              );
 
-            {/* Title */}
-            <div className="grid gap-2">
-              <Label htmlFor="title">
-                Title <span className="text-muted-foreground">(optional)</span>
-              </Label>
-              <Input
-                id="title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Session title"
-                className="bg-surface"
-              />
-            </div>
+              const titleField = (
+                <div className="grid gap-2" key="title">
+                  <Label htmlFor="title">Title</Label>
+                  <Input
+                    id="title"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="Your todo"
+                    className="bg-surface"
+                  />
+                </div>
+              );
+
+              // Title leads, then Project.
+              return [titleField, projectField];
+            })()}
 
             {/* Schedule Toggle */}
             <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-muted/30">
@@ -265,35 +320,71 @@ export function CreateTodoDialog({
               </span>
             </div>
 
-            {/* Start Time - Only show if scheduled */}
+            {/* Start & End Time - Only show if scheduled */}
             {isScheduled && (
-              <div className="grid gap-2 animate-in slide-in-from-top-2">
-                <Label htmlFor="startTime">Start Time</Label>
-                <Input
-                  id="startTime"
-                  type="time"
-                  value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
-                  required={isScheduled}
-                  className="bg-surface"
-                />
+              <div className="grid grid-cols-2 gap-3 animate-in slide-in-from-top-2">
+                <div className="grid gap-2">
+                  <Label htmlFor="startTime">Start</Label>
+                  <Input
+                    id="startTime"
+                    type="time"
+                    value={startTime}
+                    onChange={(e) => handleStartChange(e.target.value)}
+                    required={isScheduled}
+                    className="bg-surface"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="endTime">End</Label>
+                  <Input
+                    id="endTime"
+                    type="time"
+                    value={endTime}
+                    onChange={(e) => handleEndChange(e.target.value)}
+                    required={isScheduled}
+                    className="bg-surface"
+                  />
+                </div>
               </div>
             )}
 
-            {/* Duration */}
+            {/* Duration (hours / minutes) */}
             <div className="grid gap-2">
-              <Label htmlFor="duration">Duration</Label>
-              <Input
-                id="duration"
-                type="time"
-                value={duration}
-                onChange={(e) => setDuration(e.target.value)}
-                required
-                className="bg-surface"
-              />
-              <p className="text-xs text-muted-foreground">
-                Format: hours:minutes (e.g., 01:30 for 1 hour 30 minutes)
-              </p>
+              <Label>Duration</Label>
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <Input
+                    id="durationHours"
+                    type="number"
+                    min={0}
+                    max={23}
+                    value={durationHours}
+                    onChange={(e) => handleDurationChange(parseInt(e.target.value, 10), durationMinutes)}
+                    required
+                    className="bg-surface pr-8"
+                    aria-label="Duration hours"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-muted-foreground pointer-events-none">
+                    H
+                  </span>
+                </div>
+                <div className="relative flex-1">
+                  <Input
+                    id="durationMinutes"
+                    type="number"
+                    min={0}
+                    max={59}
+                    value={durationMinutes}
+                    onChange={(e) => handleDurationChange(durationHours, parseInt(e.target.value, 10))}
+                    required
+                    className="bg-surface pr-8"
+                    aria-label="Duration minutes"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-muted-foreground pointer-events-none">
+                    m
+                  </span>
+                </div>
+              </div>
             </div>
 
             {/* Note */}
@@ -328,7 +419,7 @@ export function CreateTodoDialog({
             </Button>
             <Button
               type="submit"
-              disabled={!taskId || isSubmitting}
+              disabled={!projectId || isSubmitting}
               className="btn-brutal"
             >
               {isSubmitting

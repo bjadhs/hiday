@@ -1,8 +1,8 @@
-import { Task } from '@/lib/types';
+import { Project } from '@/lib/types';
 
 export type TimelineSession = {
     id: string;
-    task: Task;
+    project: Project;
     startedAt: number;
     endedAt: number;
     duration: number;
@@ -17,7 +17,7 @@ export type TimelineSession = {
 
 export interface LayoutItem {
     id: string;
-    task: Task;
+    project: Project;
     startedAt: number;
     endedAt: number;
     duration: number;
@@ -27,7 +27,7 @@ export interface LayoutItem {
     height: number;
     isRunning: boolean;
     original: {
-        tasks: Task | null;
+        projects: Project | null;
         id: string;
         started_at: number | null;
         ended_at: number | null;

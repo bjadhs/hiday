@@ -4,13 +4,13 @@ import { Moon, Palette } from 'lucide-react';
 import { SettingsSection } from './settings-section';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { FontSizeToggle } from '@/components/font-size-toggle';
-import { AccentColorToggle } from '@/components/accent-color-toggle';
+import { ThemePresetToggle } from '@/components/theme-preset-toggle';
 
 /**
  * AppearanceSection
  *
  * Settings section for appearance-related options like dark mode, font size,
- * and accent color.
+ * and theme preset.
  *
  * @example
  * ```tsx
@@ -24,7 +24,7 @@ export function AppearanceSection() {
         <div>
           <p className='font-semibold'>Dark Mode</p>
           <p className='text-sm text-muted-foreground'>
-            Toggle between light and dark theme
+            Toggle between light and dark themes
           </p>
         </div>
         <ThemeToggle />
@@ -42,13 +42,13 @@ export function AppearanceSection() {
         <div className='flex items-center gap-3 mb-3'>
           <Palette className='w-5 h-5 text-primary' />
           <div>
-            <p className='font-semibold'>Accent Color</p>
+            <p className='font-semibold'>Theme</p>
             <p className='text-sm text-muted-foreground'>
-              Choose a theme that matches your mood
+              Choose a complete theme that matches your style
             </p>
           </div>
         </div>
-        <AccentColorToggle />
+        <ThemePresetToggle />
       </div>
     </SettingsSection>
   );

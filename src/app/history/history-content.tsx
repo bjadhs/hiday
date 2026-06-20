@@ -47,7 +47,7 @@ function HistoryPageContent() {
       duration: s.duration,
       title: s.title || null,
       note: s.note || null,
-      tasks: s.task,
+      projects: s.project,
     }));
     return calculateTimelineLayout(layoutSessions, startOfDay, now);
   }, [sessions, startOfDay, now]);
@@ -79,8 +79,8 @@ function HistoryPageContent() {
   const handleTimelineEdit = useCallback((session: TimelineSession) => {
     const historySession: HistorySession = {
       id: session.id,
-      taskId: session.task.id,
-      task: session.task,
+      projectId: session.project.id,
+      project: session.project,
       startedAt: session.startedAt,
       endedAt: session.endedAt,
       duration: session.duration,
@@ -107,8 +107,8 @@ function HistoryPageContent() {
   }
 
   return (
-    <main className='flex-1 flex flex-col pb-20 lg:pb-0 overflow-hidden'>
-      <div className='flex-1 p-4 lg:p-6 space-y-4 min-h-0'>
+    <main className='flex-1 h-screen flex flex-col pb-20 lg:pb-0 overflow-hidden'>
+      <div className='flex-1 flex flex-col p-4 lg:p-6 gap-4 min-h-0'>
         {/* Controls Card */}
         <HistoryControls
           selectedDate={selectedDate}
@@ -146,7 +146,7 @@ function HistoryPageContent() {
                   <EmptyState message='No sessions recorded for this date' />
                 </div>
               ) : (
-                <div className="divide-y divide-border dark:divide-border-dark">
+                <div className="divide-y divide-border">
                   {sessions.map((session, index) => (
                     <HistorySessionItem
                       key={session.id}

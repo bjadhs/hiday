@@ -178,7 +178,7 @@ export default function Home() {
                   Analytics that actually tell you something
                 </h3>
                 <p className='mt-2 max-w-md leading-relaxed text-foreground-muted'>
-                  Interactive donut charts, weekly trends, and per-task
+                  Interactive donut charts, weekly trends, and per-project
                   breakdowns. See where the hours really went — and where to win
                   them back.
                 </p>
@@ -306,8 +306,8 @@ export default function Home() {
             {[
               {
                 n: '1',
-                title: 'Create your tasks',
-                body: 'Add everything you want to track — work, study, training, side projects. Give them colors and icons.',
+                title: 'Create your projects',
+                body: 'Add everything you want to track — work, study, training, side kprojects. Give them colors and icons.',
               },
               {
                 n: '2',
@@ -392,7 +392,7 @@ export default function Home() {
             <div className='mt-8 flex flex-col items-center justify-center gap-4 text-sm font-medium text-white/85 sm:flex-row sm:gap-7'>
               {[
                 'No credit card required',
-                'Unlimited tasks',
+                'Unlimited projects',
                 'Free forever plan',
               ].map((t) => (
                 <div key={t} className='flex items-center gap-2'>

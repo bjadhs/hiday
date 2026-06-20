@@ -32,7 +32,7 @@ export function HistoryTimelineRow({
                     <div className='flex-1' />
                 </div>
 
-                {/* Task Blocks */}
+                {/* Project Blocks */}
                 {sessions.filter(s => s.startedAt !== null).map((session) => {
                     const { left, width } = calculateBlockPosition(
                         session.startedAt!,
@@ -48,22 +48,22 @@ export function HistoryTimelineRow({
                             style={{
                                 left: `${left}%`,
                                 width: `${width}%`,
-                                backgroundColor: session.task.color,
+                                backgroundColor: session.project.color,
                             }}
-                            title={`${session.task.name}: ${session.startedAt ? formatTime(
+                            title={`${session.project.name}: ${session.startedAt ? formatTime(
                                 session.startedAt
                             ) : '--:--'} - ${session.endedAt ? formatTime(session.endedAt) : 'Ongoing'}`}
                         >
                             {/* Tooltip */}
                             <div className='absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-surface border-2 border-border-strong rounded-lg shadow-brutal opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-10 whitespace-nowrap'>
                                 <div className='flex items-center gap-2'>
-                                    <span>{session.task.icon}</span>
+                                    <span>{session.project.icon}</span>
                                     <span className='font-semibold'>
-                                        {session.title || session.task.name}
+                                        {session.title || session.project.name}
                                     </span>
-                                    {session.title && session.title !== session.task.name && (
+                                    {session.title && session.title !== session.project.name && (
                                         <span className='text-xs text-muted-foreground'>
-                                            ({session.task.name})
+                                            ({session.project.name})
                                         </span>
                                     )}
                                 </div>
@@ -86,7 +86,7 @@ export function HistoryTimelineRow({
                             {width > 15 && (
                                 <div className='absolute inset-0 flex items-center px-2 overflow-hidden'>
                                     <span className='text-xs font-semibold text-white truncate drop-shadow-md'>
-                                        {session.title || session.task.name}
+                                        {session.title || session.project.name}
                                     </span>
                                 </div>
                             )}

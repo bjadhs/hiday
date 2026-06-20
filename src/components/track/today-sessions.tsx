@@ -2,14 +2,14 @@
 
 import { Pencil, Clock, Play } from 'lucide-react';
 import { formatDuration } from '@/lib/utils';
-import { Task, HistorySession } from '@/lib/types';
+import { Project, HistorySession } from '@/lib/types';
 import { useNow } from '@/lib/hooks/use-now';
 
 // Database session type from Supabase - matching the actual type
 interface DbSession {
   id: string;
-  task_id: string | null;
-  tasks: {
+  project_id: string | null;
+  projects: {
     id: string;
     name: string;
     color: string;
@@ -31,7 +31,7 @@ interface TodaySessionsProps {
  * TodaySessions
  * 
  * Displays a list of today's completed sessions with
- * task info, duration, and edit capability.
+ * project info, duration, and edit capability.
  * 
  * @example
  * ```tsx
@@ -56,13 +56,13 @@ export function TodaySessions({ sessions, onEditSession }: TodaySessionsProps) {
   };
 
   const convertToHistorySession = (session: DbSession): HistorySession => {
-    const task: Task = session.tasks ? {
-      id: session.tasks.id,
-      name: session.tasks.name,
-      color: session.tasks.color,
-      icon: session.tasks.icon,
+    const project: Project = session.projects ? {
+      id: session.projects.id,
+      name: session.projects.name,
+      color: session.projects.color,
+      icon: session.projects.icon,
     } : {
-      id: session.task_id || 'unknown',
+      id: session.project_id || 'unknown',
       name: 'Unknown',
       color: '#6B7280',
       icon: '❓',
@@ -70,8 +70,8 @@ export function TodaySessions({ sessions, onEditSession }: TodaySessionsProps) {
 
     return {
       id: session.id,
-      taskId: session.task_id || '',
-      task,
+      projectId: session.project_id || '',
+      project,
       startedAt: session.started_at || 0,
       endedAt: session.ended_at,
       duration: session.duration || 0,
@@ -95,11 +95,11 @@ export function TodaySessions({ sessions, onEditSession }: TodaySessionsProps) {
             </div>
             <h3 className="text-xl font-black mb-2">No sessions yet</h3>
             <p className="text-sm text-muted-foreground max-w-xs mb-6 leading-relaxed">
-              A session is a focused block of time you spend on a task. Start one from a task to see it here.
+              A session is a focused block of time you spend on a project. Start one from a project to see it here.
             </p>
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-surface-elevated border-2 border-border text-xs font-bold text-muted-foreground">
               <Play className="w-3.5 h-3.5 text-primary" />
-              Press start on any task to begin
+              Press start on any project to begin
             </div>
           </div>
         ) : (
@@ -113,22 +113,22 @@ export function TodaySessions({ sessions, onEditSession }: TodaySessionsProps) {
               >
                 <div
                   className="w-10 h-10 rounded-lg flex items-center justify-center text-lg border-2 border-black/10 dark:border-white/25 shrink-0"
-                  style={{ backgroundColor: session.tasks?.color }}
+                  style={{ backgroundColor: session.projects?.color }}
                 >
-                  {session.tasks?.icon}
+                  {session.projects?.icon}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold truncate">
-                    {session.title || session.tasks?.name}
+                    {session.title || session.projects?.name}
                   </p>
                   <span
                     className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full mt-1"
                     style={{
-                      backgroundColor: `${session.tasks?.color}20`,
-                      color: session.tasks?.color,
+                      backgroundColor: `${session.projects?.color}20`,
+                      color: session.projects?.color,
                     }}
                   >
-                    {session.tasks?.icon} {session.tasks?.name}
+                    {session.projects?.icon} {session.projects?.name}
                   </span>
                   {session.note && (
                     <p className="text-xs text-foreground-muted truncate mt-1">
@@ -142,10 +142,10 @@ export function TodaySessions({ sessions, onEditSession }: TodaySessionsProps) {
                   </p>
                   <div className="flex items-center justify-end gap-2">
                     {isRunning(session) ? (
-                      <span className="inline-flex items-center gap-1 text-xs text-green-600 dark:text-green-400 font-medium">
+                      <span className="inline-flex items-center gap-1 text-xs text-success font-medium">
                         <span className="relative flex h-2 w-2">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-                          <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75" />
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-success" />
                         </span>
                         Running
                       </span>
@@ -161,7 +161,7 @@ export function TodaySessions({ sessions, onEditSession }: TodaySessionsProps) {
                     )}
                     <button
                       onClick={() => onEditSession(historySession)}
-                      className="opacity-0 group-hover/session:opacity-100 p-1.5 rounded-md hover:bg-primary/10 text-foreground-muted hover:text-primary dark:hover:text-foreground-dark transition-all"
+                      className="opacity-0 group-hover/session:opacity-100 p-1.5 rounded-md hover:bg-primary/10 text-foreground-muted hover:text-primary transition-all"
                       title="Edit session"
                     >
                       <Pencil className="w-3.5 h-3.5" />

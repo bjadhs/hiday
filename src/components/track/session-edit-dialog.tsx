@@ -17,8 +17,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Task, HistorySession } from '@/lib/types';
-import { useTasks } from '@/lib/hooks/use-tasks';
+import { Project, HistorySession } from '@/lib/types';
+import { useProjects } from '@/lib/hooks/use-projects';
 import { useUpdateSession, useDeleteSession } from '@/lib/hooks/use-sessions';
 import { useNow } from '@/lib/hooks/use-now';
 import { ChevronDown, Trash2, Loader2, Clock } from 'lucide-react';
@@ -36,12 +36,12 @@ export function SessionEditDialog({
   isOpen,
   onClose,
 }: SessionEditDialogProps) {
-  const { data: tasks = [], isLoading: isLoadingTasks } = useTasks();
+  const { data: projects = [], isLoading: isLoadingProjects } = useProjects();
   const updateSessionMutation = useUpdateSession();
   const deleteSessionMutation = useDeleteSession();
 
   const [title, setTitle] = useState('');
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
@@ -60,8 +60,8 @@ export function SessionEditDialog({
   const getInitialValues = useCallback(() => {
     if (!session) return null;
     return {
-      title: session.title || session.task.name,
-      selectedTask: session.task,
+      title: session.title || session.project.name,
+      selectedProject: session.project,
       startTime: session.startedAt ? formatDateTimeLocal(new Date(session.startedAt)) : '',
       endTime: session.endedAt ? formatDateTimeLocal(new Date(session.endedAt)) : '',
     };
@@ -73,14 +73,14 @@ export function SessionEditDialog({
     if (!initial) return;
     requestAnimationFrame(() => {
       setTitle(initial.title);
-      setSelectedTask(initial.selectedTask);
+      setSelectedProject(initial.selectedProject);
       setStartTime(initial.startTime);
       setEndTime(initial.endTime);
     });
   }, [getInitialValues]);
 
   const handleSave = async () => {
-    if (!session || !selectedTask) return;
+    if (!session || !selectedProject) return;
 
     const startedAt = new Date(startTime).getTime();
     const endedAt = endTime ? new Date(endTime).getTime() : null;
@@ -92,7 +92,7 @@ export function SessionEditDialog({
 
     const updates = {
       title: title.trim() || null,
-      task_id: selectedTask.id,
+      project_id: selectedProject.id,
       started_at: startedAt,
       ended_at: endedAt,
       duration: duration > 0 ? duration : 0,
@@ -139,7 +139,7 @@ export function SessionEditDialog({
 
   const isValid = 
     title.trim() && 
-    selectedTask && 
+    selectedProject && 
     startTime && 
     (!endTime || new Date(endTime) > new Date(startTime));
 
@@ -171,28 +171,28 @@ export function SessionEditDialog({
               />
             </div>
 
-            {/* Task Selection */}
+            {/* Project Selection */}
             <div className="space-y-2">
-              <Label className="text-sm font-semibold text-foreground">Task</Label>
+              <Label className="text-sm font-semibold text-foreground">Project</Label>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="outline"
-                    disabled={isLoadingTasks}
+                    disabled={isLoadingProjects}
                     className="w-full justify-between border-2 border-border-strong shadow-brutal-xs btn-brutal bg-surface text-foreground hover:bg-surface-elevated"
                   >
-                    {selectedTask ? (
+                    {selectedProject ? (
                       <span className="flex items-center gap-2">
                         <span
                           className="w-5 h-5 rounded-md flex items-center justify-center text-sm border-2 border-black/10 dark:border-white/25"
-                          style={{ backgroundColor: selectedTask.color }}
+                          style={{ backgroundColor: selectedProject.color }}
                         >
-                          {selectedTask.icon}
+                          {selectedProject.icon}
                         </span>
-                        <span className="text-foreground">{selectedTask.name}</span>
+                        <span className="text-foreground">{selectedProject.name}</span>
                       </span>
                     ) : (
-                      <span className="text-foreground-muted">Select a task</span>
+                      <span className="text-foreground-muted">Select a project</span>
                     )}
                     <ChevronDown className="w-4 h-4 text-foreground-muted" />
                   </Button>
@@ -201,22 +201,22 @@ export function SessionEditDialog({
                   align="start"
                   className="w-56 max-h-60 overflow-y-auto bg-surface border-2 border-border-strong shadow-brutal"
                 >
-                  {tasks.map((task) => (
+                  {projects.map((project) => (
                     <DropdownMenuItem
-                      key={task.id}
-                      onClick={() => setSelectedTask(task as Task)}
+                      key={project.id}
+                      onClick={() => setSelectedProject(project as Project)}
                       className={cn(
                         'flex items-center gap-2 cursor-pointer text-foreground hover:text-foreground',
-                        selectedTask?.id === task.id && 'bg-primary/10'
+                        selectedProject?.id === project.id && 'bg-primary/10'
                       )}
                     >
                       <span
                         className="w-5 h-5 rounded-md flex items-center justify-center text-sm border-2 border-black/10 dark:border-white/25"
-                        style={{ backgroundColor: task.color }}
+                        style={{ backgroundColor: project.color }}
                       >
-                        {task.icon}
+                        {project.icon}
                       </span>
-                      <span>{task.name}</span>
+                      <span>{project.name}</span>
                     </DropdownMenuItem>
                   ))}
                 </DropdownMenuContent>
@@ -263,7 +263,7 @@ export function SessionEditDialog({
             </div>
 
             {formError && (
-              <p className="text-sm font-semibold text-danger dark:text-danger-dark">
+              <p className="text-sm font-semibold text-danger">
                 {formError}
               </p>
             )}
@@ -273,7 +273,7 @@ export function SessionEditDialog({
             <Button
               variant="outline"
               onClick={() => setIsDeleteConfirmOpen(true)}
-              className="border-2 border-danger text-danger dark:text-danger-dark hover:bg-danger/10 shadow-brutal-xs btn-brutal bg-surface"
+              className="border-2 border-danger text-danger hover:bg-danger/10 shadow-brutal-xs btn-brutal bg-surface"
             >
               <Trash2 className="w-4 h-4 mr-1" />
               Delete
@@ -289,7 +289,7 @@ export function SessionEditDialog({
               <Button
                 onClick={handleSave}
                 disabled={!isValid || updateSessionMutation.isPending}
-                className="bg-primary text-white border-2 border-border-strong dark:border-white/20 shadow-brutal-xs btn-brutal disabled:opacity-50 hover:bg-primary-dark"
+                className="bg-primary-highlight text-white border-2 border-border-strong dark:border-white/20 shadow-brutal-xs btn-brutal disabled:opacity-50 hover:bg-primary-highlight/90"
               >
                 {updateSessionMutation.isPending ? (
                   <Loader2 className="w-4 h-4 animate-spin mr-1" />
@@ -305,13 +305,13 @@ export function SessionEditDialog({
       <Dialog open={isDeleteConfirmOpen} onOpenChange={(open) => !open && setIsDeleteConfirmOpen(false)}>
         <DialogContent className="sm:max-w-sm bg-surface border-2 border-danger shadow-brutal">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-danger dark:text-danger-dark flex items-center gap-2">
+            <DialogTitle className="text-xl font-bold text-danger flex items-center gap-2">
               <Trash2 className="w-5 h-5" />
               Delete Session?
             </DialogTitle>
           </DialogHeader>
           <p className="text-foreground-muted py-4">
-            This will permanently delete the session &quot;{session.title || session.task.name}&quot;. 
+            This will permanently delete the session &quot;{session.title || session.project.name}&quot;. 
             This action cannot be undone.
           </p>
           <DialogFooter className="flex-row gap-2 sm:justify-end">
@@ -325,7 +325,7 @@ export function SessionEditDialog({
             <Button
               onClick={handleDelete}
               disabled={deleteSessionMutation.isPending}
-              className="bg-danger dark:bg-danger-dark text-white border-2 border-border-strong dark:border-white/20 shadow-brutal-xs btn-brutal disabled:opacity-50 hover:bg-danger-dark dark:hover:bg-danger"
+              className="bg-danger text-white border-2 border-border-strong dark:border-white/20 shadow-brutal-xs btn-brutal disabled:opacity-50 hover:bg-danger/90"
             >
               {deleteSessionMutation.isPending ? (
                 <Loader2 className="w-4 h-4 animate-spin mr-1" />

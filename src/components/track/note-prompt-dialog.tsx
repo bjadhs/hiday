@@ -56,12 +56,12 @@ export function NotePromptDialog({
             <div className='flex items-center gap-2 px-3 py-2 rounded-lg bg-surface-elevated border-2 border-border'>
               <span
                 className='w-5 h-5 rounded flex items-center justify-center text-xs border border-black/10 dark:border-white/25'
-                style={{ backgroundColor: session.task.color }}
+                style={{ backgroundColor: session.project.color }}
               >
-                {session.task.icon}
+                {session.project.icon}
               </span>
               <span className='font-semibold text-foreground capitalize'>
-                {session.title || session.task.name}
+                {session.title || session.project.name}
               </span>
             </div>
           </div>
@@ -118,7 +118,7 @@ export function NotePromptDialog({
               size={'sm'}
               onClick={() => onSave(note)}
               disabled={isStopping}
-              className='bg-primary text-white border-2 border-border-strong dark:border-white/20 shadow-brutal-xs btn-brutal disabled:opacity-50 hover:bg-primary-dark order-1 sm:order-2'
+              className='bg-primary-highlight text-white border-2 border-border-strong dark:border-white/20 shadow-brutal-xs btn-brutal disabled:opacity-50 hover:bg-primary-highlight/90 order-1 sm:order-2'
             >
               {isStopping ? (
                 <Loader2 className='w-4 h-4 animate-spin mr-1' />

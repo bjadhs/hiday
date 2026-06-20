@@ -20,7 +20,7 @@ export function HistoryListView({
                 </p>
             </div>
 
-            <div className='divide-y divide-border dark:divide-border-dark'>
+            <div className='divide-y divide-border'>
                 {sessions.length === 0 ? (
                     <EmptyState message='No sessions recorded for this date' />
                 ) : (

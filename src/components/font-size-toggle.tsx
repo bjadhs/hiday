@@ -43,7 +43,7 @@ export function FontSizeToggle() {
           className={cn(
             "flex items-center justify-center px-3 h-8 rounded-md transition-all duration-200 font-medium",
             fontSize === option.value
-              ? "bg-primary text-white shadow-brutal-xs"
+              ? "bg-primary-highlight text-white shadow-brutal-xs"
               : "text-muted-foreground hover:text-foreground",
             option.size
           )}

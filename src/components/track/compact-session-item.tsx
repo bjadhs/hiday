@@ -17,7 +17,7 @@ interface CompactSessionItemProps {
  * CompactSessionItem
  * 
  * A compact view of an active session for the list view.
- * Shows task icon, session title, elapsed time, and stop button.
+ * Shows project icon, session title, elapsed time, and stop button.
  * 
  * @example
  * ```tsx
@@ -44,17 +44,17 @@ export const CompactSessionItem = memo(function CompactSessionItem({
         onClick={onExpand}
         className="flex-1 flex items-center gap-2 min-w-0 text-left hover:opacity-80 transition-opacity"
       >
-        {/* Small Task icon */}
+        {/* Small Project icon */}
         <div
           className="w-8 h-8 rounded-md flex items-center justify-center text-base border-2 border-black/10 dark:border-white/25 shadow-brutal-xs shrink-0"
-          style={{ backgroundColor: session.task.color }}
+          style={{ backgroundColor: session.project.color }}
         >
-          {session.task.icon}
+          {session.project.icon}
         </div>
 
         {/* Session title only */}
         <span className="flex-1 min-w-0 text-sm font-semibold truncate">
-          {session.title || session.task.name}
+          {session.title || session.project.name}
         </span>
 
         {/* Timer */}
@@ -67,7 +67,7 @@ export const CompactSessionItem = memo(function CompactSessionItem({
       <button
         onClick={onStop}
         disabled={isStopping}
-        className="w-7 h-7 rounded-md bg-danger dark:bg-danger-dark text-white border-2 border-border-strong dark:border-white/20 shadow-brutal-xs btn-brutal flex items-center justify-center disabled:opacity-50 shrink-0"
+        className="w-7 h-7 rounded-md bg-danger text-white border-2 border-border-strong dark:border-white/20 shadow-brutal-xs btn-brutal flex items-center justify-center disabled:opacity-50 shrink-0"
       >
         {isStopping ? (
           <Loader2 className="w-3 h-3 animate-spin" />

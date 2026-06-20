@@ -1,8 +1,8 @@
 import { useState, useMemo, useCallback } from 'react';
 import { keepPreviousData } from '@tanstack/react-query';
 import { useSessions } from '@/lib/hooks/use-sessions';
-import { useTasks } from '@/lib/hooks/use-tasks';
-import { HistorySession, Task, ViewMode } from '@/lib/types';
+import { useProjects } from '@/lib/hooks/use-projects';
+import { HistorySession, Project, ViewMode } from '@/lib/types';
 import { isToday } from '@/components/history/utils';
 
 export function useHistoryPage() {
@@ -27,25 +27,25 @@ export function useHistoryPage() {
         return date.getTime();
     }, [selectedDate]);
 
-    // Fetch real sessions and tasks
+    // Fetch real sessions and projects
     const { data: dbSessions = [], isLoading: isLoadingSessions } = useSessions(startOfDay, endOfDay, {
       placeholderData: keepPreviousData,
     });
-    const { data: tasks = [], isLoading: isLoadingTasks } = useTasks();
+    const { data: projects = [], isLoading: isLoadingProjects } = useProjects();
 
     // Transform DB sessions to HistorySession format
     const sessions: HistorySession[] = useMemo(() => {
         return dbSessions.map(session => {
-            const task = tasks.find(t => t.id === session.task_id) || {
-                id: session.task_id || 'unknown',
-                name: 'Unknown Task',
+            const project = projects.find(t => t.id === session.project_id) || {
+                id: session.project_id || 'unknown',
+                name: 'Unknown Project',
                 color: '#6B7280',
                 icon: '❓',
             };
             return {
                 id: session.id,
-                taskId: session.task_id || '',
-                task: task as Task,
+                projectId: session.project_id || '',
+                project: project as Project,
                 startedAt: session.started_at,
                 endedAt: session.ended_at,
                 duration: session.duration || 0,
@@ -53,7 +53,7 @@ export function useHistoryPage() {
                 note: session.note || undefined,
             };
         });
-    }, [dbSessions, tasks]);
+    }, [dbSessions, projects]);
 
     const navigateDate = useCallback((days: number) => {
         setSelectedDate((prev) => {
@@ -80,7 +80,7 @@ export function useHistoryPage() {
         setViewMode,
         selectedDate,
         sessions,
-        isLoading: isLoadingSessions || isLoadingTasks,
+        isLoading: isLoadingSessions || isLoadingProjects,
         navigateDate,
         goToToday,
         editingSession,

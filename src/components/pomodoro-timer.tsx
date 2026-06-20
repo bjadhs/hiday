@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils"
 type TimerMode = "digital" | "analog"
 type TimerState = "running" | "paused" | "break"
 
-interface Task {
+interface Project {
   id: string
   name: string
   icon: string
@@ -24,12 +24,12 @@ interface Task {
 }
 
 interface PomodoroTimerProps {
-  /** Currently selected task for pomodoro */
-  selectedTask: Task | null
-  /** Available tasks to switch to */
-  tasks: Task[]
-  /** Callback when task is switched */
-  onTaskSwitch?: (taskId: string) => void
+  /** Currently selected project for pomodoro */
+  selectedProject: Project | null
+  /** Available projects to switch to */
+  projects: Project[]
+  /** Callback when project is switched */
+  onProjectSwitch?: (projectId: string) => void
   /** Callback when pomodoro session completes */
   onComplete?: () => void
   /** Initial pomodoro duration in minutes (default: 25) */
@@ -42,9 +42,9 @@ const DEFAULT_POMODORO_MINUTES = 25
 const DEFAULT_BREAK_MINUTES = 5
 
 export function PomodoroTimer({
-  selectedTask,
-  tasks,
-  onTaskSwitch,
+  selectedProject,
+  projects,
+  onProjectSwitch,
   onComplete,
   pomodoroDuration = DEFAULT_POMODORO_MINUTES,
   breakDuration = DEFAULT_BREAK_MINUTES,
@@ -111,10 +111,10 @@ export function PomodoroTimer({
     setTimeLeft(pomodoroDuration * 60)
   }
 
-  const taskColor = selectedTask?.color || "#8B5CF6"
-  const taskName = selectedTask?.name || "Select Task"
-  const taskIcon = selectedTask?.icon || "⏱️"
-  const displayTitle = sessionTitle || taskName
+  const projectColor = selectedProject?.color || "#8B5CF6"
+  const projectName = selectedProject?.name || "Select Project"
+  const projectIcon = selectedProject?.icon || "⏱️"
+  const displayTitle = sessionTitle || projectName
 
   const handleEditTitle = () => {
     setEditTitle(sessionTitle)
@@ -135,10 +135,10 @@ export function PomodoroTimer({
     <Card className={cn(
       "border-2 border-foreground shadow-brutal transition-all duration-300 overflow-hidden",
       timerState === "running" && "border-primary shadow-brutal-primary",
-      timerState === "break" && "border-success-dark dark:border-success shadow-brutal-sm"
+      timerState === "break" && "border-success shadow-brutal-sm"
     )}>
       <CardContent className="p-3">
-        {/* Header Row - Session Title + Edit + Task | POMODORO */}
+        {/* Header Row - Session Title + Edit + Project | POMODORO */}
         <div className="mb-3 pb-2 border-b border-border/50">
           {isEditingTitle ? (
             <div className="flex items-center gap-2">
@@ -146,7 +146,7 @@ export function PomodoroTimer({
                 type="text"
                 value={editTitle}
                 onChange={(e) => setEditTitle(e.target.value)}
-                placeholder={taskName}
+                placeholder={projectName}
                 className="flex-1 text-sm font-medium bg-background border-2 border-primary rounded px-2 py-1 focus:outline-none"
                 autoFocus
                 onKeyDown={(e) => {
@@ -169,7 +169,7 @@ export function PomodoroTimer({
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              {/* Session Title + Edit + Task + POMODORO all in one row */}
+              {/* Session Title + Edit + Project + POMODORO all in one row */}
               <button
                 onClick={handleEditTitle}
                 className="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors shrink-0"
@@ -180,11 +180,11 @@ export function PomodoroTimer({
               <span 
                 className="text-xs px-2 py-0.5 rounded-full font-medium shrink-0"
                 style={{ 
-                  backgroundColor: `${taskColor}20`,
-                  color: taskColor 
+                  backgroundColor: `${projectColor}20`,
+                  color: projectColor 
                 }}
               >
-                {taskName}
+                {projectName}
               </span>
               <span className="text-xs font-bold text-muted-foreground shrink-0">POMODORO</span>
             </div>
@@ -198,7 +198,7 @@ export function PomodoroTimer({
               <div className="text-center">
                 <p className={cn(
                   "text-4xl md:text-5xl font-mono font-bold tabular-nums leading-none",
-                  timerState === "break" && "text-green-500"
+                  timerState === "break" && "text-success"
                 )}>
                   {formatTime(timeLeft)}
                 </p>
@@ -228,7 +228,7 @@ export function PomodoroTimer({
                     cy="45"
                     r="40"
                     fill="none"
-                    stroke={timerState === "break" ? "#22C55E" : taskColor}
+                    stroke={timerState === "break" ? "var(--success)" : projectColor}
                     strokeWidth="4"
                     strokeLinecap="round"
                     strokeDasharray={circumference}
@@ -257,7 +257,7 @@ export function PomodoroTimer({
                     y1="45"
                     x2="45"
                     y2={timerState === "break" ? "20" : "15"}
-                    stroke={timerState === "break" ? "#22C55E" : taskColor}
+                    stroke={timerState === "break" ? "var(--success)" : projectColor}
                     strokeWidth="2.5"
                     strokeLinecap="round"
                     transform={`rotate(${(timeLeft % 60) * 6} 45 45)`}
@@ -268,7 +268,7 @@ export function PomodoroTimer({
                     y1="45"
                     x2="45"
                     y2="12"
-                    stroke={timerState === "break" ? "#22C55E" : taskColor}
+                    stroke={timerState === "break" ? "var(--success)" : projectColor}
                     strokeWidth="1.5"
                     strokeLinecap="round"
                     transform={`rotate(${(timeLeft % 60) * 6} 45 45)`}
@@ -279,7 +279,7 @@ export function PomodoroTimer({
                 <div className="absolute inset-0 flex items-center justify-center">
                   <span className={cn(
                     "text-[10px] font-mono font-bold",
-                    timerState === "break" && "text-green-500"
+                    timerState === "break" && "text-success"
                   )}>
                     {Math.floor(timeLeft / 60)}
                   </span>
@@ -288,9 +288,9 @@ export function PomodoroTimer({
             )}
           </div>
 
-          {/* Right Side - Task & Controls */}
+          {/* Right Side - Project & Controls */}
           <div className="flex flex-col items-end gap-2 min-w-[100px]">
-            {/* Task Selector */}
+            {/* Project Selector */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button 
@@ -299,25 +299,25 @@ export function PomodoroTimer({
                   className="h-auto py-1.5 px-2 text-left justify-start w-full border-2 border-transparent hover:border-foreground hover:shadow-brutal-sm hover:bg-transparent"
                 >
                   <div className="flex items-center gap-2">
-                    <span className="text-lg">{taskIcon}</span>
+                    <span className="text-lg">{projectIcon}</span>
                     <div className="text-left">
-                      <p className="text-xs font-medium leading-tight truncate max-w-[80px]">{taskName}</p>
+                      <p className="text-xs font-medium leading-tight truncate max-w-[80px]">{projectName}</p>
                     </div>
                   </div>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="min-w-[140px] max-h-48 overflow-auto">
-                {tasks.map((task) => (
+                {projects.map((project) => (
                   <DropdownMenuItem 
-                    key={task.id}
-                    onClick={() => onTaskSwitch?.(task.id)}
+                    key={project.id}
+                    onClick={() => onProjectSwitch?.(project.id)}
                     className={cn(
                       "text-xs cursor-pointer",
-                      selectedTask?.id === task.id && "bg-primary/10 text-primary"
+                      selectedProject?.id === project.id && "bg-primary/10 text-primary"
                     )}
                   >
-                    <span className="mr-2">{task.icon}</span>
-                    {task.name}
+                    <span className="mr-2">{project.icon}</span>
+                    {project.name}
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
@@ -330,7 +330,7 @@ export function PomodoroTimer({
                 <Button
                   size="sm"
                   onClick={skipBreak}
-                  className="h-7 px-2 text-[10px] bg-success-dark dark:bg-success text-white border-2 border-success dark:border-success-dark shadow-brutal-xs btn-brutal"
+                  className="h-7 px-2 text-[10px] bg-success text-white border-2 border-success shadow-brutal-xs btn-brutal"
                 >
                   Skip
                 </Button>
@@ -343,7 +343,7 @@ export function PomodoroTimer({
                     "h-7 w-7 p-0 border-2 transition-all duration-200",
                     timerState === "running"
                       ? "border-foreground shadow-brutal-xs hover:shadow-brutal-sm hover:shadow-brutal-dark-sm btn-brutal"
-                      : "bg-primary text-primary-foreground border-primary shadow-brutal-xs hover:shadow-brutal-sm hover:shadow-brutal-dark-sm btn-brutal"
+                      : "bg-primary-highlight text-primary-foreground border-primary shadow-brutal-xs hover:shadow-brutal-sm hover:shadow-brutal-dark-sm btn-brutal"
                   )}
                 >
                   {timerState === "running" ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
@@ -398,7 +398,7 @@ export function PomodoroTimer({
             <div 
               className={cn(
                 "h-full rounded-full transition-all duration-1000 ease-linear",
-                timerState === "break" ? "bg-green-500" : "bg-primary"
+                timerState === "break" ? "bg-success" : "bg-primary-highlight"
               )}
               style={{ width: `${progress * 100}%` }}
             />

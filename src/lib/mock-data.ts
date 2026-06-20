@@ -1,10 +1,10 @@
-import { Task, Session, HistorySession } from './types';
+import { Project, Session, HistorySession } from './types';
 
 // Base timestamp for consistent mock data
 export const INITIAL_NOW = Date.now();
 
-// Common tasks used across the app
-export const mockTasks: Task[] = [
+// Common projects used across the app
+export const mockProjects: Project[] = [
   { id: 'inbox', name: 'Inbox', color: '#6B7280', icon: '📥' },
   { id: '1', name: 'Coding', color: '#8B5CF6', icon: '💻', goal_duration: 240 },
   { id: '2', name: 'Gym', color: '#22C55E', icon: '💪', goal_duration: 60 },
@@ -16,37 +16,37 @@ export const mockTasks: Task[] = [
   { id: '8', name: 'Research', color: '#6366F1', icon: '🔍' },
 ];
 
-// Default task for quick start
-export const defaultTask = mockTasks[0];
+// Default project for quick start
+export const defaultProject = mockProjects[0];
 
 // Today's completed sessions for Track page
-// Each session belongs to a task and has its own title
+// Each session belongs to a project and has its own title
 export const mockTodaySessions: Session[] = [
   {
     id: '1',
-    taskId: '2',
-    task: mockTasks[1],
+    projectId: '2',
+    project: mockProjects[1],
     startedAt: INITIAL_NOW - 1000 * 60 * 60 * 2 - 1000 * 60 * 30,
     endedAt: INITIAL_NOW - 1000 * 60 * 60,
     duration: 90 * 60,
   },
   {
     id: '2',
-    taskId: '1',
-    task: mockTasks[0],
+    projectId: '1',
+    project: mockProjects[0],
     startedAt: INITIAL_NOW - 1000 * 60 * 45,
     endedAt: INITIAL_NOW - 1000 * 60 * 5,
     duration: 40 * 60,
   },
 ];
 
-// History sessions for specific tasks (used when tracking to show recent sessions)
-// Shows session title as main, task name as badge
-export const taskHistorySessions: Session[] = [
+// History sessions for specific projects (used when tracking to show recent sessions)
+// Shows session title as main, project name as badge
+export const projectHistorySessions: Session[] = [
   {
     id: 'h1',
-    taskId: 'inbox',
-    task: mockTasks[0],
+    projectId: 'inbox',
+    project: mockProjects[0],
     startedAt: INITIAL_NOW - 1000 * 60 * 60 * 24,
     endedAt: INITIAL_NOW - 1000 * 60 * 60 * 24 + 45 * 1000,
     duration: 45,
@@ -55,8 +55,8 @@ export const taskHistorySessions: Session[] = [
   },
   {
     id: 'h2',
-    taskId: 'inbox',
-    task: mockTasks[0],
+    projectId: 'inbox',
+    project: mockProjects[0],
     startedAt: INITIAL_NOW - 1000 * 60 * 60 * 48,
     endedAt: INITIAL_NOW - 1000 * 60 * 60 * 48 + 120 * 1000,
     duration: 120,
@@ -65,8 +65,8 @@ export const taskHistorySessions: Session[] = [
   },
   {
     id: 'h3',
-    taskId: 'inbox',
-    task: mockTasks[0],
+    projectId: 'inbox',
+    project: mockProjects[0],
     startedAt: INITIAL_NOW - 1000 * 60 * 60 * 72,
     endedAt: INITIAL_NOW - 1000 * 60 * 60 * 72 + 60 * 1000,
     duration: 60,
@@ -75,8 +75,8 @@ export const taskHistorySessions: Session[] = [
   },
   {
     id: 'h4',
-    taskId: 'inbox',
-    task: mockTasks[0],
+    projectId: 'inbox',
+    project: mockProjects[0],
     startedAt: INITIAL_NOW - 1000 * 60 * 60 * 96,
     endedAt: INITIAL_NOW - 1000 * 60 * 60 * 96 + 30 * 1000,
     duration: 30,
@@ -85,8 +85,8 @@ export const taskHistorySessions: Session[] = [
   },
   {
     id: 'h5',
-    taskId: 'inbox',
-    task: mockTasks[0],
+    projectId: 'inbox',
+    project: mockProjects[0],
     startedAt: INITIAL_NOW - 1000 * 60 * 60 * 120,
     endedAt: INITIAL_NOW - 1000 * 60 * 60 * 120 + 90 * 1000,
     duration: 90,
@@ -95,8 +95,8 @@ export const taskHistorySessions: Session[] = [
   },
 ];
 
-// History page subset of tasks
-export const mockHistoryTasks: Task[] = mockTasks.slice(0, 5);
+// History page subset of projects
+export const mockHistoryProjects: Project[] = mockProjects.slice(0, 5);
 
 // Generate mock sessions for a specific date (History page)
 export function generateMockSessions(date: Date): HistorySession[] {
@@ -104,8 +104,8 @@ export function generateMockSessions(date: Date): HistorySession[] {
   const sessions: HistorySession[] = [
     {
       id: '1',
-      taskId: '2',
-      task: mockHistoryTasks[1],
+      projectId: '2',
+      project: mockHistoryProjects[1],
       startedAt: baseTime + 7 * 60 * 60 * 1000,
       endedAt: baseTime + 8 * 60 * 60 * 1000 + 30 * 60 * 1000,
       duration: 90 * 60,
@@ -114,8 +114,8 @@ export function generateMockSessions(date: Date): HistorySession[] {
     },
     {
       id: '2',
-      taskId: '1',
-      task: mockHistoryTasks[0],
+      projectId: '1',
+      project: mockHistoryProjects[0],
       startedAt: baseTime + 9 * 60 * 60 * 1000,
       endedAt: baseTime + 12 * 60 * 60 * 1000,
       duration: 3 * 60 * 60,
@@ -124,8 +124,8 @@ export function generateMockSessions(date: Date): HistorySession[] {
     },
     {
       id: '3',
-      taskId: '4',
-      task: mockHistoryTasks[3],
+      projectId: '4',
+      project: mockHistoryProjects[3],
       startedAt: baseTime + 13 * 60 * 60 * 1000,
       endedAt: baseTime + 14 * 60 * 60 * 1000,
       duration: 60 * 60,
@@ -134,8 +134,8 @@ export function generateMockSessions(date: Date): HistorySession[] {
     },
     {
       id: '4',
-      taskId: '1',
-      task: mockHistoryTasks[0],
+      projectId: '1',
+      project: mockHistoryProjects[0],
       startedAt: baseTime + 14 * 60 * 60 * 1000 + 30 * 60 * 1000,
       endedAt: baseTime + 17 * 60 * 60 * 1000,
       duration: 2.5 * 60 * 60,
@@ -144,8 +144,8 @@ export function generateMockSessions(date: Date): HistorySession[] {
     },
     {
       id: '5',
-      taskId: '5',
-      task: mockHistoryTasks[4],
+      projectId: '5',
+      project: mockHistoryProjects[4],
       startedAt: baseTime + 17 * 60 * 60 * 1000 + 15 * 60 * 1000,
       endedAt: baseTime + 17 * 60 * 60 * 1000 + 45 * 60 * 1000,
       duration: 30 * 60,
@@ -154,8 +154,8 @@ export function generateMockSessions(date: Date): HistorySession[] {
     },
     {
       id: '6',
-      taskId: '3',
-      task: mockHistoryTasks[2],
+      projectId: '3',
+      project: mockHistoryProjects[2],
       startedAt: baseTime + 20 * 60 * 60 * 1000,
       endedAt: baseTime + 21 * 60 * 60 * 1000 + 30 * 60 * 1000,
       duration: 90 * 60,

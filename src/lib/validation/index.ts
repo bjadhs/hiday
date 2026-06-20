@@ -1,11 +1,11 @@
 import type { z } from 'zod';
 
 export * from './primitives';
-export * from './task';
+export * from './project';
 export * from './session';
 export * from './planned-session';
 export * from './kanban';
-export * from './project';
+export * from './kproject';
 
 /**
  * Flatten a ZodError into a `{ field: message }` map keyed by the first path

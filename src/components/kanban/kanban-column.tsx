@@ -5,31 +5,33 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { KanbanCard } from './kanban-card';
-import type { PlannedSessionWithTask } from '@/actions/planned-sessions';
-import type { KanbanStatus, Project } from '@/lib/types';
+import type { KanbanSessionWithActiveState } from '@/actions/planned-sessions';
+import type { KanbanStatus, KProject } from '@/lib/types';
 
 interface KanbanColumnProps {
   id: KanbanStatus;
   title: string;
-  color: string;
-  sessions: PlannedSessionWithTask[];
+  colorVar: string;
+  sessions: KanbanSessionWithActiveState[];
   onStartSession: (sessionId: string) => void;
-  onEditSession: (session: PlannedSessionWithTask) => void;
+  onStopSession: (sessionId: string) => Promise<void>;
+  onEditSession: (session: KanbanSessionWithActiveState) => void;
   onAddTodo: (columnId: KanbanStatus) => void;
   onInboxDrop: (sessionId: string, columnId: KanbanStatus) => void;
-  projects: Project[];
+  kprojects: KProject[];
 }
 
 export function KanbanColumn({
   id,
   title,
-  color,
+  colorVar,
   sessions,
   onStartSession,
+  onStopSession,
   onEditSession,
   onAddTodo,
   onInboxDrop,
-  projects,
+  kprojects,
 }: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id });
 
@@ -59,11 +61,11 @@ export function KanbanColumn({
       {/* Column header */}
       <div
         className="flex items-center gap-2 px-4 py-3 border-b-2 border-border-strong rounded-t-2xl shrink-0"
-        style={{ backgroundColor: `${color}15` }}
+        style={{ backgroundColor: `color-mix(in srgb, ${colorVar} 8%, transparent)` }}
       >
         <div
           className="w-3 h-3 rounded-full"
-          style={{ backgroundColor: color }}
+          style={{ backgroundColor: colorVar }}
         />
         <h3 className="font-bold text-sm uppercase tracking-wide">{title}</h3>
         <span className="ml-auto text-xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
@@ -90,8 +92,9 @@ export function KanbanColumn({
               key={session.id}
               session={session}
               onStartSession={onStartSession}
+              onStopSession={onStopSession}
               onEditSession={onEditSession}
-              projects={projects}
+              kprojects={kprojects}
             />
           ))}
         </SortableContext>

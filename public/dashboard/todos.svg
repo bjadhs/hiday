@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="500" viewBox="0 0 800 500" fill="none">
+  <rect width="800" height="500" fill="#F0EFEA"/>
+  <g opacity="0.4">
+    <circle cx="660" cy="-40" r="220" fill="#10B981" opacity="0.18"/>
+  </g>
+  <rect x="40" y="40" width="720" height="420" rx="24" fill="#FFFFFF" stroke="#1A1A1E" stroke-width="3"/>
+  <rect x="72" y="76" width="120" height="120" rx="20" fill="#10B981" opacity="0.15" stroke="#10B981" stroke-width="3"/>
+  <rect x="108" y="112" width="48" height="48" rx="10" fill="#10B981"/>
+  <rect x="220" y="92" width="300" height="22" rx="11" fill="#1A1A1E" opacity="0.85"/>
+  <rect x="220" y="132" width="420" height="14" rx="7" fill="#4A4A55" opacity="0.5"/>
+  <rect x="220" y="158" width="360" height="14" rx="7" fill="#4A4A55" opacity="0.35"/>
+  <rect x="72" y="240" width="656" height="60" rx="14" fill="#F0EFEA" stroke="#1A1A1E" stroke-width="2"/>
+  <rect x="72" y="320" width="320" height="60" rx="14" fill="#F0EFEA" stroke="#1A1A1E" stroke-width="2"/>
+  <rect x="408" y="320" width="320" height="60" rx="14" fill="#10B981" opacity="0.12" stroke="#10B981" stroke-width="2"/>
+  <text x="72" y="430" font-family="Geist, system-ui, sans-serif" font-size="34" font-weight="700" fill="#1A1A1E">Todos</text>
+</svg>

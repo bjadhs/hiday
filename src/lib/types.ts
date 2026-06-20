@@ -1,10 +1,10 @@
 // Core data types for the ATracker application
-// TASK-SESSION RELATIONSHIP: Each Task can have multiple Sessions
-// A Session represents a time period spent working on a specific Task
+// PROJECT-SESSION RELATIONSHIP: Each Project can have multiple Sessions
+// A Session represents a time period spent working on a specific Project
 
-export type Task = {
+export type Project = {
   id: string;
-  name: string;           // Task name (e.g., "Coding", "Gym")
+  name: string;           // Project name (e.g., "Coding", "Gym")
   color: string;
   icon: string | null;
   goal_duration?: number | null; // in minutes
@@ -17,34 +17,34 @@ export type Task = {
 };
 
 // An active (ongoing) session being tracked
-// Displays: Session title (editable) + Task name (badge)
+// Displays: Session title (editable) + Project name (badge)
 export type ActiveSession = {
   id: string;
-  taskId: string;
-  task: Task;             // Belongs to this task
+  projectId: string;
+  project: Project;             // Belongs to this project
   startedAt: number;
-  title?: string;         // Session title (defaults to task name, editable by user)
+  title?: string;         // Session title (defaults to project name, editable by user)
   note?: string;          // Note about what was done in this session
 };
 
 // A completed session with recorded time
-// Displays: Session title + Task name (badge) + duration
+// Displays: Session title + Project name (badge) + duration
 export type Session = {
   id: string;
-  taskId: string;
-  task: Task;             // Belongs to this task
+  projectId: string;
+  project: Project;             // Belongs to this project
   startedAt: number;
   endedAt: number;
   duration: number;       // in seconds
-  title?: string;         // Session title (defaults to task name, editable by user)
+  title?: string;         // Session title (defaults to project name, editable by user)
   note?: string;          // Note about what was done in this session
 };
 
 // For history view - may have null endedAt for ongoing sessions
 export type HistorySession = {
   id: string;
-  taskId: string;
-  task: Task;
+  projectId: string;
+  project: Project;
   startedAt: number | null;
   endedAt: number | null;
   duration: number;
@@ -64,8 +64,8 @@ export type ViewMode = 'list' | 'timeline';
 // Uses the sessions table with status='planned'
 export type PlannedSession = {
   id: string;
-  taskId: string;
-  task: Task;
+  projectId: string;
+  project: Project;
   title: string | null;
   plannedStartTime: number | null;  // Unix timestamp when it's planned to start (stored in started_at). Null = unscheduled
   plannedEndTime: number | null;    // Unix timestamp when it's planned to end (stored in ended_at). Null = unscheduled
@@ -87,8 +87,8 @@ export type TimelinePlannedSession = PlannedSession & {
 // Kanban status values
 export type KanbanStatus = 'inbox' | 'next' | 'doing' | 'done' | 'revise';
 
-// Project for grouping Kanban todos
-export type Project = {
+// KProject for grouping Kanban todos
+export type KProject = {
   id: string;
   userId: string;
   name: string;
@@ -96,11 +96,11 @@ export type Project = {
   sortOrder: number;
 };
 
-// Planned session with Kanban workflow and project info
+// Planned session with Kanban workflow and kproject info
 export type KanbanSession = PlannedSession & {
   kanbanStatus: KanbanStatus;
-  projectId: string | null;
-  project: Project | null;
+  kprojectId: string | null;
+  kproject: KProject | null;
 };
 
 // Stats card props

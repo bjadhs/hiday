@@ -57,7 +57,7 @@ export function HistoryControls({
                         className={cn(
                             'flex items-center gap-2 px-4 py-2 rounded-md font-semibold transition-all',
                             viewMode === 'list'
-                                ? 'bg-primary text-white shadow-brutal-xs'
+                                ? 'bg-primary-highlight text-white shadow-brutal-xs'
                                 : 'text-muted-foreground hover:text-foreground'
                         )}
                     >
@@ -69,7 +69,7 @@ export function HistoryControls({
                         className={cn(
                             'flex items-center gap-2 px-4 py-2 rounded-md font-semibold transition-all',
                             viewMode === 'timeline'
-                                ? 'bg-primary text-white shadow-brutal-xs'
+                                ? 'bg-primary-highlight text-white shadow-brutal-xs'
                                 : 'text-muted-foreground hover:text-foreground'
                         )}
                     >

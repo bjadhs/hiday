@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { NavBarWrapper } from "@/components/nav-bar-wrapper";
+import { SidebarWrapper } from "@/components/sidebar-wrapper";
 import { ThemeProvider } from "@/components/theme-provider";
 import { SettingsProvider } from "@/components/settings-provider";
 import { SupabaseProvider } from "@/lib/supabase/provider";
@@ -53,9 +53,9 @@ export default function RootLayout({
                 disableTransitionOnChange
               >
                 <div className="flex min-h-screen w-full">
-                  <NavBarWrapper>
+                  <SidebarWrapper>
                     {children}
-                  </NavBarWrapper>
+                  </SidebarWrapper>
                 </div>
               </ThemeProvider>
             </SettingsProvider>
