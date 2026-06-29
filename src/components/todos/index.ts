@@ -4,3 +4,4 @@ export { ProjectColumn } from './project-column';
 export { TodoHeader } from './todo-header';
 export { CreateTodoDialog } from './create-todo-dialog';
 export { PlannedSessionBlock } from './planned-session-block';
+export { TimerSessionBlock } from './timer-session-block';

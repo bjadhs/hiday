@@ -3,6 +3,7 @@
 import { useState, useMemo, useRef, useCallback } from 'react';
 import { HOURS, HOUR_HEIGHT, MIN_CONTENT_WIDTH } from '@/components/timeline/constants';
 import { PlannedSessionBlock } from './planned-session-block';
+import { TimerSessionBlock } from './timer-session-block';
 import type { Database } from '@/lib/supabase/database.types';
 import type { PlannedSession, TimelinePlannedSession } from '@/lib/types';
 import { useNow } from '@/lib/hooks/use-now';
@@ -12,6 +13,8 @@ type DBSession = Database['public']['Tables']['sessions']['Row'] & { projects: D
 
 interface TodoTimelineProps {
   plannedSessions: DBSession[];
+  /** View-only timer/session blocks (e.g. tracked sessions) — no drag, resize or edit. */
+  readOnlySessions?: DBSession[];
   selectedDate: Date;
   onSessionClick: (session: PlannedSession) => void;
   onTimeSlotClick: (timestamp: number, durationMs?: number) => void;
@@ -186,6 +189,7 @@ function calculatePlannedSessionsLayout(
 
 export function TodoTimeline({
   plannedSessions,
+  readOnlySessions = [],
   selectedDate,
   onSessionClick,
   onTimeSlotClick,
@@ -244,6 +248,26 @@ export function TodoTimeline({
     () => calculatePlannedSessionsLayout(plannedSessions, startOfDay, endOfDay),
     [plannedSessions, startOfDay, endOfDay]
   );
+
+  // Layout for view-only timer/session blocks — pinned to a thin rail on the
+  // right edge rather than column-packed against plan blocks, so they never
+  // need collision-aware positioning (deliberately simpler than
+  // calculatePlannedSessionsLayout: these are markers, not editable blocks).
+  const readOnlyLayout = useMemo(() => {
+    return readOnlySessions
+      .map((s) => {
+        if (!s.started_at) return null;
+        const endedAt = s.ended_at ?? Math.min(now, endOfDay);
+        const visualStart = Math.max(s.started_at, startOfDay);
+        const visualEnd = Math.min(Math.max(endedAt, visualStart + 60000), endOfDay);
+        if (visualStart >= endOfDay || visualEnd <= startOfDay) return null;
+
+        const top = timestampToPixel(visualStart, startOfDay);
+        const height = Math.max(timestampToPixel(visualEnd, startOfDay) - top, 14);
+        return { session: s, top, height };
+      })
+      .filter((s): s is NonNullable<typeof s> => s !== null);
+  }, [readOnlySessions, startOfDay, endOfDay, now]);
 
   // Check if selected date is today
   const isToday = selectedDate.toDateString() === new Date().toDateString();
@@ -555,6 +579,11 @@ export function TodoTimeline({
                   dayStart={startOfDay}
                   dayEnd={endOfDay}
                 />
+              ))}
+
+              {/* View-only timer/session blocks */}
+              {readOnlyLayout.map(({ session, top, height }) => (
+                <TimerSessionBlock key={session.id} session={session} top={top} height={height} />
               ))}
 
               {/* New session drag preview */}

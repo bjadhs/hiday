@@ -83,6 +83,34 @@ export async function getPlannedSessions(date: string) {
 }
 
 /**
+ * Get the "Plan" blocks for the /plan page on a given date: scheduled
+ * sessions that originated from the planned-sessions flow, whether still
+ * planned or already marked done (status IN planned/completed). Currently
+ * *running* todos (status='active') are intentionally excluded here — the
+ * /plan page renders those as read-only timer blocks instead, matching how
+ * /todos already treats active sessions as a separate "running" overlay
+ * rather than part of the editable planned list.
+ */
+export async function getPlanDaySessions(date: string) {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  const { data, error } = await supabase
+    .from('sessions')
+    .select('*, projects(*)')
+    .eq('user_id', user.id)
+    .eq('session_date', date)
+    .in('status', ['planned', 'completed'])
+    .not('started_at', 'is', null)
+    .order('started_at', { ascending: true })
+
+  if (error) throw error
+  return data as PlannedSessionWithProject[]
+}
+
+/**
  * Create a new planned session
  * A planned session has status = 'planned' and uses started_at as the planned start time
  * If plannedStartTime is null, creates an unscheduled session (no specific time)
@@ -154,6 +182,10 @@ export async function updatePlannedSession(
   const v = updatePlannedSessionSchema.parse(updates)
 
   const updateData: SessionUpdate = {}
+
+  if (v.projectId !== undefined) {
+    updateData.project_id = v.projectId
+  }
 
   if (v.plannedStartTime !== undefined) {
     updateData.started_at = v.plannedStartTime

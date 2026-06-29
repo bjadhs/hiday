@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
 
 // Routes that require authentication
-const protectedRoutes = ['/track', '/analyze', '/settings', '/projects', '/history', '/timeline', '/todos', '/kanban']
+const protectedRoutes = ['/track', '/analyze', '/settings', '/projects', '/history', '/timeline', '/todos', '/kanban', '/plan']
 
 // Protected routes that have a public `/explore/<key>` preview. Unauthenticated
 // visitors are sent to the preview instead of a bare login. (Settings has no

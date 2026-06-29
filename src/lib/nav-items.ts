@@ -7,6 +7,7 @@ import {
   BarChart3,
   ListTodo,
   Settings,
+  NotebookPen,
 } from 'lucide-react';
 
 export type NavItem = {
@@ -26,6 +27,7 @@ export const navItems: NavItem[] = [
   { key: 'track', label: 'Track', href: '/track', icon: Zap },
   { key: 'timeline', label: 'Timeline', href: '/timeline', icon: Clock },
   { key: 'todos', label: 'Todos', href: '/todos', icon: CalendarCheck },
+  { key: 'plan', label: 'Plan', href: '/plan', icon: NotebookPen },
   { key: 'kanban', label: 'Kanban', href: '/kanban', icon: Kanban },
   { key: 'history', label: 'History', href: '/history', icon: History },
   { key: 'analyze', label: 'Analyze', href: '/analyze', icon: BarChart3 },

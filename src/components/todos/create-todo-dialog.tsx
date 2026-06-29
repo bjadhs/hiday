@@ -35,6 +35,7 @@ interface CreateTodoDialogProps {
     note?: string;
   }) => void;
   onUpdate: (sessionId: string, data: {
+    projectId?: string;
     plannedStartTime?: number | null;
     plannedDuration?: number;
     title?: string;
@@ -42,6 +43,8 @@ interface CreateTodoDialogProps {
   }) => void;
   isSubmitting: boolean;
   error?: string | null;
+  /** Lets the project select stay enabled while editing (default: locked, matching /todos). */
+  allowProjectChange?: boolean;
 }
 
 /**
@@ -103,6 +106,7 @@ export function CreateTodoDialog({
   onUpdate,
   isSubmitting,
   error,
+  allowProjectChange = false,
 }: CreateTodoDialogProps) {
   const [projectId, setProjectId] = useState('');
   const [title, setTitle] = useState('');
@@ -177,6 +181,7 @@ export function CreateTodoDialog({
 
     if (isEditing && editingSession) {
       onUpdate(editingSession.id, {
+        ...(allowProjectChange ? { projectId } : {}),
         plannedStartTime,
         plannedDuration,
         title: title || undefined,
@@ -274,7 +279,7 @@ export function CreateTodoDialog({
                     onChange={(e) => setProjectId(e.target.value)}
                     className="flex h-9 w-full rounded-md border border-input bg-surface px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 text-foreground"
                     required
-                    disabled={isEditing} // Can't change project when editing
+                    disabled={isEditing && !allowProjectChange}
                   >
                     <option value="" className="bg-surface">Select a project</option>
                     {activeProjects.map((project) => (

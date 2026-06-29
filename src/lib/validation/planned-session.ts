@@ -13,6 +13,7 @@ export const createPlannedSessionSchema = z.object({
 
 /** Validates the `updates` patch passed to `updatePlannedSession`. */
 export const updatePlannedSessionSchema = z.object({
+  projectId: uuid.optional(),
   plannedStartTime: timestamp.nullable().optional(),
   plannedDuration: z.number().int().positive('Duration must be greater than zero').optional(),
   title: z.string().trim().max(200, 'Title is too long').optional(),

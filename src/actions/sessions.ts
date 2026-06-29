@@ -212,3 +212,28 @@ export async function getTodaySessions() {
   const startOfDay = new Date().setHours(0, 0, 0, 0)
   return getSessions(startOfDay, now)
 }
+
+/**
+ * Get the "Timer" blocks for the /plan page on a given date: time-tracked
+ * sessions (status='active' — running or already stopped, per how
+ * `stopSession` works) that are NOT part of the planned-sessions flow.
+ * These render as read-only blocks on the timeline.
+ */
+export async function getTimerSessionsForDate(date: string) {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  const { data, error } = await supabase
+    .from('sessions')
+    .select('*, projects(*)')
+    .eq('user_id', user.id)
+    .eq('session_date', date)
+    .eq('status', 'active')
+    .not('started_at', 'is', null)
+    .order('started_at', { ascending: true })
+
+  if (error) throw error
+  return data as SessionWithProject[]
+}
