@@ -23,6 +23,9 @@ export const metadata: Metadata = {
   title: "Hiday - Time Tracking",
   description: "Modern time tracking and productivity management application",
   keywords: ["time tracking", "productivity", "habits", "goals", "tracking"],
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export const viewport: Viewport = {

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Clock } from 'lucide-react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
 
@@ -16,9 +16,7 @@ export function Navbar({
         <div className='flex justify-between items-center h-16'>
           {/* Logo */}
           <Link href='/' className='flex items-center gap-2.5'>
-            <div className='size-10 rounded-xl gradient-primary border-2 border-border-strong shadow-brutal-sm flex items-center justify-center'>
-              <Clock className='size-5 text-primary-foreground' />
-            </div>
+            <Image src='/logo.svg' alt='Hiday' width={40} height={40} className='size-10' priority />
             <span className='text-xl font-bold text-foreground tracking-tight'>
               Hiday
             </span>
