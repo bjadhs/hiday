@@ -38,7 +38,7 @@ function convertToPlannedSession(session: DBSession): PlannedSession {
       name: session.projects.name,
       color: session.projects.color,
       icon: session.projects.icon,
-    } : { id: '', name: 'Unknown', color: '#gray', icon: null },
+    } : { id: '', name: 'Unknown', color: '#6b7280', icon: null },
     title: session.title,
     plannedStartTime: session.started_at,
     plannedEndTime: session.ended_at || (session.started_at ? session.started_at + (session.duration || 0) * 1000 : null),
@@ -109,8 +109,9 @@ function ProjectGroup({
   // unschedule it (drag from timeline back to the backlog).
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
-    const sessionId = e.dataTransfer.getData('sessionId');
-    if (sessionId) {
+    // getData() only returns a value on drop, not dragover — check the
+    // advertised types instead (custom type names are lowercased by the browser).
+    if (e.dataTransfer.types.includes('sessionid')) {
       setIsDropTarget(true);
     }
   };

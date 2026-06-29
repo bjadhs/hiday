@@ -173,8 +173,6 @@ export function CreateTodoDialog({
     e.preventDefault();
     e.stopPropagation();
 
-    console.log('Form submitted', { projectId, isEditing, isScheduled });
-
     const plannedDuration = durationHours * 3600 + durationMinutes * 60;
     // Only set start time if scheduled, otherwise null (unscheduled)
     const plannedStartTime = isScheduled ? parseTimeFromInput(startTime, selectedDate) : null;
@@ -251,7 +249,6 @@ export function CreateTodoDialog({
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
       if (!open) {
-        console.log('Dialog closing');
         onClose();
       }
     }}>
